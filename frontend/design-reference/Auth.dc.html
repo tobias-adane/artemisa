@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  :root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+  html,body{margin:0;padding:0}
+  body{background:#fafafa;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  button{font-family:inherit;transition:background-color .15s var(--ease-out),color .15s var(--ease-out),border-color .15s var(--ease-out),transform .12s var(--ease-out)}
+  button:active{transform:scale(0.97)}
+  input{font-family:inherit}
+  input::placeholder{color:#a3a3a3}
+  a{color:#737373;text-decoration:underline;text-underline-offset:2px}
+  a:hover{color:#0a0a0a}
+  @keyframes fadeSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  [data-field]{animation:fadeSwap .28s var(--ease-out) both}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    [data-field]{animation:none !important;opacity:1 !important;transform:none !important}
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px;background:#fafafa;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+  <div style="width:100%;max-width:452px;background:#ffffff;border:1px solid #e5e5e5;border-radius:26px;padding:4px;padding-bottom:0;box-shadow:0 8px 32px rgba(0,0,0,0.05)">
+
+    <div style="border:1px solid #e5e5e5;border-radius:22px;background:#f7f7f7;padding:52px 40px 44px">
+
+      <img src="artemisa-logo.svg" alt="Artemisa" width="34" height="34" style="display:block;width:34px;height:34px;margin:0 auto">
+
+      <h1 style="margin:16px 0 0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:29px;line-height:1.1;letter-spacing:0.2px;text-align:center;color:#0a0a0a">{{ heading }}</h1>
+      <p style="margin:8px 0 0;font-size:13px;line-height:1.6;color:#737373;text-align:center;text-wrap:pretty">{{ subhead }}</p>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:34px">
+        <button style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:40px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;color:#0a0a0a;font-size:13.5px;font-weight:500;cursor:pointer" style-hover="background:#f0f0f0">
+          <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
+          <span>{{ googleLabel }}</span>
+        </button>
+        <button style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:40px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;color:#0a0a0a;font-size:13.5px;font-weight:500;cursor:pointer" style-hover="background:#f0f0f0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#0a0a0a"><path d="M17.05 12.53c-.02-2.02 1.65-2.99 1.72-3.04-.94-1.37-2.4-1.56-2.92-1.58-1.24-.13-2.42.73-3.05.73-.63 0-1.6-.71-2.63-.69-1.35.02-2.6.79-3.29 2-.14.24-.35.7-.35.7s-1.29 3.71.9 6.9c.66.95 1.44 2.02 2.47 1.98 1-.04 1.37-.64 2.58-.64 1.2 0 1.54.64 2.6.62 1.07-.02 1.75-.97 2.4-1.93.42-.61.75-1.32.75-1.32s-1.68-.75-1.7-2.63zM15.1 6.05c.55-.67.92-1.6.82-2.53-.79.03-1.75.53-2.32 1.19-.51.59-.96 1.54-.84 2.44.88.07 1.79-.45 2.34-1.1z"></path></svg>
+          <span>{{ appleLabel }}</span>
+        </button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:24px 0">
+        <div style="flex:1;height:1px;background:#e5e5e5"></div>
+        <span style="font-size:11px;color:#a3a3a3;letter-spacing:0.06em">OR</span>
+        <div style="flex:1;height:1px;background:#e5e5e5"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ fields }}" as="f" hint-placeholder-count="2">
+          <div data-field="">
+            <label style="display:block;font-size:12px;font-weight:600;color:#0a0a0a;margin-bottom:7px;letter-spacing:0.01em">{{ f.label }}</label>
+            <div style="position:relative">
+              <input type="{{ f.type }}" placeholder="{{ f.placeholder }}" style="width:100%;height:38px;border:1px solid #e5e5e5;border-radius:22px;padding:0 {{ f.padRight }} 0 14px;font-size:13px;color:#0a0a0a;background:#fff;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+              <sc-if value="{{ f.reveal }}" hint-placeholder-val="{{ false }}">
+                <button type="button" onClick="{{ f.toggle }}" title="Show password" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);height:26px;width:26px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:14px;color:#737373;cursor:pointer" style-hover="background:#f5f5f5;color:#0a0a0a">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </button>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <a href="#" style="font-size:12px;flex:none;white-space:nowrap">Forgot password?</a>
+        </div>
+      </sc-if>
+
+      <button style="width:100%;height:40px;margin-top:20px;border:none;border-radius:22px;background:#171717;color:#fafafa;font-size:13.5px;font-weight:500;cursor:pointer;letter-spacing:0.01em" style-hover="background:#262626">{{ cta }}</button>
+
+    </div>
+
+    <div style="position:relative;padding:22px 20px">
+      <p style="position:relative;isolation:isolate;margin:0;text-align:center;font-size:13px;color:#0a0a0a">
+        {{ switchPrompt }} <button onClick="{{ toggleMode }}" style="border:none;background:transparent;padding:0;font-size:13px;color:#737373;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-weight:500" style-hover="color:#0a0a0a">{{ switchAction }}</button>
+      </p>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:760}}">
+class Component extends DCLogic {
+  state = { mode: 'login', showPw: false, showConfirm: false };
+
+  renderVals() {
+    const s = this.state;
+    const signup = s.mode === 'signup';
+    const pwType = s.showPw ? 'text' : 'password';
+    const confirmType = s.showConfirm ? 'text' : 'password';
+
+    const fields = signup
+      ? [
+          { label: 'Name', type: 'text', placeholder: 'Maria Alvarez', padRight: '14px', reveal: false },
+          { label: 'Email', type: 'email', placeholder: 'name@email.com', padRight: '14px', reveal: false },
+          { label: 'Password', type: pwType, placeholder: 'must be 8 characters', padRight: '38px', reveal: true, toggle: () => this.setState((p) => ({ showPw: !p.showPw })) },
+          { label: 'Confirm password', type: confirmType, placeholder: 'repeat password', padRight: '38px', reveal: true, toggle: () => this.setState((p) => ({ showConfirm: !p.showConfirm })) },
+        ]
+      : [
+          { label: 'Email', type: 'email', placeholder: 'name@email.com', padRight: '14px', reveal: false },
+          { label: 'Password', type: pwType, placeholder: 'must be 8 characters', padRight: '38px', reveal: true, toggle: () => this.setState((p) => ({ showPw: !p.showPw })) },
+        ];
+
+    return {
+      isLogin: !signup,
+      heading: signup ? 'Create your Artemisa account' : 'Log in to Artemisa',
+      subhead: signup ? 'Set up your home, invite family, and start monitoring in minutes.' : 'Welcome back. Your spaces are waiting.',
+      fields,
+      cta: signup ? 'Create account' : 'Log in',
+      googleLabel: signup ? 'Sign up with Google' : 'Continue with Google',
+      appleLabel: signup ? 'Sign up with Apple' : 'Continue with Apple',
+      switchPrompt: signup ? 'Already have an account?' : 'New to Artemisa?',
+      switchAction: signup ? 'Log in' : 'Create an account',
+      toggleMode: () => this.setState((p) => ({ mode: p.mode === 'signup' ? 'login' : 'signup', showPw: false, showConfirm: false })),
+    };
+  }
+}
+</script>
+</body>
+</html>

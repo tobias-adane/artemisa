@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  *{box-sizing:border-box}
+  :root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1);--ease-drawer:cubic-bezier(.32,.72,0,1)}
+  html,body{margin:0;padding:0}
+  body{background:#ffffff;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  input::placeholder{color:#737373}
+  input{outline:none;border:none;background:transparent;font-family:inherit}
+  button{font-family:inherit;transition:background-color .15s var(--ease-out),color .15s var(--ease-out),border-color .15s var(--ease-out),transform .12s var(--ease-out)}
+  button:active{transform:scale(0.97)}
+  [data-space-card] image-slot{transition:transform .4s var(--ease-out)}
+  @media (hover:hover) and (pointer:fine){[data-space-card]:hover image-slot{transform:scale(1.03)}}
+  html{scrollbar-width:none;-ms-overflow-style:none}
+  ::-webkit-scrollbar{width:0;height:0;display:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes popIn{from{opacity:0;transform:translateY(4px) scale(0.97)}to{opacity:1;transform:none}}
+  @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:none}}
+  @keyframes overlayIn{from{opacity:0}to{opacity:1}}
+  [data-navbtn]{position:relative}
+  [data-navtip]{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%) translateY(3px);background:#171717;color:#fff;font-size:11px;font-weight:500;letter-spacing:0.01em;padding:5px 9px;border-radius:12px;white-space:nowrap;opacity:0;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.18);transition:opacity .15s var(--ease-out),transform .15s var(--ease-out)}
+  [data-navtip]::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#171717}
+  @media (hover:hover) and (pointer:fine){[data-navbtn]:hover [data-navtip]{opacity:1;transform:translateX(-50%)}}
+  [data-mi]{color:#404040;transition:color .15s var(--ease-out)}
+  [data-mi]:hover{color:#000000 !important}
+  [data-mi] [data-icon]{color:currentColor !important}
+  [data-mi] svg{stroke:currentColor}
+  [data-mi] span[style*="flex"]{color:inherit !important}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    [data-step],[data-field],[data-event]{animation:none !important;opacity:1 !important;transform:none !important}
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#ffffff;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+  <!-- ===================== DESKTOP ===================== -->
+  <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+  <div>
+    <header style="position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(255,255,255,0.82);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px)">
+      <dc-import name="AvatarMenu" hint-size="28px,28px"></dc-import>
+      <div style="display: flex; align-items: center; padding: 0 18px; border: none; border-radius: 999px; font-size: 12px; font-weight: 500; color: #000; background: #fff; padding-top: 8px; padding-bottom: 8px; padding-left: 16px; padding-right: 16px;flex:none;white-space:nowrap">Home</div>
+      <button title="New chat" onClick="{{ newChat }}" style="width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e5e5; border-radius: 999px; background: #fff; color: #404040; cursor: pointer" style-hover="color:#000000">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+      </button>
+    </header>
+
+    <section style="min-height:calc(100vh - 210px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px 16px">
+      <div style="width:100%;max-width:600px;display:flex;flex-direction:column;align-items:center">
+
+        <sc-if value="{{ idle }}" hint-placeholder-val="{{ true }}">
+        <div style="text-align:center;line-height:1.16;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:32px;letter-spacing:0.2px">
+          <div style="white-space:nowrap">{{ greeting }}, <span style="color:#bcbcbc">{{ name }}</span></div>
+          <div style="color:#0a0a0a;white-space:nowrap">{{ subtitle }}</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conversing }}" hint-placeholder-val="{{ false }}">
+        <div style="width:100%;margin-top:30px;max-height:52vh;overflow-y:auto;overflow-x:hidden;padding:4px 4px;display:flex;flex-direction:column">
+          <sc-for list="{{ messages }}" as="m" hint-placeholder-count="0">
+            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px;justify-content:{{ m.rowJustify }};animation:fadeUp .26s var(--ease-out) both">
+              <sc-if value="{{ m.isUser }}" hint-placeholder-val="{{ false }}">
+                <div style="max-width:78%;padding:12px 16px;border-radius:24px 6px 20px 20px;background:#ffffff;border:1px solid #e5e5e5;color:#0a0a0a;font-size:14px;line-height:1.5;white-space:pre-wrap">{{ m.text }}</div>
+                <image-slot id="home-user-avatar" shape="circle" placeholder=" " style="width:20px;height:20px;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,0.06)"></image-slot>
+              </sc-if>
+              <sc-if value="{{ m.isAssistant }}" hint-placeholder-val="{{ true }}">
+                <div style="max-width:94%;color:#0a0a0a;font-family:'Instrument Serif',Georgia,serif;font-size:17px;line-height:1.42;white-space:pre-wrap">{{ m.text }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ thinking }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:flex-start;margin-bottom:12px">
+            <div style="display:flex;gap:5px;padding:14px 16px;border-radius:22px;background:#f5f5f5">
+              <span style="width:7px;height:7px;border-radius:50%;background:#737373;animation:blink 1.2s infinite"></span>
+              <span style="width:7px;height:7px;border-radius:50%;background:#737373;animation:blink 1.2s infinite .2s"></span>
+              <span style="width:7px;height:7px;border-radius:50%;background:#737373;animation:blink 1.2s infinite .4s"></span>
+            </div>
+          </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ hasSpace }}" hint-placeholder-val="{{ false }}">
+        <div style="width:100%;margin-top:34px;display:flex;justify-content:flex-end;align-items:flex-start;line-height:0">
+          <div style="position:relative;flex:none;display:block;width:80px;height:80px;padding:4px;border-radius:32px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,0.10),0 0 0 0.5px rgba(0,0,0,0.06);animation:popIn .17s var(--ease-out)">
+            <div style="width:100%;height:100%;border-radius:26px;overflow:hidden;background:#e5e5e5">
+              <image-slot id="{{ focusSlotId }}" shape="rounded" radius="22" placeholder="{{ focusPlaceholder }}" style="display:block;width:100%;height:100%"></image-slot>
+            </div>
+            <button onClick="{{ clearSpace }}" title="Close" style="position:absolute;top:7px;right:7px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:1px solid #e5e5e5;border-radius:999px;background:rgba(255,255,255,0.94);color:#0a0a0a;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.18);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" style-hover="background:#fff;color:#000">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </button>
+          </div>
+        </div>
+        </sc-if>
+
+        <div style="width: 100%; margin-top: {{ chatMarginTop }}; background: #fff; border: 1px solid #e5e5e5; border-radius:36px; box-shadow: 0 6px 28px rgba(0,0,0,0.05); padding: 18px 20px 14px; transition: margin-top .3s var(--ease-out), box-shadow .25s ease, border-color .25s ease">
+          <input value="{{ input }}" onInput="{{ onInput }}" onKeyDown="{{ onKey }}" placeholder="Ask anything about your home" style="width:100%;font-size:14px;color:#0a0a0a;padding:4px 4px 16px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="position:relative">
+              <button onClick="{{ toggleMenu }}" title="Add" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid {{ menuBorder }}; border-radius: 999px; background: {{ menuBg }}; color: {{ menuIcon }}; cursor: pointer" style-hover="color:#000000">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+              </button>
+              <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ closeMenu }}" style="position:fixed;inset:0;z-index:65"></div>
+                <div style="position:absolute;bottom:calc(100% + 10px);left:-6px;z-index:70;min-width:214px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:10px;transform-origin:bottom left;animation:popIn .17s var(--ease-out)">
+                  <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">More</div>
+                  <button onClick="{{ pickFile }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                    <span style="flex:1;font-size:14px;color:inherit">Attach</span>
+                  </button>
+                  <button onClick="{{ pickAround }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    <span style="flex:1;font-size:14px;color:inherit">Around me</span>
+                    <span style="font-size:11px;font-weight:600;color:#2563eb;padding:3px 0">Beta</span>
+                  </button>
+
+                </div>
+              </sc-if>
+            </div>
+            <div style="position:relative">
+              <button onClick="{{ toggleSpaces }}" title="Spaces" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid {{ spacesBorder }}; border-radius: 999px; background: {{ spacesBg }}; color: {{ spacesIcon }}; cursor: pointer" style-hover="color:#000000">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z"></path><rect x="3" y="14" width="7" height="7" rx="1"></rect><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+              </button>
+              <sc-if value="{{ spacesOpen }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ closeSpaces }}" style="position:fixed;inset:0;z-index:65"></div>
+                <div style="position:absolute;bottom:calc(100% + 10px);left:-6px;z-index:70;min-width:214px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:10px;transform-origin:bottom left;animation:popIn .17s var(--ease-out)">
+                  <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">Spaces</div>
+                  <sc-for list="{{ spaceItems }}" as="sp" hint-placeholder-count="5">
+                    <button onClick="{{ sp.run }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+                      <div style="width:16px;height:16px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="{{ sp.icon }}"></div>
+                      <span style="flex:1;font-size:14px;color:inherit">{{ sp.name }}</span>
+                      <sc-if value="{{ sp.selected }}" hint-placeholder-val="{{ false }}">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto"><path d="M20 6 9 17l-5-5"></path></svg>
+                      </sc-if>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ hasContext }}" hint-placeholder-val="{{ false }}">
+              <div style="display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 6px 0 11px;border:1px solid #d4d4d4;border-radius:999px;background:#f5f5f5;font-size:12.5px;color:#0a0a0a;max-width:240px;animation:popIn .17s var(--ease-out)">
+                <div style="width:13px;height:13px;flex:none;display:flex;align-items:center;justify-content:center;color:#404040" data-icon="{{ contextIcon }}"></div>
+                <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ contextLabel }}</span>
+                <button onClick="{{ clearContext }}" title="Remove" style="width:19px;height:19px;flex:none;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:999px;color:#737373;cursor:pointer" style-hover="background:#e5e5e5;color:#0a0a0a">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                </button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ hasAttachments }}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{ attachments }}" as="a" hint-placeholder-count="0">
+                <div style="display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 6px 0 11px;border:1px solid #e5e5e5;border-radius:999px;background:#fafafa;font-size:12.5px;color:#404040;max-width:200px">
+                  <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.name }}</span>
+                  <button onClick="{{ a.remove }}" title="Remove" style="width:19px;height:19px;flex:none;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:999px;color:#a3a3a3;cursor:pointer" style-hover="background:#f0f0f0;color:#0a0a0a">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                  </button>
+                </div>
+              </sc-for>
+            </sc-if>
+            <input type="file" ref="{{ fileRef }}" onChange="{{ onFiles }}" multiple="{{ true }}" style="display:none">
+            <div style="flex:1"></div>
+            <sc-if value="{{ thinking }}" hint-placeholder-val="{{ false }}">
+              <div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center">
+                <span style="width:14px;height:14px;border-radius:50%;border:2px solid #e5e5e5;border-top-color:#000;animation:spin .7s linear infinite"></span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ showSend }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ sendNow }}" title="Send" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:999px;background:#171717;color:#fff;cursor:pointer" style-hover="background:#262626">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg>
+              </button>
+            </sc-if>
+            <sc-if value="{{ showVoice }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ openVoice }}" title="Voice" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e5e5; border-radius: 999px; background: #fff; color: #404040; cursor: pointer" style-hover="color:#000000">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"></polyline><path d="M4 18v-2a4 4 0 0 1 4-4h12"></path></svg>
+              </button>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-if value="{{ showQuick }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;justify-content:center">
+          <sc-for list="{{ quickActions }}" as="q" hint-placeholder-count="3">
+            <button onClick="{{ q.run }}" style="height:32px;padding:0 12px;border:1px solid #e5e5e5;border-radius:22px;background:#ffffff;color:#404040;font-size:13px;cursor:pointer;box-shadow:0 10px 34px rgba(0,0,0,0.10)" style-hover="color:#000000">{{ q.label }}</button>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+    </section>
+
+    <sc-if value="{{ idle }}" hint-placeholder-val="{{ true }}">
+    <section style="max-width:1120px;margin:0 auto;padding:0 80px 130px">
+      <sc-if value="{{ noSpaces }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px dashed #d4d4d4;border-radius:34px;padding:56px 28px;text-align:center">
+          <div style="font-family:'Instrument Serif',Georgia,serif;font-size:24px">No spaces yet</div>
+          <p style="margin:10px auto 18px;max-width:40ch;font-size:13.5px;line-height:1.65;color:#737373;text-wrap:pretty">Spaces are how Artemisa understands your home — a room, an entrance, a yard. Add one and point a camera at it.</p>
+          <button onClick="{{ addFirstSpace }}" style="height:34px;padding:0 16px;border:none;border-radius:18px;background:#171717;color:#fafafa;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#262626">Add your first space</button>
+        </div>
+      </sc-if>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <sc-for list="{{ spaces }}" as="space" hint-placeholder-count="6">
+          <div data-space-card="" style="position:relative;aspect-ratio:4/3;border-radius:36px;overflow:hidden;cursor:pointer;background:#e5e5e5">
+            <image-slot id="{{ space.slotId }}" shape="rect" mask="inset(0)" placeholder="{{ space.placeholder }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+            <div style="position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(to top,rgba(0,0,0,0.55),rgba(0,0,0,0))"></div>
+            <div style="position:absolute;left:16px;right:44px;bottom:14px;color:#fff;font-size:12px;font-weight:400;letter-spacing:0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,0.3)">{{ space.name }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+    </sc-if>
+
+    <sc-if value="{{ idle }}" hint-placeholder-val="{{ true }}">
+    <div style="position:fixed;left:0;right:0;bottom:0;z-index:60;width:100%;box-sizing:border-box;display:flex;justify-content:center;padding:24px 0;backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);pointer-events:none">
+    <nav style="pointer-events:auto;display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border:1px solid #e5e5e5;border-radius:999px;box-shadow:0 10px 34px rgba(0,0,0,0.10)">
+      <sc-for list="{{ navDesktop }}" as="n" hint-placeholder-count="3">
+        <button data-navbtn="" onClick="{{ n.run }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid {{ n.borderColor }};border-radius:999px;cursor:pointer;background:{{ n.bg }};color:{{ n.color }}" style-hover="color:#000000">
+          <div style="width:12px;height:12px;display:flex;align-items:center;justify-content:center" data-icon="{{ n.icon }}"></div>
+          <span data-navtip="">{{ n.label }}</span>
+        </button>
+      </sc-for>
+      <div style="width:1px;height:20px;background:#e5e5e5;margin:0 3px"></div>
+      <div style="position:relative">
+        <button data-navbtn="" onClick="{{ toggleNavAdd }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid {{ navAddBorder }};border-radius:999px;cursor:pointer;background:{{ navAddBg }};color:{{ navAddIcon }}" style-hover="color:#000000">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          <span data-navtip="">Add</span>
+        </button>
+        <sc-if value="{{ navAddOpen }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ closeNavAdd }}" style="position:fixed;inset:0;z-index:65"></div>
+          <div style="position:absolute;bottom:calc(100% + 12px);right:0;z-index:70;min-width:214px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:10px;transform-origin:bottom right;animation:popIn .17s var(--ease-out)">
+            <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">Add</div>
+            <sc-for list="{{ navAddItems }}" as="p" hint-placeholder-count="3">
+              <button onClick="{{ p.run }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+                <div style="width:17px;height:17px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="{{ p.icon }}"></div>
+                <span style="flex:1;font-size:14px;color:inherit">{{ p.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </nav>
+    </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <!-- ===================== MOBILE ===================== -->
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+  <div style="padding-bottom:110px">
+    <header style="position:sticky;top:0;z-index:50;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">
+      <div style="width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center"><dc-import name="AvatarMenu" hint-size="28px,28px"></dc-import></div>
+      <div style="display:flex;align-items:center;padding:8px 18px;border:none;border-radius:999px;font-size:14px;font-weight:500;color:#0a0a0a;background:#fff;flex:none;white-space:nowrap">Home</div>
+      <button style="width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid #e5e5e5;border-radius:999px;background:#fff;color:#555;cursor:pointer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+      </button>
+    </header>
+
+    <div style="padding:14px 18px 4px">
+      <div style="font-size:14px;color:#737373;margin-bottom:6px">{{ greeting }}, {{ name }}</div>
+      <div style="font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:34px;line-height:1.08;color:#0a0a0a">Everything feels right at home.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px">
+      <sc-for list="{{ spaces }}" as="space" hint-placeholder-count="6">
+        <div style="position:relative;aspect-ratio:3/4;border-radius:22px;overflow:hidden;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.06),0 8px 22px rgba(0,0,0,0.05);background:#e5e5e5;transition:transform .34s var(--ease-out),box-shadow .34s ease" style-hover="transform:translateY(-3px);box-shadow:0 2px 4px rgba(0,0,0,0.08),0 16px 32px rgba(0,0,0,0.12)">
+          <image-slot id="m-{{ space.slotId }}" shape="rect" mask="inset(0)" placeholder="{{ space.placeholder }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+          <div style="position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(to top,rgba(0,0,0,0.55),rgba(0,0,0,0))"></div>
+          <div style="position:absolute;left:14px;bottom:13px;color:#fff;font-size:15px;font-weight:500;text-shadow:0 1px 8px rgba(0,0,0,0.3)">{{ space.name }}</div>
+          <button style="position:absolute;right:8px;bottom:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:50%;background:transparent;color:#fff;cursor:pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="12" cy="19" r="1.6"></circle></svg>
+          </button>
+        </div>
+      </sc-for>
+    </div>
+
+    <nav style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:7px;padding:8px;background:#fff;border:1px solid #e5e5e5;border-radius:999px;box-shadow:0 10px 34px rgba(0,0,0,0.12)">
+      <sc-for list="{{ navMobile }}" as="n" hint-placeholder-count="3">
+        <button onClick="{{ n.run }}" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid {{ n.borderColor }};border-radius:50%;cursor:pointer;background:#fff;color:{{ n.color }}">
+          <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center" data-icon="{{ n.icon }}"></div>
+        </button>
+      </sc-for>
+      <div style="width:1px;height:24px;background:#e8e8e8;margin:0 2px"></div>
+      <button title="Add" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid #e5e5e5;border-radius:50%;cursor:pointer;background:#fff;color:#5a5a5a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+      </button>
+    </nav>
+  </div>
+  </sc-if>
+
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:98;display:flex;align-items:center;gap:8px;padding:9px 14px;background:#171717;color:#fafafa;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,0.22);font-size:12.5px;font-weight:500;animation:popIn .18s var(--ease-out)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"></path></svg>
+      <span>{{ toast }}</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:95;background:rgba(20,20,20,0.18);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 18px;animation:overlayIn .16s var(--ease-out)">
+      <div onClick="{{ stop }}" style="width:min(452px,100%);flex:none;margin:auto;background:#ffffff;border:1px solid #e5e5e5;border-radius:26px;padding:4px;padding-bottom:0;box-shadow:0 24px 60px rgba(0,0,0,0.20),0 4px 12px rgba(0,0,0,0.08);animation:modalIn .22s var(--ease-out)">
+
+        <div style="border:1px solid #e5e5e5;border-radius:22px;background:#f7f7f7;padding:34px 32px 28px">
+
+          <h2 style="margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:27px;line-height:1.15;letter-spacing:0.2px;text-align:left;color:#0a0a0a">{{ modalTitle }}</h2>
+          <p style="margin:7px 0 0;font-size:13px;line-height:1.6;color:#737373;text-align:left;text-wrap:pretty">{{ modalSubhead }}</p>
+
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px">
+            <sc-for list="{{ modalFields }}" as="f" hint-placeholder-count="2">
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#0a0a0a;margin-bottom:7px;letter-spacing:0.01em">{{ f.label }}</label>
+                <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                  <input type="text" value="{{ f.value }}" onInput="{{ f.onInput }}" placeholder="{{ f.placeholder }}" style="width:100%;height:38px;border:1px solid #e5e5e5;border-radius:22px;padding:0 14px;font-size:13px;color:#0a0a0a;background:#fff;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)"/>
+                </sc-if>
+                <sc-if value="{{ f.isPills }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:7px">
+                    <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3">
+                      <button type="button" onClick="{{ o.run }}" style="height:32px;padding:0 13px;border:1px solid {{ o.border }};border-radius:999px;background:{{ o.bg }};color:{{ o.color }};font-size:12.5px;font-weight:500;cursor:pointer" style-hover="border-color:#a3a3a3">{{ o.label }}</button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ showQr }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ startQr }}" style="display:flex;align-items:center;gap:12px;margin-top:14px;border:1px dashed #d4d4d4;border-radius:20px;background:#fff;padding:12px 13px;cursor:pointer" style-hover="border-color:#a3a3a3">
+              <div style="width:44px;height:44px;flex:none;border-radius:18px;background:#fff;border:1px solid #e5e5e5;color:#404040;display:flex;align-items:center;justify-content:center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"></path></svg>
+              </div>
+              <div style="flex:1;min-width:0;font-size:12px;line-height:1.55;color:#737373;text-wrap:pretty">Hold your camera's pairing QR code up to this screen, then tap here to pair.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ statusNote }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:11px;font-size:12px;color:#737373">{{ statusNote }}</div>
+          </sc-if>
+
+          <sc-if value="{{ camLive }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;border:1px solid #e5e5e5;border-radius:20px;overflow:hidden;background:#e5e5e5;aspect-ratio:16/9">
+              <image-slot id="home-cam-live" placeholder="Live view" shape="rect" style="width:100%;height:100%"></image-slot>
+            </div>
+          </sc-if>
+
+          <button type="button" onClick="{{ submitModal }}" style="width:100%;height:40px;margin-top:22px;border:none;border-radius:22px;background:{{ ctaBg }};color:#fafafa;font-size:13.5px;font-weight:500;cursor:{{ ctaCursor }};letter-spacing:0.01em" style-hover="background:{{ ctaHover }}">{{ modalCta }}</button>
+
+        </div>
+
+        <div style="padding:18px 20px">
+          <p style="margin:0;text-align:left;font-size:12.5px;color:#737373">
+            {{ modalFootNote }} <button type="button" onClick="{{ closeModal }}" style="border:none;background:transparent;padding:0;font-size:12.5px;color:#737373;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-weight:500" style-hover="color:#0a0a0a">Cancel</button>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:820}}">
+class Component extends DCLogic {
+  state = {
+    isMobile: false,
+    input: '',
+    messages: [],
+    thinking: false,
+    hoveredCard: -1,
+    activeNav: 'home',
+    greeting: 'Good evening',
+    menuOpen: false,
+    spacesOpen: false,
+    navAddOpen: false,
+    selectedSpace: null,
+    threadsSubOpen: false,
+    context: null,
+    attachments: [],
+    modal: null,
+    camState: 'idle',
+    toast: '',
+    storeSpaces: [],
+    form: { spaceName: '', spaceType: 'Indoor', camName: '', camSpace: 'Living Room', camMethod: 'Scan QR', camIp: '', inviteEmail: '', inviteRole: 'Member' },
+  };
+
+  pillStyleFor(active) {
+    return { border: active ? '#d4d4d4' : '#e5e5e5', bg: active ? '#f5f5f5' : '#ffffff', color: active ? '#0a0a0a' : '#404040' };
+  }
+
+  openModal(kind) { this.setState({ modal: kind, camState: 'idle', navAddOpen: false, menuOpen: false }); }
+
+  THREADS = [
+    { label: 'Package delivered at the entrance', time: '2:30 PM', status: 'Notice' },
+    { label: 'Nora came home', time: '6:15 PM', status: 'Safe' },
+    { label: 'Porch light came on', time: '6:50 PM', status: 'Safe' },
+    { label: 'Front door locked itself', time: '9:14 PM', status: 'Safe' },
+    { label: 'Unfamiliar face at the gate', time: '9:38 PM', status: 'Alert' },
+  ];
+
+  SPACES = [
+    { id: 'living',   name: 'Living Room', placeholder: 'living room' },
+    { id: 'kitchen',  name: 'Kitchen',     placeholder: 'kitchen' },
+    { id: 'entrance', name: 'Entrance',    placeholder: 'entrance' },
+    { id: 'bedroom',  name: 'Bedroom',     placeholder: 'bedroom' },
+    { id: 'backyard', name: 'Backyard',    placeholder: 'backyard' },
+    { id: 'office',   name: 'Office',      placeholder: 'office' },
+  ];
+
+  ICONS = {
+    home: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>',
+    chat: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>',
+    zap: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>',
+    shapes: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z"></path><rect x="3" y="14" width="7" height="7" rx="1"></rect><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>',
+    globe: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',
+    plus: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>',
+    sofa: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"></path><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0Z"></path><path d="M4 18v2"></path><path d="M20 18v2"></path></svg>',
+    bed: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>',
+    utensils: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>',
+    door: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"></path><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path><path d="M2 20h20"></path></svg>',
+    leaf: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6"></path></svg>',
+    briefcase: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
+    'add-space': '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M12 8v8M8 12h8"></path></svg>',
+    camera: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>',
+    invite: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>',
+    user: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+    card: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>',
+    users: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
+    sliders: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>',
+    memory: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>',
+    language: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>',
+    file: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>',
+    help: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+    logout: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>',
+  };
+
+  componentDidMount() {
+    this.applyGreeting();
+    try {
+      const pending = sessionStorage.getItem('artemisa_active_space');
+      if (pending) {
+        sessionStorage.removeItem('artemisa_active_space');
+        const MAP = { 'living-room': 'living', 'kids-bedroom': 'bedroom', kitchen: 'kitchen', entrance: 'entrance', bedroom: 'bedroom', backyard: 'backyard', office: 'office' };
+        const mapped = MAP[pending] || pending;
+        this.setState({ selectedSpace: mapped });
+      }
+    } catch (e) {}
+    this._resize = () => {
+      const m = window.innerWidth < 768;
+      if (m !== this.state.isMobile) this.setState({ isMobile: m });
+    };
+    this.setState({ isMobile: window.innerWidth < 768 });
+    window.addEventListener('resize', this._resize);
+    this._iconTimer = setTimeout(() => this.paintNavIcons(), 0);
+    if (window.ArtemisaStore) {
+      this.setState({ storeSpaces: window.ArtemisaStore.load().spaces });
+      this._unsub = window.ArtemisaStore.subscribe((d) => this.setState({ storeSpaces: d.spaces }));
+    }
+    this._onAdd = (ev) => this.openModal((ev.detail && ev.detail.kind) || 'space');
+    window.addEventListener('artemisa:add', this._onAdd);
+    this._key = (ev) => { if (ev.key === 'Escape' && this.state.modal) this.setState({ modal: null }); };
+    window.addEventListener('keydown', this._key);
+  }
+
+  navigateTo(url) {
+    window.location.href = url + (typeof window !== 'undefined' ? window.location.search : '');
+  }
+
+  componentDidUpdate() { this.paintNavIcons(); }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._resize);
+    window.removeEventListener('artemisa:add', this._onAdd);
+    window.removeEventListener('keydown', this._key);
+    if (this._unsub) this._unsub();
+    clearTimeout(this._camT);
+    clearTimeout(this._toastT);
+  }
+
+  paintNavIcons() {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('[data-icon]').forEach((el) => {
+      const key = el.getAttribute('data-icon');
+      const svg = this.ICONS[key];
+      if (svg && el.innerHTML.indexOf('svg') === -1) el.innerHTML = svg;
+    });
+  }
+
+  applyGreeting() {
+    const h = new Date().getHours();
+    let g = 'Good evening';
+    if (h < 5) g = 'Good night';
+    else if (h < 12) g = 'Good morning';
+    else if (h < 18) g = 'Good afternoon';
+    else if (h < 22) g = 'Good evening';
+    else g = 'Good night';
+    this.setState({ greeting: g });
+  }
+
+  replyFor(msg) {
+    const m = msg.toLowerCase();
+    if (/(family|check in|kids|maya|everyone|who('|\s)?s home|whos home)/.test(m))
+      return "Everyone's home. I last saw Maya in the kitchen about 20 minutes ago, and Cooper's been asleep by the back door since 8. No one's left since you got in.";
+    if (/(activity|recent|happened|today|earlier)/.test(m))
+      return "A quiet day. The porch light came on at 9:42 when you pulled in, the front door locked itself at 9:14, and a delivery dropped a package at 2:30 this afternoon. Nothing that needed you.";
+    if (/(going on|what.?s up|status|right now|now)/.test(m))
+      return "All calm right now. Four cameras are watching, every door's locked, and the only movement in the last hour was the cat on the living room sofa.";
+    if (/(door|lock|locked)/.test(m))
+      return "All doors are locked — front, back, and garage. The front door last opened at 9:14 PM when you came home.";
+    if (/(kitchen|living|bedroom|entrance|backyard|office)/.test(m))
+      return "That room's quiet — lights are off and nothing's moved in a while. Want me to keep a closer eye on it tonight?";
+    return "I'm watching the house and everything looks settled. Ask me who's home, what's happened today, or about any room, and I'll tell you what I see.";
+  }
+
+  send(text) {
+    const files = this.state.attachments.slice();
+    let msg = (text != null ? text : this.state.input).trim();
+    if (!msg && files.length) msg = 'Take a look at this.';
+    if (!msg || this.state.thinking) return;
+    if (this.state.isMobile) {
+      try { sessionStorage.setItem('artemisa_pending', msg); } catch (e) {}
+      this.navigateTo('Chat.dc.html');
+      return;
+    }
+    const ctx = this.state.context;
+    const prefix = ctx ? '[' + ctx.label + '] ' : '';
+    this.setState((s) => ({
+      messages: [...s.messages, { role: 'user', text: prefix + msg + (files.length ? '\n' + files.map((f) => f.name).join(' · ') : '') }],
+      input: '',
+      attachments: [],
+      thinking: true,
+    }));
+    setTimeout(() => {
+      const r = files.length
+        ? 'Got it — I looked at ' + files.map((f) => f.name).join(', ') + ". Nothing in it matches a face I know, so I've filed it as unfamiliar."
+        : this.replyFor(msg);
+      this.setState((s) => ({ messages: [...s.messages, { role: 'assistant', text: r }], thinking: false }));
+    }, 1100);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const hasInput = s.input.trim().length > 0;
+
+    const modalSpaceNames = this.SPACES.map((x) => x.name)
+      .concat((s.storeSpaces || []).map((x) => x.name).filter((n) => !this.SPACES.some((y) => y.name === n)));
+
+    const f = s.form;
+    const IP_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const setF = (k) => (ev) => {
+      const v = ev.target.value;
+      this.setState((p) => ({ form: Object.assign({}, p.form, { [k]: v }) }));
+      if (k === 'camIp') {
+        clearTimeout(this._camT);
+        if (IP_RE.test(v.trim())) { this.setState({ camState: 'connecting' }); this._camT = setTimeout(() => this.setState({ camState: 'ok' }), 900); }
+        else this.setState({ camState: 'idle' });
+      }
+    };
+    const input = (label, key, placeholder) => ({ isInput: true, isPills: false, label, placeholder, value: f[key], onInput: setF(key) });
+    const pills = (label, key, options) => ({
+      isInput: false, isPills: true, label, options: options.map((o) => Object.assign({
+        label: o,
+        run: () => this.setState((p) => ({ form: Object.assign({}, p.form, { [key]: o }), camState: key === 'camMethod' ? 'idle' : p.camState })),
+      }, this.pillStyleFor(f[key] === o))),
+    });
+
+    const MODALS = {
+      space: {
+        title: 'New space', cta: 'Create space', foot: 'Changed your mind?',
+        subhead: 'Name the area Artemisa should watch. You can add cameras to it right after.',
+        fields: [input('Space name', 'spaceName', 'e.g. Hallway'), pills('Type', 'spaceType', ['Indoor', 'Outdoor', 'Entry'])],
+        valid: f.spaceName.trim().length > 0,
+      },
+      camera: {
+        title: 'Connect a camera', cta: 'Connect camera', foot: 'Not ready yet?',
+        subhead: 'Pair by QR code, or add the camera by its IP address on your network.',
+        fields: [input('Camera name', 'camName', 'e.g. Kitchen ceiling'), pills('Space', 'camSpace', modalSpaceNames), pills('Connection', 'camMethod', ['Scan QR', 'IP address'])]
+          .concat(f.camMethod === 'IP address' ? [input('Camera IP address', 'camIp', '192.168.1.42')] : []),
+        valid: f.camName.trim().length > 0 && s.camState === 'ok',
+      },
+      invite: {
+        title: 'Invite a member', cta: 'Send invite', foot: 'Rather not now?',
+        subhead: 'They will get access to the spaces and activity you choose.',
+        fields: [input('Email', 'inviteEmail', 'name@email.com'), pills('Role', 'inviteRole', ['Admin', 'Member', 'Guest'])],
+        valid: /.+@.+\..+/.test(f.inviteEmail.trim()),
+      },
+    };
+    const m = MODALS[s.modal] || null;
+
+    const spaces = this.SPACES.map((sp, i) => ({
+      slotId: 'space-' + sp.id,
+      name: sp.name,
+      placeholder: sp.placeholder,
+      onEnter: () => this.setState({ hoveredCard: i }),
+      onLeave: () => this.setState({ hoveredCard: -1 }),
+      showOverlay: s.hoveredCard === i,
+    }));
+
+    const messages = s.messages.map((m) => ({
+      text: m.text,
+      isUser: m.role === 'user',
+      isAssistant: m.role !== 'user',
+      rowJustify: m.role === 'user' ? 'flex-end' : 'flex-start',
+    }));
+
+    const spaceIcons = { living: 'sofa', kitchen: 'utensils', entrance: 'door', bedroom: 'bed', backyard: 'leaf', office: 'briefcase' };
+    const spaceItems = this.SPACES.map((sp) => ({
+      name: sp.name,
+      icon: spaceIcons[sp.id],
+      selected: s.selectedSpace === sp.id,
+      run: () => this.setState({ selectedSpace: sp.id, spacesOpen: false }),
+    }));
+    const activeSpace = this.SPACES.find((sp) => sp.id === s.selectedSpace) || null;
+
+    const QUICK_BY_SPACE = {
+      living:   ['Show me the live view', 'Any motion in here today?', 'Turn the lights off'],
+      kitchen:  ['Show me the live view', 'Did anyone come in?', 'Is the back door locked?'],
+      entrance: ["Who's been at the door?", 'Is it locked?', 'Show recent visitors'],
+      bedroom:  ['Is anyone in here?', 'Switch to night mode', 'Last activity here'],
+      backyard: ['Show me the live view', 'Any motion outside?', 'Is the gate locked?'],
+      office:   ['Show me the live view', 'Any activity today?', 'Lock it up'],
+    };
+    const baseQuick = ['Check in with my family', "What's going on in home?", 'Recent Activity'];
+    const quickLabels = activeSpace ? QUICK_BY_SPACE[activeSpace.id] : baseQuick;
+    const quickActions = quickLabels.map((label) => ({ label, run: () => this.send(label) }));
+
+    const NAV_TARGET = { spaces: 'Spaces.dc.html', activity: 'Activity.dc.html' };
+    const mkNav = (defs) => defs.map((n) => ({
+      icon: n.icon,
+      label: n.label,
+      borderColor: '#e5e5e5',
+      bg: s.activeNav === n.id ? '#f5f5f5' : '#ffffff',
+      color: s.activeNav === n.id ? '#000000' : '#404040',
+      run: () => {
+        const target = NAV_TARGET[n.id];
+        if (target) { this.navigateTo(target); return; }
+        this.setState({ activeNav: n.id });
+      },
+    }));
+    const navDesktop = mkNav([
+      { id: 'home',     icon: 'home',   label: 'Home' },
+      { id: 'spaces',   icon: 'shapes', label: 'Spaces' },
+      { id: 'activity', icon: 'zap',    label: 'Activity' },
+    ]);
+    const navMobile = mkNav([
+      { id: 'home',     icon: 'home',   label: 'Home' },
+      { id: 'spaces',   icon: 'shapes', label: 'Spaces' },
+      { id: 'activity', icon: 'zap',    label: 'Activity' },
+    ]);
+
+    return {
+      isMobile: s.isMobile,
+      desktop: !s.isMobile,
+      greeting: s.greeting,
+      name: 'Alexander',
+      subtitle: activeSpace ? ('Focused on ' + activeSpace.name + '. How can I assist you?') : 'Everything feels right at home.',
+      hasSpace: !!activeSpace,
+      focusSlotId: activeSpace ? ('space-' + activeSpace.id) : 'space-none',
+      focusPlaceholder: activeSpace ? activeSpace.placeholder : '',
+      chatMarginTop: activeSpace ? '8px' : '34px',
+      clearSpace: () => this.setState({ selectedSpace: null }),
+      statusLine: '4 cameras watching · all doors locked · last activity 9:42 PM',
+      input: s.input,
+      messages,
+      conversing: s.messages.length > 0 || s.thinking,
+      idle: !(s.messages.length > 0 || s.thinking),
+      thinking: s.thinking,
+      showSend: hasInput && !s.thinking,
+      showVoice: !hasInput && !s.thinking,
+      showQuick: s.messages.length === 0 && !s.thinking,
+      spaces,
+      noSpaces: spaces.length === 0,
+      addFirstSpace: () => this.openModal('space'),
+      quickActions,
+      navDesktop,
+      navMobile,
+      menuOpen: s.menuOpen,
+      menuBorder: '#e5e5e5',
+      menuBg: s.menuOpen ? '#f5f5f5' : '#ffffff',
+      menuIcon: s.menuOpen ? '#000000' : '#404040',
+      toggleMenu: () => this.setState((p) => ({ menuOpen: !p.menuOpen, spacesOpen: false, threadsSubOpen: false })),
+      closeMenu: () => this.setState({ menuOpen: false, threadsSubOpen: false }),
+      spacesOpen: s.spacesOpen,
+      spacesBorder: '#e5e5e5',
+      spacesBg: s.spacesOpen ? '#f5f5f5' : '#ffffff',
+      spacesIcon: s.spacesOpen ? '#000000' : '#404040',
+      toggleSpaces: () => this.setState((p) => ({ spacesOpen: !p.spacesOpen, menuOpen: false })),
+      closeSpaces: () => this.setState({ spacesOpen: false }),
+      navAddOpen: s.navAddOpen,
+      navAddBorder: '#e5e5e5',
+      navAddBg: s.navAddOpen ? '#f5f5f5' : '#ffffff',
+      navAddIcon: s.navAddOpen ? '#000000' : '#404040',
+      toggleNavAdd: () => this.setState((p) => ({ navAddOpen: !p.navAddOpen })),
+      closeNavAdd: () => this.setState({ navAddOpen: false }),
+      navAddItems: [
+        { icon: 'add-space', label: 'New space', key: 'space' },
+        { icon: 'camera', label: 'Connect a camera', key: 'camera' },
+        { icon: 'invite', label: 'Invite a member', key: 'invite' },
+      ].map((p) => ({
+        icon: p.icon,
+        label: p.label,
+        run: () => this.openModal(p.key),
+      })),
+      newChat: () => this.setState({ messages: [], input: '', thinking: false, context: null, attachments: [], menuOpen: false, spacesOpen: false, threadsSubOpen: false }),
+      threadsSubOpen: s.threadsSubOpen,
+      threadsSubBg: 'transparent',
+      toggleThreadsSub: () => this.setState((p) => ({ threadsSubOpen: !p.threadsSubOpen })),
+      openThreadsSub: () => { if (!s.threadsSubOpen) this.setState({ threadsSubOpen: true }); },
+      closeThreadsSub: () => { if (s.threadsSubOpen) this.setState({ threadsSubOpen: false }); },
+      threadItems: this.THREADS.map((t) => ({
+        label: t.label,
+        time: t.time,
+        dot: t.status === 'Alert' ? '#d08700' : t.status === 'Notice' ? '#a3a3a3' : '#22c55e',
+        run: () => this.setState({ context: { label: t.label, icon: 'zap' }, menuOpen: false, threadsSubOpen: false }),
+      })),
+      pickAround: () => this.setState({ context: { label: 'Around me', icon: 'globe' }, menuOpen: false, threadsSubOpen: false }),
+      hasContext: !!s.context,
+      contextLabel: s.context ? s.context.label : '',
+      contextIcon: s.context ? s.context.icon : 'zap',
+      clearContext: () => this.setState({ context: null }),
+      attachments: s.attachments.map((f, i) => ({
+        name: f.name,
+        remove: () => this.setState((p) => ({ attachments: p.attachments.filter((_, j) => j !== i) })),
+      })),
+      hasAttachments: s.attachments.length > 0,
+      fileRef: (el) => { this._fileEl = el; },
+      pickFile: () => { this.setState({ menuOpen: false }); if (this._fileEl) this._fileEl.click(); },
+      onFiles: (e) => {
+        const list = Array.from(e.target.files || []).map((f) => ({ name: f.name }));
+        this.setState((p) => ({ attachments: p.attachments.concat(list).slice(0, 4) }));
+        e.target.value = '';
+      },
+      toast: s.toast,
+      stop: (ev) => ev.stopPropagation(),
+      modalOpen: !!m,
+      modalTitle: m ? m.title : '',
+      modalSubhead: m ? m.subhead : '',
+      modalFields: m ? m.fields : [],
+      modalCta: m ? m.cta : '',
+      modalFootNote: m ? m.foot : '',
+      ctaBg: m && m.valid ? '#171717' : '#c4c4c4',
+      ctaHover: m && m.valid ? '#262626' : '#c4c4c4',
+      ctaCursor: m && m.valid ? 'pointer' : 'not-allowed',
+      showQr: s.modal === 'camera' && f.camMethod === 'Scan QR',
+      camLive: s.modal === 'camera' && s.camState === 'ok',
+      statusNote: s.modal === 'camera' && s.camState === 'connecting' ? 'Connecting…' : '',
+      startQr: () => {
+        clearTimeout(this._camT);
+        this.setState({ camState: 'connecting' });
+        this._camT = setTimeout(() => this.setState({ camState: 'ok' }), 1700);
+      },
+      submitModal: () => {
+        if (!m || !m.valid) return;
+        const St = window.ArtemisaStore;
+        if (St) {
+          if (s.modal === 'space') St.addSpace({ name: f.spaceName, type: f.spaceType });
+          if (s.modal === 'camera') St.addCamera({ name: f.camName, space: f.camSpace, method: f.camMethod, ip: f.camIp });
+          if (s.modal === 'invite') St.addMember({ email: f.inviteEmail, role: f.inviteRole });
+        }
+        this.setState((p) => ({
+          modal: null, camState: 'idle',
+          toast: s.modal === 'space' ? 'Space created' : s.modal === 'camera' ? 'Camera connected' : 'Invite sent',
+          form: Object.assign({}, p.form, { spaceName: '', camName: '', camIp: '', inviteEmail: '' }),
+        }));
+        clearTimeout(this._toastT);
+        this._toastT = setTimeout(() => this.setState({ toast: '' }), 2600);
+      },
+      closeModal: () => { clearTimeout(this._camT); this.setState({ modal: null, camState: 'idle' }); },
+      spaceItems,
+      onInput: (e) => this.setState({ input: e.target.value }),
+      onKey: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
+      sendNow: () => this.send(),
+      openVoice: () => {},
+    };
+  }
+}
+</script>
+</body>
+</html>

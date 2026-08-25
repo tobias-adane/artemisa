@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="./artemisa-store.js"></script>
+<style>
+  :root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1);--ease-drawer:cubic-bezier(.32,.72,0,1)}
+  @keyframes popIn{from{opacity:0;transform:translateY(4px) scale(0.97)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    [data-step],[data-field],[data-event]{animation:none !important;opacity:1 !important;transform:none !important}
+  }
+</style>
+</helmet>
+<div style="position:relative">
+  <div onClick="{{ toggleSettings }}" style="width:28px;height:28px;flex:none;cursor:pointer;border-radius:50%">
+    <image-slot id="artemisa-avatar" shape="circle" placeholder=" " style="width:28px;height:28px;flex:none;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,0.06)"></image-slot>
+  </div>
+  <sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSettings }}" style="position:fixed;inset:0;z-index:65"></div>
+    <div onMouseLeave="{{ closeHoverSoon }}" style="position:absolute;top:calc(100% + 10px);left:0;z-index:70;width:198px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:7px;transform-origin:top left;animation:popIn .17s var(--ease-out)">
+
+      <sc-if value="{{ flyoutOpen }}" hint-placeholder-val="{{ false }}">
+      <div onMouseEnter="{{ keepHover }}" onMouseLeave="{{ closeHoverSoon }}" style="position:absolute;left:100%;top:{{ flyTop }}px;padding-left:8px;z-index:75">
+      <div style="width:{{ flyWidth }};background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:7px;transform-origin:top left;animation:popIn .17s var(--ease-out)">
+        <div style="display:flex;align-items:center;gap:2px;padding:2px 2px 6px">
+          <sc-if value="{{ showBack }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ goBack }}" title="Back" style="width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:9px;cursor:pointer;color:#737373" style-hover="color:#000000">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            </button>
+          </sc-if>
+          <span style="font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">{{ subTitle }}</span>
+        </div>
+
+        <sc-if value="{{ spaceList }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ spaceRows }}" as="sp" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border-radius:14px;text-align:left">
+              <div style="width:15px;height:15px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="{{ sp.icon }}"></div>
+              <span style="flex:1;font-size:13px;color:#0a0a0a">{{ sp.name }}</span>
+              <span style="font-size:12.5px;font-weight:500;color:#22c55e">Safe</span>
+            </div>
+          </sc-for>
+          <div style="display:flex;justify-content:flex-end;padding:10px 4px 2px">
+            <button onClick="{{ openCreate }}" title="Create a new space" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:none;border-radius:22px;background:#171717;color:#fff;cursor:pointer" style-hover="background:#262626">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z"></path><rect x="3" y="14" width="7" height="7" rx="1"></rect><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+            </button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ spaceCreate }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:0 2px">
+            <div style="font-size:13px;font-weight:600;color:#0a0a0a;margin:4px 0 7px">Name</div>
+            <input value="{{ spaceName }}" onInput="{{ onSpaceName }}" placeholder="Give your space a name" style="width:100%;font-size:14px;color:#0a0a0a;padding:9px 2px;border-bottom:1px solid #e5e5e5">
+            <div style="font-size:13px;font-weight:600;color:#0a0a0a;margin:16px 0 7px">Category</div>
+            <div style="position:relative">
+              <button onClick="{{ toggleCategory }}" style="display:flex;align-items:center;width:100%;padding:9px 2px;border:none;border-bottom:1px solid #e5e5e5;background:transparent;cursor:pointer;text-align:left;color:#404040">
+                <span style="flex:1;font-size:14px;color:{{ categoryColor }}">{{ categoryLabel }}</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              </button>
+              <sc-if value="{{ categoryOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:80;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:6px;animation:popIn .17s var(--ease-out)">
+                  <sc-for list="{{ categories }}" as="c" hint-placeholder-count="5">
+                    <button onClick="{{ c.run }}" style="display:flex;align-items:center;width:100%;padding:8px 10px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;font-size:13.5px" data-mi="" style-hover="color:#000000">{{ c.label }}</button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#0a0a0a;margin:16px 0 7px">Custom Instructions</div>
+            <textarea value="{{ spaceInstr }}" onInput="{{ onSpaceInstr }}" placeholder="E.g., 'Notify me if unusual motion is detected after 10 PM', 'Ignore small pet movements', 'Alert if the front door opens when no one is home.'" style="width:100%;min-height:96px;resize:none;border:1px solid #e5e5e5;border-radius:20px;padding:11px;font-size:13px;line-height:1.55;color:#0a0a0a;font-family:inherit;outline:none"></textarea>
+            <div style="display:flex;justify-content:flex-end;margin-top:14px">
+              <button onClick="{{ openCameras }}" style="display:flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:none;border-radius:22px;background:#171717;color:#fafafa;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#262626">Next <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ spaceCameras }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:0 2px">
+            <div style="border:1px dashed #d4d4d4;border-radius:22px;height:150px;display:flex;align-items:center;justify-content:center;color:#a3a3a3">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></svg>
+            </div>
+            <div style="display:flex;justify-content:center;gap:26px;margin-top:16px">
+              <button style="border:none;background:transparent;font-size:13px;color:#0a0a0a;cursor:pointer;font-family:inherit" style-hover="color:#000">Connect manually</button>
+              <button style="border:none;background:transparent;font-size:13px;color:#0a0a0a;cursor:pointer;font-family:inherit" style-hover="color:#000">Find in local network</button>
+            </div>
+            <div style="text-align:center;margin-top:10px;font-size:12px;color:#737373;text-decoration:underline;text-underline-offset:2px;cursor:pointer">View compatible devices</div>
+            <div style="display:flex;justify-content:flex-end;margin-top:16px">
+              <button onClick="{{ createSpaceDone }}" style="display:flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:none;border-radius:22px;background:#171717;color:#fafafa;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#262626">Create space <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ subFamily }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ familyRows }}" as="m" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:9px;padding:6px;border-radius:22px;position:relative">
+              <image-slot id="{{ m.slotId }}" shape="circle" placeholder="{{ m.initials }}" style="width:30px;height:30px;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,0.06)"></image-slot>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:500;color:#0a0a0a">{{ m.name }}</div>
+                <div style="font-size:11px;color:#737373;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.email }}</div>
+              </div>
+              <div style="position:relative;flex:none">
+                <button onClick="{{ m.toggleRole }}" style="display:flex;align-items:center;gap:4px;padding:5px 8px 5px 10px;border:1px solid #e5e5e5;border-radius:999px;background:#fff;font-size:11.5px;color:#0a0a0a;cursor:pointer" data-mi="" style-hover="color:#000000">
+                  <span>{{ m.role }}</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <sc-if value="{{ m.roleOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:calc(100% + 5px);right:0;z-index:80;min-width:128px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:6px;animation:popIn .17s var(--ease-out)">
+                    <sc-for list="{{ m.roleOptions }}" as="o" hint-placeholder-count="3">
+                      <button onClick="{{ o.run }}" style="display:flex;align-items:center;width:100%;padding:7px 10px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;font-size:13px;color:{{ o.color }}" data-mi="" style-hover="color:#000000">
+                        <span style="flex:1">{{ o.label }}</span>
+                        <sc-if value="{{ o.active }}" hint-placeholder-val="{{ false }}">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                        </sc-if>
+                      </button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex;justify-content:flex-end;padding:10px 4px 2px">
+            <button onClick="{{ addMember }}" title="Add member" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:none;border-radius:22px;background:#171717;color:#fff;cursor:pointer" style-hover="background:#262626">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+            </button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ subSystem }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:0 2px">
+            <textarea value="{{ sysText }}" onInput="{{ onSysInput }}" placeholder="E.g., 'Notify me if unusual motion is detected after 10 PM', 'Ignore small pet movements', 'Alert if the front door opens when no one is home.'" style="width:100%;min-height:104px;resize:none;border:1px solid #e5e5e5;border-radius:22px;padding:10px;font-size:12.5px;line-height:1.5;color:#0a0a0a;font-family:inherit;outline:none"></textarea>
+            <div style="display:flex;justify-content:flex-end;gap:7px;margin-top:12px">
+              <button onClick="{{ goBack }}" style="height:32px;padding:0 12px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;color:#0a0a0a;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit" data-mi="" style-hover="color:#000000">Cancel</button>
+              <button onClick="{{ saveSys }}" style="height:32px;padding:0 12px;border:none;border-radius:22px;background:#171717;color:#fff;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit" style-hover="background:#262626">Save changes</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ subMemory }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:2px 2px 2px">
+            <div style="display:flex;align-items:center;gap:8px;padding:2px 0 10px">
+              <span style="width:13px;height:13px;flex:none;border-radius:50%;border:3.5px solid #0a0a0a;box-sizing:border-box"></span>
+              <span style="flex:1;font-size:12.5px;font-weight:500;color:#0a0a0a">Total</span>
+              <button onClick="{{ upgrade }}" style="padding:5px 11px;border:none;border-radius:22px;background:#171717;color:#fff;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit" style-hover="background:#262626">Upgrade</button>
+            </div>
+            <div style="height:4px;border-radius:999px;background:#e5e5e5;overflow:hidden;margin:0 0 12px">
+              <div style="width:37.5%;height:100%;background:#171717;border-radius:999px"></div>
+            </div>
+            <div style="display:flex;align-items:center;padding:4px 0">
+              <span style="flex:1;font-size:11.5px;color:#737373">Used</span>
+              <span style="font-size:11.5px;font-weight:500;color:#0a0a0a">12 GB</span>
+            </div>
+            <div style="display:flex;align-items:center;padding:4px 0">
+              <span style="flex:1;font-size:11.5px;color:#737373">Remaining</span>
+              <span style="font-size:11.5px;font-weight:500;color:#0a0a0a">20 GB</span>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ subLanguage }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ languages }}" as="l" hint-placeholder-count="6">
+            <button onClick="{{ l.run }}" style="display:flex;align-items:center;width:100%;padding:6px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+              <span style="flex:1;font-size:13px;color:#0a0a0a">{{ l.label }}</span>
+              <sc-if value="{{ l.active }}" hint-placeholder-val="{{ false }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+              </sc-if>
+            </button>
+          </sc-for>
+        </sc-if>
+
+        <sc-if value="{{ subDoc }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:2px 6px 8px;font-size:12.5px;line-height:1.6;color:#737373">{{ docText }}</div>
+        </sc-if>
+      </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ true }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">My account</div>
+      <sc-for list="{{ acctItems }}" as="i" hint-placeholder-count="4">
+        <button onClick="{{ i.run }}" onMouseEnter="{{ i.onEnter }}" style="display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+          <div style="width:15px;height:15px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="{{ i.icon }}"></div>
+          <span style="flex:1;font-size:13px;color:inherit">{{ i.label }}</span>
+          <sc-if value="{{ i.badge }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:11px;font-weight:600;color:#0a0a0a;background:#e5e5e5;padding:3px 8px;border-radius:999px">{{ i.badgeText }}</span>
+          </sc-if>
+          <sc-if value="{{ i.chevron }}" hint-placeholder-val="{{ false }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+          </sc-if>
+        </button>
+      </sc-for>
+      <div style="height:1px;background:#e5e5e5;margin:6px 4px"></div>
+      <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">System</div>
+      <sc-for list="{{ systemItems }}" as="i" hint-placeholder-count="3">
+        <button onClick="{{ i.run }}" onMouseEnter="{{ i.onEnter }}" style="display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+          <div style="width:15px;height:15px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="{{ i.icon }}"></div>
+          <span style="flex:1;font-size:13px;color:inherit">{{ i.label }}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        </button>
+      </sc-for>
+      <div style="height:1px;background:#e5e5e5;margin:6px 4px"></div>
+      <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">About</div>
+      <sc-for list="{{ aboutItems }}" as="i" hint-placeholder-count="3">
+        <button onClick="{{ i.run }}" onMouseEnter="{{ i.onEnter }}" style="display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+          <div style="width:15px;height:15px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="{{ i.icon }}"></div>
+          <span style="flex:1;font-size:13px;color:inherit">{{ i.label }}</span>
+        </button>
+      </sc-for>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:420}}">
+class Component extends DCLogic {
+  state = {
+    settingsOpen: false,
+    hoverSub: null,
+    hoverTop: 0,
+    spaceStep: 'list',
+    roleMenuFor: null,
+    categoryOpen: false,
+    docKind: 'terms',
+    spaceName: '',
+    spaceInstr: '',
+    spaceCategory: '',
+    sysText: '',
+    lang: 'English',
+    memberRoles: { valeriano: 'Owner', nora: 'Member', tobias: 'Member', lucia: 'Member' },
+  };
+
+  FAMILY = [
+    { id: 'valeriano', name: 'Valeriano Adane', email: 'valerianoadane@gmail.com', initials: 'VA' },
+    { id: 'nora',      name: 'Nora Allen',      email: 'noraallen@gmail.com',      initials: 'NA' },
+    { id: 'tobias',    name: 'Tobias Adane',    email: 'tobiasadane@gmail.com',    initials: 'TA' },
+    { id: 'lucia',     name: 'Lucia Adane',     email: 'luciaadane@gmail.com',     initials: 'LA' },
+  ];
+
+  CATEGORIES = ['Living area', 'Kitchen', 'Bedroom', 'Entrance', 'Outdoor', 'Office'];
+  LANGS = ['English', 'Español'];
+  DOCS = {
+    terms: 'By using Artemisa you agree to our Terms of Service and Privacy Policy. Your camera feeds and activity data stay private to your household and are never sold. You can export or delete everything at any time from this menu.',
+    help: 'Need a hand? Browse setup guides, learn how spaces and family roles work, or reach a person directly. Most cameras connect in under two minutes — open a space and tap Connect a camera to begin.',
+  };
+
+  SPACES = [
+    { id: 'living',   name: 'Living Room' },
+    { id: 'kitchen',  name: 'Kitchen' },
+    { id: 'entrance', name: 'Entrance' },
+    { id: 'bedroom',  name: 'Bedroom' },
+    { id: 'backyard', name: 'Backyard' },
+    { id: 'office',   name: 'Office' },
+  ];
+
+  ICONS = {
+    shapes: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z"></path><rect x="3" y="14" width="7" height="7" rx="1"></rect><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>',
+    sofa: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"></path><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0Z"></path><path d="M4 18v2"></path><path d="M20 18v2"></path></svg>',
+    bed: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>',
+    utensils: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>',
+    door: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12h.01"></path><path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path><path d="M2 20h20"></path></svg>',
+    leaf: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6"></path></svg>',
+    briefcase: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
+    user: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+    card: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>',
+    users: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
+    bell: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path><path d="M3.3 14c.8-2.3.8-4.3.8-5a8 8 0 0 1 15.8 0c0 .7 0 2.7.8 5a1 1 0 0 1-.9 1.4H4.2A1 1 0 0 1 3.3 14Z"></path></svg>',
+    sliders: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>',
+    memory: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>',
+    language: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>',
+    file: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>',
+    help: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+    logout: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>',
+  };
+
+  componentDidMount() { this._t = setTimeout(() => this.paintIcons(), 0); }
+  componentDidUpdate() { this.paintIcons(); }
+  componentWillUnmount() { if (this._t) clearTimeout(this._t); if (this._hoverTimer) clearTimeout(this._hoverTimer); }
+
+  paintIcons() {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('[data-icon]').forEach((el) => {
+      const key = el.getAttribute('data-icon');
+      const svg = this.ICONS[key];
+      if (svg && el.innerHTML.indexOf('svg') === -1) el.innerHTML = svg;
+    });
+  }
+
+  navigateTo(url) {
+    window.location.href = url + (typeof window !== 'undefined' ? window.location.search : '');
+  }
+
+  requestAdd(kind) {
+    this.setState({ settingsOpen: false, hoverSub: null, spaceStep: 'list' });
+    try { window.dispatchEvent(new CustomEvent('artemisa:add', { detail: { kind: kind } })); } catch (e) {}
+  }
+
+  openSettings(tab) {
+    try { sessionStorage.setItem('artemisa_settings_tab', tab); } catch (e) {}
+    this.setState({ settingsOpen: false });
+    this.navigateTo('Settings.dc.html');
+  }
+
+  openHoverSub(key, e, docKind) {
+    if (this._hoverTimer) clearTimeout(this._hoverTimer);
+    const top = (e && e.currentTarget) ? e.currentTarget.offsetTop : (this.state.hoverTop || 0);
+    const next = { hoverSub: key, hoverTop: top, roleMenuFor: null, categoryOpen: false };
+    next.spaceStep = (key === 'spaces' && this.state.hoverSub === 'spaces') ? this.state.spaceStep : 'list';
+    if (docKind) next.docKind = docKind;
+    this.setState(next);
+  }
+  closeHoverNow() {
+    if (this._hoverTimer) clearTimeout(this._hoverTimer);
+    this._hoverTimer = setTimeout(() => this.setState({ hoverSub: null, roleMenuFor: null, categoryOpen: false }), 180);
+  }
+  goBack() {
+    const s = this.state;
+    if (s.hoverSub === 'spaces' && s.spaceStep === 'cameras') { this.setState({ spaceStep: 'create' }); return; }
+    if (s.hoverSub === 'spaces' && s.spaceStep === 'create') { this.setState({ spaceStep: 'list' }); return; }
+    this.setState({ hoverSub: null, roleMenuFor: null, categoryOpen: false });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const spaceIcons = { living: 'sofa', kitchen: 'utensils', entrance: 'door', bedroom: 'bed', backyard: 'leaf', office: 'briefcase' };
+
+    let subTitle = '';
+    if (s.hoverSub === 'family') subTitle = 'Family';
+    else if (s.hoverSub === 'system') subTitle = 'System Instructions';
+    else if (s.hoverSub === 'memory') subTitle = 'Interactive memory';
+    else if (s.hoverSub === 'language') subTitle = 'Language';
+    else if (s.hoverSub === 'doc') subTitle = s.docKind === 'terms' ? 'Terms and privacy' : 'Help center';
+    else if (s.hoverSub === 'spaces') subTitle = s.spaceStep === 'create' ? 'Create a new space' : s.spaceStep === 'cameras' ? 'Connect your cameras' : 'Spaces';
+
+    return {
+      settingsOpen: s.settingsOpen,
+      toggleSettings: () => this.setState((p) => ({ settingsOpen: !p.settingsOpen })),
+      closeSettings: () => this.setState({ settingsOpen: false, hoverSub: null, spaceStep: 'list', roleMenuFor: null, categoryOpen: false }),
+      flyoutOpen: !!s.hoverSub,
+      flyTop: s.hoverTop,
+      flyWidth: (() => {
+        const v = s.hoverSub;
+        if (v === 'spaces') return s.spaceStep === 'list' ? '224px' : '262px';
+        if (v === 'family') return '272px';
+        if (v === 'system') return '264px';
+        if (v === 'memory') return '246px';
+        if (v === 'language') return '198px';
+        if (v === 'doc') return '254px';
+        return '236px';
+      })(),
+      showBack: s.hoverSub === 'spaces' && s.spaceStep !== 'list',
+      keepHover: () => { if (this._hoverTimer) clearTimeout(this._hoverTimer); },
+      closeHoverSoon: () => this.closeHoverNow(),
+      subTitle: subTitle,
+      goBack: () => this.goBack(),
+      subFamily: s.hoverSub === 'family',
+      subSystem: s.hoverSub === 'system',
+      subMemory: s.hoverSub === 'memory',
+      subLanguage: s.hoverSub === 'language',
+      subDoc: s.hoverSub === 'doc',
+      docText: this.DOCS[s.docKind],
+      spaceList: s.hoverSub === 'spaces' && s.spaceStep === 'list',
+      spaceCreate: s.hoverSub === 'spaces' && s.spaceStep === 'create',
+      spaceCameras: s.hoverSub === 'spaces' && s.spaceStep === 'cameras',
+      spaceRows: this.SPACES.map((sp) => ({
+        name: sp.name,
+        icon: spaceIcons[sp.id] || 'shapes',
+        noop: true,
+        run: () => { try { sessionStorage.setItem('artemisa_active_space', sp.id); } catch (e) {} this.navigateTo('Home.dc.html'); },
+      })),
+      openCreate: () => this.requestAdd('space'),
+      openCameras: () => this.setState({ spaceStep: 'cameras' }),
+      createSpaceDone: () => this.setState({ hoverSub: null, spaceStep: 'list', settingsOpen: false }),
+      spaceName: s.spaceName,
+      onSpaceName: (e) => this.setState({ spaceName: e.target.value }),
+      spaceInstr: s.spaceInstr,
+      onSpaceInstr: (e) => this.setState({ spaceInstr: e.target.value }),
+      categoryOpen: s.categoryOpen,
+      categoryLabel: s.spaceCategory || 'Select',
+      categoryColor: s.spaceCategory ? '#0a0a0a' : '#737373',
+      toggleCategory: () => this.setState((p) => ({ categoryOpen: !p.categoryOpen })),
+      categories: this.CATEGORIES.map((c) => ({ label: c, run: () => this.setState({ spaceCategory: c, categoryOpen: false }) })),
+      familyRows: this.FAMILY.map((m) => ({
+        slotId: 'fam-' + m.id,
+        name: m.name,
+        email: m.email,
+        initials: m.initials,
+        role: s.memberRoles[m.id],
+        roleOpen: s.roleMenuFor === m.id,
+        toggleRole: () => this.setState((p) => ({ roleMenuFor: p.roleMenuFor === m.id ? null : m.id })),
+        roleOptions: ['Owner', 'Member', 'Remove'].map((o) => ({
+          label: o,
+          color: o === 'Remove' ? '#dc2626' : '#2a2a2a',
+          active: s.memberRoles[m.id] === o,
+          run: () => this.setState((p) => ({ memberRoles: { ...p.memberRoles, [m.id]: o === 'Remove' ? p.memberRoles[m.id] : o }, roleMenuFor: null })),
+        })),
+      })),
+      addMember: () => this.requestAdd('invite'),
+      sysText: s.sysText,
+      onSysInput: (e) => this.setState({ sysText: e.target.value }),
+      saveSys: () => this.setState({ hoverSub: null }),
+      upgrade: () => {},
+      languages: this.LANGS.map((l) => ({ label: l, active: s.lang === l, run: () => this.setState({ lang: l }) })),
+      acctItems: [
+        { icon: 'user', label: 'Profile', run: () => this.openSettings('members'), onEnter: () => this.closeHoverNow() },
+        { icon: 'card', label: 'Subscription', badge: true, badgeText: 'Plus', run: () => this.openSettings('plan'), onEnter: () => this.closeHoverNow() },
+        { icon: 'shapes', label: 'Spaces', chevron: true, run: (e) => this.openHoverSub('spaces', e), onEnter: (e) => this.openHoverSub('spaces', e) },
+        { icon: 'users', label: 'Family', chevron: true, run: (e) => this.openHoverSub('family', e), onEnter: (e) => this.openHoverSub('family', e) },
+      ],
+      systemItems: [
+        { icon: 'bell', label: 'Alerts', run: () => this.openSettings('alerts'), onEnter: () => this.closeHoverNow() },
+        { icon: 'sliders', label: 'System Instructions', chevron: true, run: (e) => this.openHoverSub('system', e), onEnter: (e) => this.openHoverSub('system', e) },
+        { icon: 'memory', label: 'Interactive Memory', chevron: true, run: (e) => this.openHoverSub('memory', e), onEnter: (e) => this.openHoverSub('memory', e) },
+        { icon: 'language', label: 'Language', chevron: true, run: (e) => this.openHoverSub('language', e), onEnter: (e) => this.openHoverSub('language', e) },
+      ],
+      aboutItems: [
+        { icon: 'file', label: 'Terms and privacy', run: () => this.setState({ settingsOpen: false }), onEnter: () => this.openHoverSub('doc', null, 'terms') },
+        { icon: 'help', label: 'Help center', run: () => this.setState({ settingsOpen: false }), onEnter: () => this.openHoverSub('doc', null, 'help') },
+        { icon: 'logout', label: 'Log out', run: () => this.setState({ settingsOpen: false }), onEnter: () => this.closeHoverNow() },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

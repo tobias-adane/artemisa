@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<script src="./artemisa-store.js"></script>
+<style>
+  *{box-sizing:border-box}
+  :root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1);--ease-drawer:cubic-bezier(.32,.72,0,1)}
+  html,body{margin:0;padding:0}
+  body{background:#ffffff;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;font-variant-numeric:tabular-nums}
+  button{font-family:inherit;transition:background-color .15s var(--ease-out),color .15s var(--ease-out),border-color .15s var(--ease-out),transform .12s var(--ease-out)}
+  button:active{transform:scale(0.97)}
+  html{scrollbar-width:none;-ms-overflow-style:none}
+  ::-webkit-scrollbar{width:0;height:0;display:none}
+  [data-event] image-slot{transition:transform .4s var(--ease-out)}
+  @media (hover:hover) and (pointer:fine){[data-event]:hover image-slot{transform:scale(1.03)}}
+  [data-ask] svg{transition:transform .16s var(--ease-out)}
+  @media (hover:hover) and (pointer:fine){[data-ask]:hover svg{transform:scale(1.08)}}
+  [data-date]{transition:color .16s ease,opacity .16s ease}
+  [data-event]{animation:fadeUp .28s var(--ease-out) both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes popIn{from{opacity:0;transform:translateY(4px) scale(0.97)}to{opacity:1;transform:none}}
+  @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:none}}
+  @keyframes overlayIn{from{opacity:0}to{opacity:1}}
+  [data-navbtn]{position:relative}
+  [data-navtip]{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%) translateY(3px);background:#171717;color:#fff;font-size:11px;font-weight:500;letter-spacing:0.01em;padding:5px 9px;border-radius:12px;white-space:nowrap;opacity:0;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.18);transition:opacity .15s var(--ease-out),transform .15s var(--ease-out)}
+  [data-navtip]::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#171717}
+  @media (hover:hover) and (pointer:fine){[data-navbtn]:hover [data-navtip]{opacity:1;transform:translateX(-50%)}}
+  [data-mi]{color:#404040;transition:color .15s var(--ease-out)}
+  [data-mi]:hover{color:#0a0a0a}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    [data-step],[data-field],[data-event]{animation:none !important;opacity:1 !important;transform:none !important}
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#ffffff;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column">
+
+  <!-- Header -->
+  <header style="flex:none;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;background:#fff;z-index:20">
+    <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+      <button data-mi="" onClick="{{ goHome }}" title="Back" style="width:28px;height:28px;flex:none;display:flex;align-items:center;justify-content:center;border:none;border-radius:999px;background:#fff;cursor:pointer;border:1px solid #e5e5e5" style-hover="color:#000000">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+      </button>
+    </sc-if>
+    <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+      <dc-import name="AvatarMenu" hint-size="28px,28px"></dc-import>
+    </sc-if>
+    <div style="display:flex;align-items:center;padding:8px 16px;border-radius:999px;font-size:12px;font-weight:500;color:#000;background:#fff;border:none;flex:none;white-space:nowrap">Activity</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button data-mi="" onClick="{{ goSearch }}" title="Search" style="width:28px;height:28px;flex:none;display:flex;align-items:center;justify-content:center;border:none;border-radius:999px;background:#fff;cursor:pointer;border:1px solid #e5e5e5" style-hover="color:#000000">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      </button>
+      <div style="position:relative">
+      <button onClick="{{ toggleMore }}" title="Filter" style="width:28px;height:28px;flex:none;display:flex;align-items:center;justify-content:center;border:none;border-radius:999px;background:{{ moreBg }};color:{{ moreColor }};cursor:pointer;border:1px solid #e5e5e5" style-hover="color:#000000">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8z"></path></svg>
+      </button>
+      <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeMore }}" style="position:fixed;inset:0;z-index:65"></div>
+        <div style="position:absolute;top:calc(100% + 10px);right:0;z-index:70;min-width:208px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:7px;transform-origin:top right;animation:popIn .12s var(--ease-out)">
+          <div style="display:flex;align-items:center;gap:4px;padding:6px 9px 4px">
+            <sc-if value="{{ filterShowBack }}" hint-placeholder-val="{{ false }}">
+              <button data-mi="" onClick="{{ goFilterBack }}" title="Back" style="width:18px;height:18px;flex:none;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:transparent;cursor:pointer;margin-left:-3px" style-hover="background:#e5e5e5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;width:12px;height:12px"><path d="m15 18-6-6 6-6"></path></svg>
+              </button>
+            </sc-if>
+            <span style="font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">{{ filterHeader }}</span>
+          </div>
+          <sc-for list="{{ filterRows }}" as="f" hint-placeholder-count="3">
+            <button data-mi="" onClick="{{ f.run }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:7px 9px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" style-hover="color:#000000">
+              <sc-if value="{{ f.icon }}" hint-placeholder-val="">
+                <div data-icon="{{ f.icon }}" style="width:15px;height:15px;flex:none;display:flex;align-items:center;justify-content:center;color:currentColor"></div>
+              </sc-if>
+              <sc-if value="{{ f.dot }}" hint-placeholder-val="">
+                <span style="width:7px;height:7px;flex:none;border-radius:50%;background:{{ f.dot }}"></span>
+              </sc-if>
+              <span style="flex:1;font-size:13px;color:currentColor">{{ f.label }}</span>
+              <sc-if value="{{ f.meta }}" hint-placeholder-val="">
+                <span style="font-size:11.5px;color:#737373;white-space:nowrap">{{ f.meta }}</span>
+              </sc-if>
+              <sc-if value="{{ f.active }}" hint-placeholder-val="{{ false }}">
+                <span style="width:5px;height:5px;flex:none;border-radius:50%;background:#737373"></span>
+              </sc-if>
+              <sc-if value="{{ f.hasChevron }}" hint-placeholder-val="">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    </div>
+  </header>
+
+  <!-- Full-width title + contextual message -->
+  <div style="flex:none;padding:{{ headPad }}">
+    <div style="font-size:{{ subSize }};color:#737373;margin-bottom:10px;letter-spacing:0.01em">Everything that happened at home.</div>
+    <div style="font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:{{ titleSize }};line-height:1.0;color:#0a0a0a;letter-spacing:0.3px;text-wrap:balance">{{ headline }}</div>
+  </div>
+
+  <!-- Content -->
+  <div style="display:flex;align-items:flex-start">
+
+    <!-- Fixed chronological bar (desktop) -->
+    <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+      <aside style="flex:none;width:330px;align-self:flex-start;position:sticky;top:64px;max-height:calc(100vh - 64px);display:flex;flex-direction:column;padding:2px 30px 24px 52px">
+        <div style="flex:1;min-height:0;overflow-y:auto;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 10%,#000 86%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 10%,#000 86%,transparent 100%)">
+          <div style="display:flex;flex-direction:column;gap:1px;padding:6px 0">
+            <sc-for list="{{ dates }}" as="d" hint-placeholder-count="12">
+              <button data-date="" onClick="{{ d.run }}" style="display:flex;align-items:center;gap:12px;padding:6px 4px;border:none;background:transparent;cursor:{{ d.cursor }};text-align:left;opacity:{{ d.opacity }}" style-hover="opacity:1">
+                <span style="height:1.5px;width:{{ d.dashW }};flex:none;border-radius:2px;background:{{ d.dashColor }};transition:width .18s ease,background-color .18s ease"></span>
+                <span style="font-size:12.5px;font-weight:{{ d.weight }};color:{{ d.color }};white-space:nowrap;letter-spacing:0.01em">{{ d.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </aside>
+    </sc-if>
+
+    <!-- Scrolling feed (only this moves) -->
+    <main data-feed="" style="flex:1;min-width:0;padding:{{ feedPad }}">
+      <div style="max-width:720px;margin:0 auto;width:100%">
+
+        <sc-for list="{{ feedDays }}" as="day" hint-placeholder-count="3">
+          <div data-day="{{ day.key }}" style="margin-bottom:8px;scroll-margin-top:16px">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:30px">
+              <span style="font-size:14.5px;font-weight:500;color:#0a0a0a;white-space:nowrap">{{ day.label }}</span>
+              <div style="flex:1;height:1px;background:#e5e5e5"></div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:{{ eventGap }};margin-bottom:{{ dayGap }}">
+              <sc-for list="{{ day.events }}" as="e" hint-placeholder-count="2">
+                <div data-event="" style="display:flex;gap:20px;opacity:{{ e.opacity }}">
+                  <div style="flex:none;width:{{ timeColW }};padding-top:1px">
+                    <span style="font-size:11px;font-weight:500;color:#737373;background:#fff;padding:4px 11px;border-radius:999px;border:1px solid #d4d4d4;letter-spacing:0.01em;font-variant-numeric:tabular-nums;white-space:nowrap">{{ e.time }}</span>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div onClick="{{ e.open }}" style="font-size:15.5px;font-weight:600;color:#0a0a0a;line-height:1.3;text-wrap:balance;cursor:pointer" style-hover="color:#404040">{{ e.title }}</div>
+                    <div style="font-size:13.5px;line-height:1.6;color:#737373;margin-top:6px;max-width:560px;text-wrap:pretty">{{ e.description }}</div>
+                    <div onClick="{{ e.open }}" style="position:relative;width:100%;aspect-ratio:{{ imgAspect }};border-radius:26px;overflow:hidden;background:#e5e5e5;margin-top:16px;cursor:pointer">
+                      <image-slot id="{{ e.slotId }}" shape="rect" mask="inset(0)" placeholder="{{ e.placeholder }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+                      <div style="position:absolute;inset:0;border-radius:26px;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06),inset 0 1px 3px rgba(0,0,0,0.05);pointer-events:none"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px">
+                      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                        <div style="display:inline-flex;align-items:center;padding:6px 13px;border-radius:999px;box-shadow:inset 0 0 0 1px {{ e.badgeRing }}">
+                          <span style="font-size:12px;font-weight:500;color:{{ e.statusColor }}">{{ e.status }}</span>
+                        </div>
+                        <button onClick="{{ e.toggleReviewed }}" title="{{ e.reviewTitle }}" style="display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border:1px solid {{ e.reviewBorder }};border-radius:999px;background:{{ e.reviewBg }};color:{{ e.reviewColor }};font-size:11.5px;font-weight:500;cursor:pointer" style-hover="color:#000000">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                          <span>{{ e.reviewLabel }}</span>
+                        </button>
+                      </div>
+                      <button data-ask="" onClick="{{ e.open }}" style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:none;border-radius:22px;background:#171717;color:#fafafa;font-size:12.5px;font-weight:500;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.14)" style-hover="background:#000;box-shadow:0 4px 14px rgba(0,0,0,0.2)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>
+                        <span>See details</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+
+        <sc-if value="{{ feedEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="border:1px dashed #d4d4d4;border-radius:30px;padding:52px 26px;text-align:center;margin-top:8px">
+            <div style="font-family:'Instrument Serif',Georgia,serif;font-size:23px">{{ emptyTitle }}</div>
+            <p style="margin:10px auto 18px;max-width:42ch;font-size:13.5px;line-height:1.65;color:#737373">{{ emptyBody }}</p>
+            <button onClick="{{ emptyAction }}" style="height:34px;padding:0 16px;border:none;border-radius:17px;background:#171717;color:#fafafa;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#262626">{{ emptyCta }}</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ hasMore }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:center;padding:6px 0 4px">
+            <button onClick="{{ loadMore }}" style="height:36px;padding:0 18px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;color:#0a0a0a;font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#000000">{{ loadMoreLabel }}</button>
+          </div>
+        </sc-if>
+
+        <div style="height:60px"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Floating nav -->
+  <div style="position:fixed;left:0;right:0;bottom:0;z-index:60;width:100%;box-sizing:border-box;display:flex;justify-content:center;padding:24px 0;backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);pointer-events:none">
+  <nav style="pointer-events:auto;display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border:1px solid #e5e5e5;border-radius:999px;box-shadow:0 10px 34px rgba(0,0,0,0.10)">
+    <sc-for list="{{ nav }}" as="n" hint-placeholder-count="3">
+      <button data-navbtn="" onClick="{{ n.run }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid {{ n.borderColor }};border-radius:999px;cursor:pointer;background:{{ n.bg }};color:{{ n.color }}" style-hover="color:#000000">
+        <div style="width:12px;height:12px;display:flex;align-items:center;justify-content:center" data-icon="{{ n.icon }}"></div>
+        <span data-navtip="">{{ n.label }}</span>
+      </button>
+    </sc-for>
+    <div style="width:1px;height:20px;background:#e5e5e5;margin:0 3px"></div>
+    <div style="position:relative">
+      <button data-navbtn="" onClick="{{ togglePlus }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid {{ plusBorder }};border-radius:999px;cursor:pointer;background:{{ plusBg }};color:{{ plusColor }}" style-hover="color:#000000">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        <span data-navtip="">Add</span>
+      </button>
+      <sc-if value="{{ plusOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closePlus }}" style="position:fixed;inset:0;z-index:65"></div>
+        <div style="position:absolute;bottom:calc(100% + 12px);right:0;z-index:70;min-width:208px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:7px;transform-origin:bottom right;animation:popIn .12s var(--ease-out)">
+          <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">Add</div>
+          <sc-for list="{{ plusItems }}" as="p" hint-placeholder-count="3">
+            <button data-mi="" onClick="{{ p.run }}" style="display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" style-hover="color:#000000">
+              <div style="width:15px;height:15px;flex:none;display:flex;align-items:center;justify-content:center;color:currentColor" data-icon="{{ p.icon }}"></div>
+              <span style="flex:1;font-size:13px;color:currentColor">{{ p.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </nav>
+  </div>
+
+  <!-- Search command menu -->
+  <sc-if value="{{ searchOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSearch }}" style="position:fixed;inset:0;z-index:90;background:rgba(20,20,20,0.18);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:12vh 18px 24px;animation:overlayIn .16s var(--ease-out)">
+      <div onClick="{{ stop }}" style="width:min(496px,100%);flex:none;background:#ffffff;border:1px solid #e5e5e5;border-radius:26px;padding:4px;padding-bottom:0;box-shadow:0 24px 60px rgba(0,0,0,0.20),0 4px 12px rgba(0,0,0,0.08);animation:modalIn .2s var(--ease-out)">
+
+        <div style="border:1px solid #e5e5e5;border-radius:22px;background:#f7f7f7;padding:14px 14px 10px;display:flex;flex-direction:column;max-height:62vh">
+
+          <div style="flex:none;display:flex;align-items:center;gap:9px;height:38px;padding:0 12px;background:#fff;border:1px solid #e5e5e5;border-radius:22px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input data-search-input="" value="{{ searchQuery }}" onInput="{{ onSearch }}" placeholder="Search activity, spaces, status…" autoFocus="{{ true }}" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:#0a0a0a"/>
+          </div>
+
+          <div style="flex:1;min-height:0;overflow-y:auto;margin-top:10px;display:flex;flex-direction:column;gap:6px">
+            <sc-for list="{{ searchResults }}" as="r" hint-placeholder-count="4">
+              <button data-mi="" onClick="{{ r.run }}" style="display:flex;align-items:center;gap:11px;width:100%;flex:none;padding:10px 12px;border:1px solid #e5e5e5;background:#fff;border-radius:20px;cursor:pointer;text-align:left;color:#404040" style-hover="border-color:#a3a3a3">
+                <span style="width:7px;height:7px;flex:none;border-radius:50%;background:{{ r.statusColor }};box-shadow:0 0 0 3px {{ r.statusHalo }}"></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:600;color:currentColor;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.title }}</div>
+                  <div style="font-size:11.5px;color:#737373;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.meta }}</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4d4d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="m9 18 6-6-6-6"></path></svg>
+              </button>
+            </sc-for>
+            <sc-if value="{{ searchEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:28px 16px;text-align:center;color:#737373;font-size:13px">No activity matches “{{ searchQuery }}”.</div>
+            </sc-if>
+          </div>
+
+        </div>
+
+        <div style="padding:16px 20px">
+          <p style="margin:0;font-size:12.5px;color:#737373">Press <span style="font-size:10.5px;font-weight:600;color:#404040;background:#f5f5f5;border:1px solid #e5e5e5;border-radius:6px;padding:2px 6px;letter-spacing:0.04em">ESC</span> to close, or <button type="button" onClick="{{ closeSearch }}" style="border:none;background:transparent;padding:0;font-size:12.5px;color:#737373;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-weight:500" style-hover="color:#0a0a0a">go back to activity</button></p>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:98;display:flex;align-items:center;gap:8px;padding:9px 14px;background:#171717;color:#fafafa;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,0.22);font-size:12.5px;font-weight:500;animation:popIn .18s var(--ease-out)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"></path></svg>
+      <span>{{ toast }}</span>
+    </div>
+  </sc-if>
+
+  <!-- Event detail -->
+  <sc-if value="{{ detailOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeDetail }}" style="position:fixed;inset:0;z-index:96;background:rgba(20,20,20,0.18);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 18px;animation:overlayIn .16s var(--ease-out)">
+      <div onClick="{{ stop }}" style="width:min(560px,100%);flex:none;margin:auto;background:#ffffff;border:1px solid #e5e5e5;border-radius:26px;padding:4px;padding-bottom:0;box-shadow:0 24px 60px rgba(0,0,0,0.20),0 4px 12px rgba(0,0,0,0.08);animation:modalIn .22s var(--ease-out)">
+
+        <div style="border:1px solid #e5e5e5;border-radius:22px;background:#f7f7f7;padding:18px 18px 20px">
+
+          <div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#e5e5e5">
+            <image-slot id="{{ detailSlotId }}" shape="rect" mask="inset(0)" placeholder="{{ detailPlaceholder }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+          </div>
+
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px">
+            <div style="height:4px;border-radius:999px;background:#e5e5e5;position:relative;overflow:hidden">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:{{ detailProgress }};background:#171717;border-radius:999px"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:#737373;font-variant-numeric:tabular-nums">
+              <span>{{ detailClipStart }}</span>
+              <span>{{ detailDuration }} clip</span>
+              <span>{{ detailClipEnd }}</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:16px">
+            <div style="display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid #e5e5e5">
+              <span style="width:6px;height:6px;border-radius:50%;background:{{ detailStatusColor }}"></span>
+              <span style="font-size:12px;font-weight:500;color:#404040">{{ detailStatus }}</span>
+            </div>
+            <sc-for list="{{ detailChips }}" as="c" hint-placeholder-count="3">
+              <div style="display:inline-flex;align-items:center;height:28px;padding:0 12px;border-radius:999px;background:#fff;border:1px solid #e5e5e5;font-size:12px;color:#404040">{{ c.label }}</div>
+            </sc-for>
+          </div>
+
+          <h2 style="margin:18px 0 0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:27px;line-height:1.15;letter-spacing:0.2px;color:#0a0a0a">{{ detailTitle }}</h2>
+          <p style="margin:8px 0 0;font-size:13.5px;line-height:1.65;color:#737373;text-wrap:pretty">{{ detailDescription }}</p>
+
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:20px">
+            <button type="button" onClick="{{ detailAsk }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:none;border-radius:22px;background:#171717;color:#fafafa;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#262626">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>
+              <span>Ask about this</span>
+            </button>
+            <button type="button" onClick="{{ detailShare }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;color:#0a0a0a;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#f0f0f0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0L8 7m4-4 4 4"></path><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+              <span>{{ detailShareLabel }}</span>
+            </button>
+            <sc-if value="{{ detailNeedsHelp }}" hint-placeholder-val="{{ false }}">
+              <button type="button" onClick="{{ detailAlert }}" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid #f0d4d4;border-radius:22px;background:#fff;color:#dc2626;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#fdf2f2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13.7 3.6a2 2 0 0 0-3.4 0L2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3Z"></path><path d="M12 9v4M12 17h.01"></path></svg>
+                <span>{{ detailAlertLabel }}</span>
+              </button>
+            </sc-if>
+          </div>
+
+        </div>
+
+        <div style="padding:18px 20px">
+          <p style="margin:0;font-size:12.5px;color:#737373">Clips are kept for 30 days. <button type="button" onClick="{{ closeDetail }}" style="border:none;background:transparent;padding:0;font-size:12.5px;color:#737373;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-weight:500" style-hover="color:#0a0a0a">Close</button></p>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- Add dialogs: new space · connect a camera · invite a member -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:95;background:rgba(20,20,20,0.18);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 18px;animation:overlayIn .16s var(--ease-out)">
+      <div onClick="{{ stop }}" style="width:min(452px,100%);flex:none;margin:auto;background:#ffffff;border:1px solid #e5e5e5;border-radius:26px;padding:4px;padding-bottom:0;box-shadow:0 24px 60px rgba(0,0,0,0.20),0 4px 12px rgba(0,0,0,0.08);animation:modalIn .22s var(--ease-out)">
+
+        <div style="border:1px solid #e5e5e5;border-radius:22px;background:#f7f7f7;padding:34px 32px 28px">
+
+          <h2 style="margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:27px;line-height:1.15;letter-spacing:0.2px;text-align:left;color:#0a0a0a">{{ modalTitle }}</h2>
+          <p style="margin:7px 0 0;font-size:13px;line-height:1.6;color:#737373;text-align:left;text-wrap:pretty">{{ modalSubhead }}</p>
+
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px">
+            <sc-for list="{{ modalFields }}" as="f" hint-placeholder-count="2">
+              <div data-field="">
+                <label style="display:block;font-size:12px;font-weight:600;color:#0a0a0a;margin-bottom:7px;letter-spacing:0.01em">{{ f.label }}</label>
+                <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                  <input type="text" value="{{ f.value }}" onInput="{{ f.onInput }}" placeholder="{{ f.placeholder }}" style="width:100%;height:38px;border:1px solid #e5e5e5;border-radius:22px;padding:0 14px;font-size:13px;color:#0a0a0a;background:#fff;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)"/>
+                </sc-if>
+                <sc-if value="{{ f.isPills }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:7px">
+                    <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3">
+                      <button type="button" onClick="{{ o.run }}" style="height:32px;padding:0 13px;border:1px solid {{ o.border }};border-radius:999px;background:{{ o.bg }};color:{{ o.color }};font-size:12.5px;font-weight:500;cursor:pointer" style-hover="border-color:#a3a3a3">{{ o.label }}</button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ showQr }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ startQr }}" style="display:flex;align-items:center;gap:12px;margin-top:14px;border:1px dashed #d4d4d4;border-radius:20px;background:#fff;padding:12px 13px;cursor:pointer" style-hover="border-color:#a3a3a3">
+              <div style="width:44px;height:44px;flex:none;border-radius:18px;background:#fff;border:1px solid #e5e5e5;color:#404040;display:flex;align-items:center;justify-content:center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"></path></svg>
+              </div>
+              <div style="flex:1;min-width:0;font-size:12px;line-height:1.55;color:#737373;text-wrap:pretty">Hold your camera's pairing QR code up to this screen, then tap here to pair.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ statusNote }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:11px;font-size:12px;color:#737373">{{ statusNote }}</div>
+          </sc-if>
+
+          <sc-if value="{{ camLive }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;border:1px solid #e5e5e5;border-radius:20px;overflow:hidden;background:#e5e5e5;aspect-ratio:16/9">
+              <image-slot id="activity-cam-live" placeholder="Live view" shape="rect" style="width:100%;height:100%"></image-slot>
+            </div>
+          </sc-if>
+
+          <button type="button" onClick="{{ submitModal }}" style="width:100%;height:40px;margin-top:22px;border:none;border-radius:22px;background:{{ ctaBg }};color:#fafafa;font-size:13.5px;font-weight:500;cursor:{{ ctaCursor }};letter-spacing:0.01em" style-hover="background:{{ ctaHover }}">{{ modalCta }}</button>
+
+        </div>
+
+        <div style="padding:18px 20px">
+          <p style="margin:0;text-align:left;font-size:12.5px;color:#737373">
+            {{ modalFootNote }} <button type="button" onClick="{{ closeModal }}" style="border:none;background:transparent;padding:0;font-size:12.5px;color:#737373;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-weight:500" style-hover="color:#0a0a0a">Cancel</button>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:860}}">
+class Component extends DCLogic {
+  state = {
+    isMobile: false,
+    activeNav: 'activity',
+    plusOpen: false,
+    modal: null,
+    form: { spaceName: '', spaceType: 'Indoor', camName: '', camSpace: 'Kitchen', camMethod: 'Scan QR', camIp: '', inviteEmail: '', inviteRole: 'Member' },
+    camState: 'idle',
+    detail: null,
+    shared: { spaces: [], cameras: [], members: [], reviewed: [] },
+    dayLimit: 3,
+    shareDone: false,
+    alertSent: false,
+    toast: '',
+    moreOpen: false,
+    filterStatus: 'All',
+    filterSpace: 'All',
+    filterDate: 'All',
+    filterView: 'root',
+    searchOpen: false,
+    searchQuery: '',
+    activeDate: '2026-06-27',
+  };
+
+  FEED = [
+    { key: '2026-06-27', label: 'June 27, 2026', events: [
+      { time: '06:15 PM', status: 'Safe',  title: 'Your wife came home',      description: 'She pulled up around 6:15pm with groceries. Made it inside in about 10 minutes. Pretty typical evening.', placeholder: 'living room · 6:15 PM' },
+      { time: '02:30 PM', status: 'Alert', title: 'A package was delivered',   description: "A courier left a box on the mat and walked off. It's still waiting there for you by the front door.", placeholder: 'entrance · 2:30 PM' },
+      { time: '11:40 AM', status: 'Safe',  title: 'Just the cat, settling in', description: 'A little movement on the sofa — the cat found a sunny spot and curled up. Nothing else stirred all morning.', placeholder: 'living room · 11:40 AM' },
+    ]},
+    { key: '2026-06-26', label: 'June 26, 2026', events: [
+      { time: '09:14 PM', status: 'Safe',  title: 'The front door locked itself', description: 'Once everyone was home the door locked on schedule. The house was quietly secured for the night.', placeholder: 'entrance · 9:14 PM' },
+      { time: '06:50 PM', status: 'Safe',  title: 'Garden lights came on',        description: 'The lights rose at dusk over a calm, empty yard. The gate stayed shut the whole evening.', placeholder: 'backyard · 6:50 PM' },
+      { time: '08:02 AM', status: 'Safe',  title: 'Morning began softly',         description: 'The first lights came on and a kettle was filled. An ordinary, gentle start to the day.', placeholder: 'kitchen · 8:02 AM' },
+    ]},
+    { key: '2026-06-25', label: 'June 25, 2026', events: [
+      { time: '07:38 PM', status: 'Alert', title: 'Motion at the back gate', description: 'Something moved by the side gate just after dusk. It settled quickly — most likely the neighbour\u2019s dog.', placeholder: 'backyard · 7:38 PM' },
+      { time: '01:12 PM', status: 'Safe',  title: 'A quiet afternoon',     description: 'Sun moved across the living room and nothing stirred. The house rested while everyone was out.', placeholder: 'living room · 1:12 PM' },
+    ]},
+    { key: '2026-06-24', label: 'June 24, 2026', events: [
+      { time: '10:05 PM', status: 'Safe', title: 'Everyone settled in',        description: 'Lights dimmed room by room and the house went still for the night.', placeholder: 'hallway · 10:05 PM' },
+      { time: '05:20 PM', status: 'Safe', title: 'Kids came home from school', description: 'The front door opened at 5:20 with the usual rush. Backpacks down, fridge open — all normal.', placeholder: 'entrance · 5:20 PM' },
+    ]},
+    { key: '2026-06-23', label: 'June 23, 2026', events: [
+      { time: '03:44 PM', status: 'Safe', title: 'Delivery dropped off', description: 'A parcel was left by the door and collected a few minutes later.', placeholder: 'entrance · 3:44 PM' },
+    ]},
+  ];
+
+  STATUS_COLOR = { Safe: '#22c55e', Alert: '#d08700', Emergency: '#dc2626' };
+  STATUS_RING  = { Safe: 'rgba(22,163,74,0.28)', Alert: 'rgba(208,135,0,0.32)', Emergency: 'rgba(220,38,38,0.3)' };
+
+  ICONS = {
+    home: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>',
+    shapes: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z"></path><rect x="3" y="14" width="7" height="7" rx="1"></rect><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>',
+    zap: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>',
+    'add-space': '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M12 8v8M8 12h8"></path></svg>',
+    camera: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>',
+    invite: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>',
+    calendar: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>',
+    status: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg>',
+  };
+
+  spaceOf(e) { return (String(e.placeholder).split('·')[0] || '').trim(); }
+  cap(str) { return String(str).replace(/\b\w/g, (c) => c.toUpperCase()); }
+  dateLabelOf(key) { const d = this.FEED.find((x) => x.key === key); return d ? d.label.replace(/, 2026$/, '') : key; }
+
+  componentDidMount() {
+    this._resize = () => {
+      const m = window.innerWidth < 760;
+      if (m !== this.state.isMobile) this.setState({ isMobile: m });
+    };
+    this.setState({ isMobile: window.innerWidth < 760 });
+    window.addEventListener('resize', this._resize);
+    this._scroll = () => this.onPageScroll();
+    window.addEventListener('scroll', this._scroll, { passive: true });
+    this._onAdd = (ev) => this.setState({ modal: (ev.detail && ev.detail.kind) || 'space', camState: 'idle', plusOpen: false, moreOpen: false });
+    window.addEventListener('artemisa:add', this._onAdd);
+    this._key = (ev) => {
+      if (ev.key === 'Escape') { if (this.state.detail) this.setState({ detail: null }); if (this.state.modal) this.setState({ modal: null }); if (this.state.searchOpen) this.setState({ searchOpen: false }); if (this.state.moreOpen) this.setState({ moreOpen: false }); }
+      if ((ev.metaKey || ev.ctrlKey) && (ev.key === 'k' || ev.key === 'K')) { ev.preventDefault(); this.setState({ searchOpen: true }); }
+    };
+    window.addEventListener('keydown', this._key);
+    if (window.ArtemisaStore) {
+      this.setState({ shared: window.ArtemisaStore.load() });
+      this._unsub = window.ArtemisaStore.subscribe((d) => this.setState({ shared: d }));
+    }
+    this.paintNavIcons();
+  }
+  componentDidUpdate() {
+    this.paintNavIcons();
+    if (this.state.searchOpen && !this._searchWasOpen) {
+      const i = document.querySelector('[data-search-input]');
+      if (i) i.focus();
+    }
+    this._searchWasOpen = this.state.searchOpen;
+  }
+  componentWillUnmount() {
+    if (this._resize) window.removeEventListener('resize', this._resize);
+    if (this._scroll) window.removeEventListener('scroll', this._scroll);
+    if (this._key) window.removeEventListener('keydown', this._key);
+    if (this._onAdd) window.removeEventListener('artemisa:add', this._onAdd);
+    if (this._unsub) this._unsub();
+    clearTimeout(this._camT);
+    clearTimeout(this._toastT);
+    clearTimeout(this._shareT);
+  }
+
+  navigateTo(url) {
+    window.location.href = url + (typeof window !== 'undefined' ? window.location.search : '');
+  }
+
+  paintNavIcons() {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('[data-icon]').forEach((el) => {
+      const key = el.getAttribute('data-icon');
+      const svg = this.ICONS[key];
+      if (svg && el.innerHTML.indexOf('svg') === -1) el.innerHTML = svg;
+    });
+  }
+
+  askAbout(ev) {
+    try { sessionStorage.setItem('artemisa_pending', 'Tell me more about: ' + ev.title); } catch (e) {}
+    this.navigateTo('Chat.dc.html');
+  }
+
+  gotoDate(key) {
+    if (typeof document === 'undefined') return;
+    const el = document.querySelector('[data-day="' + key + '"]');
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 78;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    this.setState({ activeDate: key });
+  }
+
+  onPageScroll() {
+    if (this._raf) return;
+    this._raf = requestAnimationFrame(() => {
+      this._raf = null;
+      const groups = Array.from(document.querySelectorAll('[data-day]'));
+      let active = groups[0];
+      for (const g of groups) {
+        if (g.getBoundingClientRect().top - 78 <= 90) active = g;
+      }
+      if (!active) return;
+      const key = active.getAttribute('data-day');
+      if (key && key !== this.state.activeDate) this.setState({ activeDate: key });
+    });
+  }
+
+  buildDates(have) {
+    const rows = [];
+    for (let off = 3; off >= -8; off--) {
+      const d = new Date(2026, 5, 27 + off);
+      const key = '2026-06-' + String(d.getDate()).padStart(2, '0');
+      const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      rows.push({ key, label, hasEvents: have.has(key) });
+    }
+    return rows;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const mob = s.isMobile;
+
+    const reviewedIds = (s.shared.reviewed || []);
+    const mkEvent = (e, dk, i) => {
+      const eid = dk + '-' + i;
+      const done = reviewedIds.indexOf(eid) !== -1;
+      return {
+        time: e.time,
+        title: e.title,
+        description: e.description,
+        status: e.status,
+        statusColor: this.STATUS_COLOR[e.status] || '#737373',
+        badgeRing: '#d4d4d4',
+        slotId: 'activity-' + dk.replace(/-/g, '') + '-' + i,
+        placeholder: e.placeholder,
+        opacity: done ? '0.5' : '1',
+        reviewLabel: done ? 'Reviewed' : 'Mark reviewed',
+        reviewTitle: done ? 'Undo review' : 'Mark as reviewed',
+        reviewBorder: done ? '#d4d4d4' : '#e5e5e5',
+        reviewBg: done ? '#f5f5f5' : '#ffffff',
+        reviewColor: done ? '#404040' : '#737373',
+        toggleReviewed: () => {
+          const St = window.ArtemisaStore;
+          if (!St) return;
+          if (done) St.unmarkReviewed(eid); else St.markReviewed(eid);
+        },
+        ask: () => this.askAbout(e),
+        open: () => this.setState({ detail: { dk, i }, shareDone: false, alertSent: false }),
+      };
+    };
+
+    const matches = (e, dk) =>
+      (s.filterStatus === 'All' || e.status === s.filterStatus) &&
+      (s.filterSpace === 'All' || this.spaceOf(e) === s.filterSpace) &&
+      (s.filterDate === 'All' || dk === s.filterDate);
+    const filtered = this.FEED
+      .map((d) => ({ key: d.key, label: d.label, events: d.events.filter((e) => matches(e, d.key)) }))
+      .filter((d) => d.events.length > 0);
+
+    // Unique spaces across all events, in first-seen order
+    const spaceSet = [];
+    this.FEED.forEach((d) => d.events.forEach((e) => { const sp = this.spaceOf(e); if (sp && spaceSet.indexOf(sp) === -1) spaceSet.push(sp); }));
+
+    // Two-level "Filter by" dropdown
+    let filterHeader, filterShowBack, filterRows;
+    if (s.filterView === 'spaces') {
+      filterHeader = 'Spaces'; filterShowBack = true;
+      filterRows = ['All', ...spaceSet].map((v) => ({
+        icon: '', dot: '', hasChevron: '', label: v === 'All' ? 'All spaces' : this.cap(v), meta: '',
+        active: s.filterSpace === v, run: () => this.setState({ filterSpace: v, filterView: 'root', moreOpen: false }),
+      }));
+    } else if (s.filterView === 'date') {
+      filterHeader = 'Date'; filterShowBack = true;
+      filterRows = [{ key: 'All', label: 'All dates' }, ...this.FEED.map((d) => ({ key: d.key, label: this.dateLabelOf(d.key) }))].map((d) => ({
+        icon: '', dot: '', hasChevron: '', label: d.label, meta: '',
+        active: s.filterDate === d.key, run: () => this.setState({ filterDate: d.key, filterView: 'root', moreOpen: false }),
+      }));
+    } else if (s.filterView === 'status') {
+      filterHeader = 'Status'; filterShowBack = true;
+      filterRows = [
+        { label: 'All events', value: 'All', dot: '#a3a3a3' },
+        { label: 'Safe', value: 'Safe', dot: '#22c55e' },
+        { label: 'Alert', value: 'Alert', dot: '#d08700' },
+        { label: 'Emergency', value: 'Emergency', dot: '#dc2626' },
+      ].map((f) => ({
+        icon: '', hasChevron: '', meta: '', label: f.label, dot: f.dot,
+        active: s.filterStatus === f.value, run: () => this.setState({ filterStatus: f.value, filterView: 'root', moreOpen: false }),
+      }));
+    } else {
+      filterHeader = 'Filter by'; filterShowBack = false;
+      filterRows = [
+        { icon: 'shapes', label: 'Spaces', meta: s.filterSpace === 'All' ? '' : this.cap(s.filterSpace), view: 'spaces' },
+        { icon: 'calendar', label: 'Date', meta: s.filterDate === 'All' ? '' : this.dateLabelOf(s.filterDate), view: 'date' },
+        { icon: 'status', label: 'Status', meta: s.filterStatus === 'All' ? '' : s.filterStatus, view: 'status' },
+      ].map((r) => ({ icon: r.icon, dot: '', label: r.label, meta: r.meta, active: false, hasChevron: '1', run: () => this.setState({ filterView: r.view }) }));
+    }
+
+    // Search command menu
+    const q = s.searchQuery.trim().toLowerCase();
+    const flat = [];
+    this.FEED.forEach((d) => d.events.forEach((e) => flat.push({ e, dayKey: d.key })));
+    const STATUS_HALO = { Safe: 'rgba(34,197,94,0.14)', Alert: 'rgba(208,135,0,0.16)', Emergency: 'rgba(220,38,38,0.14)' };
+    const hits = q
+      ? flat.filter(({ e }) => (e.title + ' ' + e.description + ' ' + e.placeholder + ' ' + e.status).toLowerCase().includes(q))
+      : flat;
+    const searchResults = hits.map(({ e, dayKey }) => ({
+      title: e.title,
+      meta: this.dateLabelOf(dayKey) + ' · ' + e.time + ' · ' + this.cap(this.spaceOf(e)),
+      statusColor: this.STATUS_COLOR[e.status] || '#737373',
+      statusHalo: STATUS_HALO[e.status] || 'rgba(0,0,0,0.06)',
+      run: () => { this.setState({ searchOpen: false, searchQuery: '' }); setTimeout(() => this.gotoDate(dayKey), 70); },
+    }));
+    const searchEmpty = q.length > 0 && searchResults.length === 0;
+
+    const visibleDays = filtered.slice(0, s.dayLimit || 3);
+    const feedDays = visibleDays.map((d) => ({
+      key: d.key,
+      label: d.label,
+      events: d.events.map((e, i) => mkEvent(e, d.key, i)),
+    }));
+    const remainingDays = filtered.length - visibleDays.length;
+    const filtersOn = s.filterStatus !== 'All' || s.filterSpace !== 'All' || s.filterDate !== 'All';
+
+    const haveKeys = new Set(filtered.map((d) => d.key));
+    const dates = this.buildDates(haveKeys).map((r) => {
+      const active = r.key === s.activeDate;
+      return {
+        label: r.label,
+        run: () => { if (r.hasEvents) this.gotoDate(r.key); },
+        cursor: r.hasEvents ? 'pointer' : 'default',
+        opacity: active ? '1' : (r.hasEvents ? '0.78' : '0.4'),
+        color: active ? '#0a0a0a' : (r.hasEvents ? '#737373' : '#d4d4d4'),
+        weight: active ? 600 : 400,
+        dashColor: active ? '#0a0a0a' : (r.hasEvents ? '#d4d4d4' : '#e5e5e5'),
+        dashW: active ? '20px' : '11px',
+      };
+    });
+
+    const NAV_TARGET = { home: 'Home.dc.html', spaces: 'Spaces.dc.html', activity: null };
+    const nav = [
+      { id: 'home', icon: 'home', label: 'Home' },
+      { id: 'spaces', icon: 'shapes', label: 'Spaces' },
+      { id: 'activity', icon: 'zap', label: 'Activity' },
+    ].map((n) => ({
+      icon: n.icon,
+      label: n.label,
+      borderColor: '#e5e5e5',
+      bg: s.activeNav === n.id ? '#f5f5f5' : '#ffffff',
+      color: s.activeNav === n.id ? '#000000' : '#404040',
+      run: () => {
+        const target = NAV_TARGET[n.id];
+        if (target) { this.navigateTo(target); return; }
+        this.setState({ activeNav: n.id, plusOpen: false });
+      },
+    }));
+
+    const plusItems = [
+      { icon: 'add-space', label: 'New space', key: 'space' },
+      { icon: 'camera', label: 'Connect a camera', key: 'camera' },
+      { icon: 'invite', label: 'Invite a member', key: 'invite' },
+    ].map((p) => ({ icon: p.icon, label: p.label, run: () => this.setState({ plusOpen: false, modal: p.key, camState: 'idle' }) }));
+
+    const f = s.form;
+    const IP_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const setF = (k) => (ev) => {
+      const v = ev.target.value;
+      this.setState((p) => ({ form: Object.assign({}, p.form, { [k]: v }) }));
+      if (k === 'camIp') {
+        clearTimeout(this._camT);
+        if (IP_RE.test(v.trim())) { this.setState({ camState: 'connecting' }); this._camT = setTimeout(() => this.setState({ camState: 'ok' }), 900); }
+        else this.setState({ camState: 'idle' });
+      }
+    };
+    const input = (label, key, placeholder) => ({ isInput: true, isPills: false, label, placeholder, value: f[key], onInput: setF(key) });
+    const pills = (label, key, options) => ({
+      isInput: false, isPills: true, label, options: options.map((o) => ({
+        label: o,
+        border: f[key] === o ? '#d4d4d4' : '#e5e5e5',
+        bg: f[key] === o ? '#f5f5f5' : '#ffffff',
+        color: f[key] === o ? '#0a0a0a' : '#404040',
+        run: () => this.setState((p) => ({ form: Object.assign({}, p.form, { [key]: o }), camState: key === 'camMethod' ? 'idle' : p.camState })),
+      })),
+    });
+
+    const baseSpaces = ['Kitchen', 'Front door', 'Garage', 'Backyard'];
+    const spaceOptions = baseSpaces.concat(s.shared.spaces.map((x) => x.name).filter((n) => baseSpaces.indexOf(n) === -1));
+
+    const MODALS = {
+      space: {
+        icon: 'add-space', title: 'New space', cta: 'Create space',
+        subhead: 'Name the area Artemisa should watch. You can add cameras to it right after.',
+        fields: [input('Space name', 'spaceName', 'e.g. Kitchen'), pills('Type', 'spaceType', ['Indoor', 'Outdoor', 'Entry'])],
+        valid: f.spaceName.trim().length > 0, foot: 'Changed your mind?',
+      },
+      camera: {
+        icon: 'camera', title: 'Connect a camera', cta: 'Connect camera',
+        subhead: 'Pair by QR code, or add the camera by its IP address on your network.',
+        fields: [input('Camera name', 'camName', 'e.g. Kitchen ceiling'), pills('Space', 'camSpace', spaceOptions), pills('Connection', 'camMethod', ['Scan QR', 'IP address'])].concat(
+          f.camMethod === 'IP address' ? [input('Camera IP address', 'camIp', '192.168.1.42')] : []
+        ),
+        valid: f.camName.trim().length > 0 && s.camState === 'ok', foot: 'Not ready yet?',
+      },
+      invite: {
+        icon: 'invite', title: 'Invite a member', cta: 'Send invite',
+        subhead: 'They will get access to the spaces and activity you choose.',
+        fields: [input('Email', 'inviteEmail', 'name@email.com'), pills('Role', 'inviteRole', ['Admin', 'Member', 'Guest'])],
+        valid: /.+@.+\..+/.test(f.inviteEmail.trim()), foot: 'Rather not now?',
+      },
+    };
+    const m = MODALS[s.modal] || null;
+
+    // Event detail
+    const dsel = s.detail;
+    const dday = dsel ? this.FEED.find((d) => d.key === dsel.dk) : null;
+    const dev = dday ? dday.events[dsel.i] : null;
+    const clipSecs = dev ? 22 + ((dsel.i + dsel.dk.charCodeAt(9)) % 40) : 0;
+    const shiftTime = (t, secs) => {
+      const mm = /^(\d{2}):(\d{2}) (AM|PM)$/.exec(t);
+      if (!mm) return t;
+      let total = (Number(mm[1]) % 12) * 3600 + Number(mm[2]) * 60 + (mm[3] === 'PM' ? 12 * 3600 : 0) + secs;
+      const h24 = Math.floor(total / 3600) % 24, mi = Math.floor((total % 3600) / 60), ss = total % 60;
+      const ap = h24 >= 12 ? 'PM' : 'AM', h12 = ((h24 + 11) % 12) + 1;
+      return String(h12).padStart(2, '0') + ':' + String(mi).padStart(2, '0') + ':' + String(ss).padStart(2, '0') + ' ' + ap;
+    };
+
+
+    return {
+      isMobile: mob,
+      desktop: !mob,
+      headline: 'A calm, quiet day.',
+      feedDays,
+      feedEmpty: feedDays.length === 0,
+      emptyTitle: filtersOn ? 'Nothing matches those filters' : 'No activity yet',
+      emptyBody: filtersOn
+        ? 'Try widening the range — or clear the filters and see the whole timeline.'
+        : 'Once a camera is watching a space, everything it notices lands here in order, newest first.',
+      emptyCta: filtersOn ? 'Clear filters' : 'Connect a camera',
+      emptyAction: () => {
+        if (filtersOn) this.setState({ filterStatus: 'All', filterSpace: 'All', filterDate: 'All', filterView: 'root', moreOpen: false });
+        else this.setState({ modal: 'camera', camState: 'idle' });
+      },
+      hasMore: remainingDays > 0,
+      loadMoreLabel: remainingDays === 1 ? 'Show 1 more day' : 'Show ' + Math.min(3, remainingDays) + ' more days',
+      loadMore: () => this.setState((p) => ({ dayLimit: (p.dayLimit || 3) + 3 })),
+      dates,
+      headPad: mob ? '18px 18px 14px' : '34px 52px 24px',
+      subSize: mob ? '14px' : '15px',
+      titleSize: mob ? '32px' : '42px',
+      feedPad: mob ? '4px 18px 120px' : '12px 56px 40px',
+      eventGap: mob ? '44px' : '52px',
+      dayGap: mob ? '48px' : '64px',
+      timeColW: mob ? '64px' : '78px',
+      imgAspect: mob ? '4/3' : '16/10',
+      moreOpen: s.moreOpen,
+      moreBg: s.moreOpen ? '#f5f5f5' : '#ffffff',
+      moreColor: s.moreOpen ? '#0a0a0a' : '#404040',
+      toggleMore: () => this.setState((p) => ({ moreOpen: !p.moreOpen, plusOpen: false, filterView: 'root' })),
+      closeMore: () => this.setState({ moreOpen: false }),
+      filterHeader,
+      filterShowBack,
+      filterRows,
+      goFilterBack: () => this.setState({ filterView: 'root' }),
+      goHome: () => this.navigateTo('Home.dc.html'),
+      goSearch: () => this.setState({ searchOpen: true, moreOpen: false }),
+      searchOpen: s.searchOpen,
+      searchQuery: s.searchQuery,
+      searchResults,
+      searchEmpty,
+      onSearch: (ev) => this.setState({ searchQuery: ev.target.value }),
+      closeSearch: () => this.setState({ searchOpen: false }),
+      stop: (ev) => ev.stopPropagation(),
+      nav,
+      plusItems,
+      plusOpen: s.plusOpen,
+      plusBorder: '#e5e5e5',
+      plusBg: s.plusOpen ? '#f5f5f5' : '#ffffff',
+      plusColor: s.plusOpen ? '#0a0a0a' : '#404040',
+      togglePlus: () => this.setState((p) => ({ plusOpen: !p.plusOpen })),
+      closePlus: () => this.setState({ plusOpen: false }),
+      modalOpen: !!m,
+      modalIcon: m ? m.icon : 'add-space',
+      modalTitle: m ? m.title : '',
+      modalSubhead: m ? m.subhead : '',
+      modalFields: m ? m.fields : [],
+      modalCta: m ? m.cta : '',
+      modalFootNote: m ? m.foot : '',
+      ctaBg: m && m.valid ? '#171717' : '#c4c4c4',
+      ctaHover: m && m.valid ? '#262626' : '#c4c4c4',
+      ctaCursor: m && m.valid ? 'pointer' : 'not-allowed',
+      showQr: s.modal === 'camera' && f.camMethod === 'Scan QR',
+      camLive: s.modal === 'camera' && s.camState === 'ok',
+      statusNote: s.modal === 'camera' && s.camState === 'connecting' ? 'Connecting…' : '',
+      startQr: () => {
+        clearTimeout(this._camT);
+        this.setState({ camState: 'connecting' });
+        this._camT = setTimeout(() => this.setState({ camState: 'ok' }), 1700);
+      },
+      submitModal: () => {
+        if (!m || !m.valid) return;
+        const St = window.ArtemisaStore;
+        if (St) {
+          if (s.modal === 'space') St.addSpace({ name: f.spaceName, type: f.spaceType });
+          if (s.modal === 'camera') St.addCamera({ name: f.camName, space: f.camSpace, method: f.camMethod, ip: f.camIp });
+          if (s.modal === 'invite') St.addMember({ email: f.inviteEmail, role: f.inviteRole });
+        }
+        this.setState((p) => ({
+          modal: null, camState: 'idle',
+          toast: s.modal === 'space' ? 'Space created' : s.modal === 'camera' ? 'Camera connected' : 'Invite sent',
+          form: Object.assign({}, p.form, { spaceName: '', camName: '', camIp: '', inviteEmail: '' }),
+        }));
+        clearTimeout(this._toastT);
+        this._toastT = setTimeout(() => this.setState({ toast: '' }), 2600);
+      },
+      closeModal: () => { clearTimeout(this._camT); this.setState({ modal: null, camState: 'idle' }); },
+
+      detailOpen: !!dev,
+      toast: s.toast,
+      detailTitle: dev ? dev.title : '',
+      detailDescription: dev ? dev.description : '',
+      detailStatus: dev ? dev.status : '',
+      detailStatusColor: dev ? (this.STATUS_COLOR[dev.status] || '#737373') : '#737373',
+      detailPlaceholder: dev ? dev.placeholder : '',
+      detailSlotId: dev ? 'activity-' + dsel.dk.replace(/-/g, '') + '-' + dsel.i + '-detail' : 'activity-detail',
+      detailChips: dev ? [
+        { label: this.dateLabelOf(dsel.dk) + ' · ' + dev.time },
+        { label: this.cap(this.spaceOf(dev)) },
+        { label: this.cap(this.spaceOf(dev)) + ' camera' },
+      ] : [],
+      detailProgress: '42%',
+      detailClipStart: dev ? shiftTime(dev.time, -4) : '',
+      detailClipEnd: dev ? shiftTime(dev.time, clipSecs) : '',
+      detailDuration: dev ? '0:' + String(clipSecs).padStart(2, '0') : '',
+      detailNeedsHelp: !!dev && dev.status !== 'Safe',
+      detailShareLabel: s.shareDone ? 'Link copied' : 'Share clip',
+      detailAlertLabel: s.alertSent ? 'Contacts notified' : 'Alert contacts',
+      detailAsk: () => { if (dev) this.askAbout(dev); },
+      detailShare: () => {
+        this.setState({ shareDone: true });
+        clearTimeout(this._shareT);
+        this._shareT = setTimeout(() => this.setState({ shareDone: false }), 2200);
+      },
+      detailAlert: () => this.setState({ alertSent: true }),
+      closeDetail: () => this.setState({ detail: null }),
+    };
+  }
+}
+</script>
+</body>
+</html>

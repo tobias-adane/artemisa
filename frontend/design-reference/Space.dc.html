@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<script src="./artemisa-store.js"></script>
+<style>
+  *{box-sizing:border-box}
+  :root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1);--ease-drawer:cubic-bezier(.32,.72,0,1)}
+  html,body{margin:0;padding:0}
+  body{background:#ffffff;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  button{font-family:inherit;transition:background-color .15s var(--ease-out),color .15s var(--ease-out),border-color .15s var(--ease-out),transform .12s var(--ease-out)}
+  button:active{transform:scale(0.97)}
+  html{scrollbar-width:none;-ms-overflow-style:none}
+  ::-webkit-scrollbar{width:0;height:0;display:none}
+  @keyframes popIn{from{opacity:0;transform:translateY(4px) scale(0.97)}to{opacity:1;transform:none}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  [data-event]{animation:fadeUp .28s var(--ease-out) both}
+  [data-ask] svg{transition:transform .16s var(--ease-out)}
+  @media (hover:hover) and (pointer:fine){[data-ask]:hover svg{transform:scale(1.08)}}
+  [data-mi]{color:#404040;transition:color .15s var(--ease-out)}
+  [data-mi]:hover{color:#000000 !important}
+  [data-mi] [data-icon]{color:currentColor !important}
+  [data-mi] svg{stroke:currentColor}
+  [data-mi] span[style*="flex"]{color:inherit !important}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    [data-step],[data-field],[data-event]{animation:none !important;opacity:1 !important;transform:none !important}
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#ffffff;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+  <header style="position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(255,255,255,0.82);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px)">
+    <button title="Back" onClick="{{ goBack }}" style="width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid #e5e5e5;border-radius:999px;background:#fff;color:#404040;cursor:pointer" style-hover="color:#000000">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+    </button>
+    <div style="display:flex;align-items:center;padding:8px 16px;border:1px solid #e5e5e5;border-radius:999px;background:#fff;font-size:12px;font-weight:500;color:#000;flex:none;white-space:nowrap">{{ name }}</div>
+    <div style="position:relative">
+      <button title="More" onClick="{{ toggleMenu }}" style="width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;border:0.5px solid {{ menuBorder }};border-radius:999px;background:{{ menuBg }};color:{{ menuIcon }};cursor:pointer" style-hover="color:#000000">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
+      </button>
+      <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeMenu }}" style="position:fixed;inset:0;z-index:65"></div>
+        <div style="position:absolute;top:calc(100% + 10px);right:0;z-index:70;min-width:206px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:10px;transform-origin:top right;animation:popIn .17s var(--ease-out)">
+          <sc-for list="{{ menuItems }}" as="mi" hint-placeholder-count="3">
+            <button onClick="{{ mi.run }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+              <div style="width:16px;height:16px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="{{ mi.icon }}"></div>
+              <span style="flex:1;font-size:14px;color:inherit">{{ mi.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </header>
+
+  <main style="max-width:900px;margin:0 auto;padding:{{ mainPad }}">
+
+    <div style="position:relative;width:100%;aspect-ratio:{{ imgAspect }};border-radius:28px;overflow:hidden;background:#e5e5e5">
+      <image-slot id="{{ slotId }}" shape="rect" mask="inset(0)" placeholder="{{ placeholder }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+    </div>
+
+    <h1 style="font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:{{ statusSize }};line-height:1.16;color:#0a0a0a;margin:24px 0 0;letter-spacing:0.2px">{{ status }}</h1>
+
+    <p style="font-size:15px;line-height:1.65;color:#737373;margin:16px 0 0;text-wrap:pretty">{{ description }}</p>
+
+    <sc-if value="{{ hasActivity }}" hint-placeholder-val="{{ true }}">
+    <div style="margin-top:42px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px">
+        <div style="font-family:'Instrument Serif',Georgia,serif;font-size:23px;color:#0a0a0a">Activity</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onClick="{{ seeAllActivity }}" style="padding:8px 15px;border:1px solid #e5e5e5;border-radius:999px;background:#fff;color:#0a0a0a;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#f5f5f5;color:#0a0a0a;border-color:#e5e5e5">See all</button>
+
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:44px">
+        <sc-for list="{{ activities }}" as="a" hint-placeholder-count="3">
+          <div data-event="" style="display:flex;gap:20px">
+            <div style="flex:none;width:72px;padding-top:1px">
+              <span style="font-size:11px;font-weight:500;color:#737373;background:#fff;padding:4px 10px;border-radius:999px;border:1px solid #d4d4d4;letter-spacing:0.01em;font-variant-numeric:tabular-nums;white-space:nowrap">{{ a.time }}</span>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:15.5px;font-weight:600;color:#0a0a0a;line-height:1.3;text-wrap:balance">{{ a.title }}</div>
+              <div style="font-size:13.5px;line-height:1.6;color:#737373;margin-top:6px;text-wrap:pretty">{{ a.description }}</div>
+              <div style="position:relative;width:100%;aspect-ratio:16/10;border-radius:26px;overflow:hidden;background:#e5e5e5;margin-top:16px">
+                <image-slot id="{{ a.slotId }}" shape="rect" mask="inset(0)" placeholder="{{ a.placeholder }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+                <div style="position:absolute;inset:0;border-radius:26px;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.06),inset 0 1px 3px rgba(0,0,0,0.05);pointer-events:none"></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px">
+                <div style="display:inline-flex;align-items:center;padding:6px 13px;border-radius:999px;box-shadow:inset 0 0 0 1px {{ a.badgeRing }}">
+                  <span style="font-size:12px;font-weight:500;color:{{ a.statusColor }}">{{ a.status }}</span>
+                </div>
+                <button data-ask="" onClick="{{ a.ask }}" style="display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:none;border-radius:22px;background:#171717;color:#fafafa;font-size:12.5px;font-weight:500;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.14)" style-hover="background:#000;box-shadow:0 4px 14px rgba(0,0,0,0.2)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>
+                  <span>Ask anything</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ noActivity }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:40px;border:1px dashed #d4d4d4;border-radius:30px;padding:48px 26px;text-align:center">
+        <div style="font-family:'Instrument Serif',Georgia,serif;font-size:23px">Nothing has happened here yet</div>
+        <p style="margin:10px auto 18px;max-width:40ch;font-size:13.5px;line-height:1.65;color:#737373">Point a camera at this space and Artemisa starts keeping its story — arrivals, lights, doors, quiet stretches.</p>
+        <button onClick="{{ seeAllActivity }}" style="height:34px;padding:0 16px;border:none;border-radius:17px;background:#171717;color:#fafafa;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#262626">See all activity</button>
+      </div>
+    </sc-if>
+
+  </main>
+
+  <div style="position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:60">
+    <button onClick="{{ askAnything }}" style="display:flex;align-items:center;gap:9px;padding:13px 20px;border:none;border-radius:999px;background:#111;color:#fff;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.22)" style-hover="background:#262626">
+      <span>Ask anything</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>
+    </button>
+  </div>
+
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:860}}">
+class Component extends DCLogic {
+  state = {
+    currentSpace: (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('artemisa_space')) || 'living-room',
+    isMobile: (typeof window !== 'undefined' && window.innerWidth < 768),
+    menuOpen: false,
+  };
+
+  SPACES = {
+    'living-room': {
+      name: 'Living Room', placeholder: 'living room photo', lastUpdate: '2 min ago',
+      status: "Your home's empty right now. All secure.",
+      description: "Your living room is quiet right now. It's that calm time of day when everything feels peaceful. The light's coming through the windows just right. Everything's the way you like it — nothing unusual, just the way it should be when no one's home.",
+    },
+    'kitchen': {
+      name: 'Kitchen', placeholder: 'kitchen photo', lastUpdate: '5 min ago',
+      status: "The kitchen's still and clean.",
+      description: "Nothing's cooking right now. The counters are clear, the faucet's off, and the fridge closed about twenty minutes ago. It's resting between meals — exactly the way you left it this morning.",
+    },
+    'entrance': {
+      name: 'Entrance', placeholder: 'entrance photo', lastUpdate: '12 min ago',
+      status: "The front door's locked. All quiet.",
+      description: "No one's come or gone in the last few hours. The door locked itself at 9:14, the porch light is on, and a package is waiting on the mat. Everything at the threshold is calm and accounted for.",
+    },
+    'bedroom': {
+      name: 'Bedroom', placeholder: 'bedroom photo', lastUpdate: '1 min ago',
+      status: "The bedroom's dim and restful.",
+      description: "The lights are low and the room is still. Curtains drawn, bed made, nothing stirring. It's holding that quiet, end-of-day softness — ready for whenever you are.",
+    },
+    'kids-bedroom': {
+      name: 'Kids Bedroom', placeholder: 'kids bedroom photo', lastUpdate: '3 min ago',
+      status: "The kids' room is calm.",
+      description: "It's settled in here. Toys are where they were left, the nightlight is glowing soft, and there's been no movement since story time. A gentle, sleepy kind of quiet.",
+    },
+    'backyard': {
+      name: 'Backyard', placeholder: 'backyard photo', lastUpdate: '8 min ago',
+      status: "The backyard's calm under open sky.",
+      description: "Still evening out back. The gate's shut, the garden lights just came on, and the only motion was a breeze through the trees a little while ago. Peaceful and secure.",
+    },
+  };
+
+  ACTIVITIES = {
+    'living-room': [
+      { title: 'Your wife came home', time: '6:15 PM', status: 'Safe', statusColor: '#22c55e', description: "She pulled up around 6:15 with groceries. Made it inside in about ten minutes. Pretty typical evening." },
+      { title: 'The lamp came on', time: '6:40 PM', status: 'Safe', statusColor: '#22c55e', description: "The corner lamp switched on as the daylight faded — right on its usual evening schedule." },
+      { title: 'A quiet stretch', time: '7:50 PM', status: 'Notice', statusColor: '#7a7a7a', description: "No movement for the last hour. The room's been calm and still since dinner wrapped up." },
+    ],
+    'kitchen': [
+      { title: 'Someone grabbed a snack', time: '7:12 PM', status: 'Safe', statusColor: '#22c55e', description: "A quick trip to the fridge and back. Door closed within seconds — nothing left ajar." },
+      { title: 'Dishwasher finished', time: '8:05 PM', status: 'Safe', statusColor: '#22c55e', description: "The cycle ran and switched off. Counters were wiped down before everyone left the room." },
+      { title: 'Lights out', time: '9:00 PM', status: 'Notice', statusColor: '#7a7a7a', description: "Kitchen lights turned off for the night. It's been dark and still in here since." },
+    ],
+    'entrance': [
+      { title: 'Package delivered', time: '2:30 PM', status: 'Notice', statusColor: '#7a7a7a', description: "A courier dropped a package on the mat and left. It's still waiting by the door for you." },
+      { title: 'Porch light on', time: '6:50 PM', status: 'Safe', statusColor: '#22c55e', description: "The porch light came on at dusk, lighting the entry. No visitors since then." },
+      { title: 'Front door locked', time: '9:14 PM', status: 'Safe', statusColor: '#22c55e', description: "The door locked itself on schedule after the last person came in. Everything's secured." },
+    ],
+    'bedroom': [
+      { title: 'Curtains drawn', time: '8:30 PM', status: 'Safe', statusColor: '#22c55e', description: "The blinds lowered as the evening settled in. The room's dim and ready for rest." },
+      { title: 'A calm hour', time: '9:10 PM', status: 'Notice', statusColor: '#7a7a7a', description: "No activity in the bedroom for over an hour. Quiet and undisturbed." },
+    ],
+    'kids-bedroom': [
+      { title: 'Story time ended', time: '8:00 PM', status: 'Safe', statusColor: '#22c55e', description: "The reading lamp dimmed and the room went quiet around eight. Looks like everyone settled in." },
+      { title: 'Nightlight on', time: '7:45 PM', status: 'Safe', statusColor: '#22c55e', description: "The nightlight switched on at its usual time, glowing soft and warm. All calm since." },
+      { title: 'No movement', time: '9:20 PM', status: 'Notice', statusColor: '#7a7a7a', description: "Still and quiet for the last while. A gentle, sleepy kind of evening in here." },
+    ],
+    'backyard': [
+      { title: 'Garden lights on', time: '6:55 PM', status: 'Safe', statusColor: '#22c55e', description: "The garden lights came up as the sky darkened, casting a soft glow over the yard." },
+      { title: 'Gate secured', time: '5:40 PM', status: 'Safe', statusColor: '#22c55e', description: "The back gate latched shut earlier and hasn't opened since. The perimeter's quiet." },
+      { title: 'Breeze through the trees', time: '7:20 PM', status: 'Notice', statusColor: '#7a7a7a', description: "A bit of motion picked up — just the wind moving through the branches. Nothing else stirring." },
+    ],
+  };
+
+  ICONS = {
+    eye: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+    bell: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path><path d="M3.3 14c.8-2.3.8-4.3.8-5a8 8 0 0 1 15.8 0c0 .7 0 2.7.8 5a1 1 0 0 1-.9 1.4H4.2A1 1 0 0 1 3.3 14Z"></path></svg>',
+    share: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg>',
+  };
+
+  componentDidMount() {
+    this.paintIcons();
+    this._resize = () => {
+      const m = window.innerWidth < 768;
+      if (m !== this.state.isMobile) this.setState({ isMobile: m });
+    };
+    window.addEventListener('resize', this._resize);
+  }
+  componentDidUpdate() { this.paintIcons(); }
+  componentWillUnmount() { window.removeEventListener('resize', this._resize); }
+
+  paintIcons() {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('[data-icon]').forEach((el) => {
+      const key = el.getAttribute('data-icon');
+      const svg = this.ICONS[key];
+      if (svg && el.innerHTML.indexOf('svg') === -1) el.innerHTML = svg;
+    });
+  }
+
+  scrollCarousel(dir) {
+    const el = document.getElementById('activity-scroll');
+    if (!el) return;
+    const card = el.querySelector('div');
+    const step = card ? card.getBoundingClientRect().width + 14 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * step, behavior: 'smooth' });
+  }
+
+  navigateTo(url) {
+    const dest = url + (typeof window !== 'undefined' ? window.location.search : '');
+    window.location.href = dest;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const base = this.SPACES[s.currentSpace] || this.SPACES['living-room'];
+    const St = window.ArtemisaStore;
+    const custom = St ? (St.load().spaces || []).filter((x) => x.id === s.currentSpace)[0] : null;
+    const overrideName = St ? (St.load().names || {})[s.currentSpace] : null;
+    const sp = Object.assign({}, base, custom ? {
+      name: custom.name,
+      placeholder: custom.name.toLowerCase(),
+      status: 'This space is set up and waiting.',
+      description: 'Nothing has come through here yet. As soon as a camera is watching, everything it notices shows up in this space.',
+    } : {}, overrideName ? { name: overrideName } : {});
+
+    const STATUS_COLOR = { Safe: '#22c55e', Alert: '#d08700', Notice: '#7a7a7a', Emergency: '#dc2626' };
+    const STATUS_RING  = { Safe: 'rgba(22,163,74,0.28)', Alert: 'rgba(208,135,0,0.32)', Notice: 'rgba(0,0,0,0.1)', Emergency: 'rgba(220,38,38,0.3)' };
+
+    const activities = (this.ACTIVITIES[s.currentSpace] || []).map((a, i) => ({
+      slotId: 'space-activity-' + s.currentSpace + '-' + i,
+      placeholder: sp.name + ' · ' + a.time,
+      title: a.title,
+      time: a.time,
+      description: a.description,
+      status: a.status,
+      statusColor: STATUS_COLOR[a.status] || '#7a7a7a',
+      badgeRing: STATUS_RING[a.status] || 'rgba(0,0,0,0.1)',
+      ask: () => {
+        try { sessionStorage.setItem('artemisa_pending', 'Tell me more about: ' + a.title); } catch (e) {}
+        this.navigateTo('Chat.dc.html');
+      },
+    }));
+
+    return {
+      activities,
+      hasActivity: activities.length > 0,
+      noActivity: activities.length === 0,
+      name: sp.name,
+      status: sp.status,
+      description: sp.description,
+      lastUpdate: sp.lastUpdate,
+      placeholder: sp.placeholder,
+      slotId: 'spaces-' + s.currentSpace,
+      imgAspect: s.isMobile ? '3 / 4' : '2.1',
+      statusSize: s.isMobile ? '25px' : '31px',
+      mainPad: s.isMobile ? '6px 16px 130px' : '12px 32px 150px',
+      menuOpen: s.menuOpen,
+      menuBorder: s.menuOpen ? '#e5e5e5' : '#e5e5e5',
+      menuBg: s.menuOpen ? '#f5f5f5' : '#ffffff',
+      menuIcon: s.menuOpen ? '#000000' : '#404040',
+      menuItems: [
+        { icon: 'eye', label: 'See all activity', run: () => {
+          this.setState({ menuOpen: false });
+          this.navigateTo('Activity.dc.html');
+        } },
+        { icon: 'bell', label: 'Notifications', run: () => {
+          try { sessionStorage.setItem('artemisa_settings_tab', 'alerts'); } catch (e) {}
+          this.setState({ menuOpen: false });
+          this.navigateTo('Settings.dc.html');
+        } },
+        { icon: 'share', label: 'Share', run: () => {
+          try { sessionStorage.setItem('artemisa_settings_tab', 'members'); } catch (e) {}
+          this.setState({ menuOpen: false });
+          this.navigateTo('Settings.dc.html');
+        } },
+      ],
+      toggleMenu: () => this.setState((p) => ({ menuOpen: !p.menuOpen })),
+      closeMenu: () => this.setState({ menuOpen: false }),
+      goBack: () => this.navigateTo('Spaces.dc.html'),
+      askAnything: () => {
+        if (s.isMobile) {
+          this.navigateTo('Chat.dc.html');
+        } else {
+          try { sessionStorage.setItem('artemisa_active_space', s.currentSpace); } catch (e) {}
+          this.navigateTo('Home.dc.html');
+        }
+      },
+      seeAllActivity: () => this.navigateTo('Activity.dc.html'),
+      scrollPrev: () => this.scrollCarousel(-1),
+      scrollNext: () => this.scrollCarousel(1),
+    };
+  }
+}
+</script>
+</body>
+</html>

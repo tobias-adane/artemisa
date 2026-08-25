@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  *{box-sizing:border-box}
+  :root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+  html,body{margin:0;padding:0}
+  body{background:#fafafa;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  button{font-family:inherit;transition:background-color .15s var(--ease-out),color .15s var(--ease-out),border-color .15s var(--ease-out),transform .12s var(--ease-out)}
+  button:active{transform:scale(0.97)}
+  input,textarea,select{font-family:inherit}
+  input::placeholder,textarea::placeholder{color:#a3a3a3}
+  a{color:#737373;text-decoration:underline;text-underline-offset:2px}
+  a:hover{color:#0a0a0a}
+  @keyframes stepIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes overlayIn{from{opacity:0}to{opacity:1}}
+  @keyframes dialogIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+  [data-step]{animation:stepIn .28s var(--ease-out) both}
+  [data-row]{animation:rowIn .26s var(--ease-out) both}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    [data-step],[data-row]{animation:none !important;opacity:1 !important;transform:none !important}
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px;background:#fafafa;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+  <div style="width:100%;max-width:520px;background:#ffffff;border:1px solid #e5e5e5;border-radius:26px;padding:4px;padding-bottom:0;box-shadow:0 8px 32px rgba(0,0,0,0.05)">
+
+    <div style="border:1px solid #e5e5e5;border-radius:22px;background:#f7f7f7;padding:38px 40px 40px">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:26px">
+        <img src="artemisa-logo.svg" alt="Artemisa" width="26" height="26" style="display:block;width:26px;height:26px;flex:none">
+        <sc-if value="{{ showDots }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:5px">
+            <sc-for list="{{ dots }}" as="d" hint-placeholder-count="7">
+              <div style="height:5px;width:{{ d.w }};border-radius:999px;background:{{ d.bg }};transition:width .25s var(--ease-out),background-color .25s var(--ease-out)"></div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <div data-step="{{ stepKey }}" key="{{ stepKey }}">
+
+        <h1 style="margin:26px 0 0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:30px;line-height:1.12;letter-spacing:0.2px;color:#0a0a0a;text-wrap:pretty">{{ heading }}</h1>
+        <p style="margin:9px 0 0;font-size:13.5px;line-height:1.6;color:#737373;text-wrap:pretty">{{ subhead }}</p>
+
+        <!-- 1 · Personal -->
+        <sc-if value="{{ isPersonal }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:28px">
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:7px">Your name</label>
+              <input value="{{ name }}" onInput="{{ onName }}" placeholder="Maria Alvarez" style="width:100%;height:38px;border:1px solid #e5e5e5;border-radius:22px;padding:0 14px;font-size:13px;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;font-weight:600;margin-bottom:7px">Where is home?</label>
+              <input value="{{ location }}" onInput="{{ onLocation }}" placeholder="Buenos Aires, Argentina" style="width:100%;height:38px;border:1px solid #e5e5e5;border-radius:22px;padding:0 14px;font-size:13px;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+              <div style="margin-top:7px;font-size:11.5px;color:#a3a3a3">{{ tzNote }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 2 · Home -->
+        <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:22px;margin-top:28px">
+            <sc-for list="{{ homeGroups }}" as="g" hint-placeholder-count="2">
+              <div>
+                <div style="font-size:12px;font-weight:600;margin-bottom:10px">{{ g.label }}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ g.options }}" as="o" hint-placeholder-count="4">
+                    <button onClick="{{ o.run }}" style="height:34px;padding:0 15px;border:1px solid {{ o.border }};border-radius:999px;background:{{ o.bg }};color:{{ o.color }};font-size:13px;font-weight:500;cursor:pointer">{{ o.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:10px">Are there kids in the home?</div>
+              <div style="display:flex;gap:8px">
+                <sc-for list="{{ kidOptions }}" as="k" hint-placeholder-count="2">
+                  <button onClick="{{ k.run }}" style="height:34px;padding:0 20px;border:1px solid {{ k.border }};border-radius:999px;background:{{ k.bg }};color:{{ k.color }};font-size:13px;font-weight:500;cursor:pointer">{{ k.label }}</button>
+                </sc-for>
+              </div>
+              <sc-if value="{{ hasKids }}" hint-placeholder-val="{{ false }}">
+                <div data-row="" style="margin-top:12px">
+                  <input value="{{ kidAges }}" onInput="{{ onKidAges }}" placeholder="e.g. 4 and 7" style="width:100%;height:38px;border:1px solid #e5e5e5;border-radius:22px;padding:0 14px;font-size:13px;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- 3 · Concerns -->
+        <sc-if value="{{ isConcerns }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:26px;display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ concernOptions }}" as="c" hint-placeholder-count="4">
+              <button onClick="{{ c.run }}" style="display:flex;align-items:center;gap:11px;width:100%;padding:13px 15px;border:1px solid {{ c.border }};border-radius:22px;background:{{ c.bg }};cursor:pointer;text-align:left" style-hover="border-color:#a3a3a3">
+                <span style="width:17px;height:17px;flex:none;border-radius:6px;border:1.5px solid {{ c.boxBorder }};background:{{ c.boxBg }};display:flex;align-items:center;justify-content:center;color:#fff">
+                  <sc-if value="{{ c.on }}" hint-placeholder-val="{{ false }}">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                  </sc-if>
+                </span>
+                <span style="flex:1;font-size:13.5px;color:#0a0a0a">{{ c.label }}</span>
+              </button>
+            </sc-for>
+            <input value="{{ concernNote }}" onInput="{{ onConcernNote }}" placeholder="{{ rotatingConcern }}" style="width:100%;height:40px;margin-top:6px;border:1px solid #e5e5e5;border-radius:22px;padding:0 14px;font-size:13px;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+          </div>
+        </sc-if>
+
+        <!-- 4 · Custom instructions -->
+        <sc-if value="{{ isInstructions }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:26px">
+            <textarea value="{{ instructions }}" onInput="{{ onInstructions }}" placeholder="{{ rotatingInstruction }}" style="width:100%;min-height:132px;resize:vertical;border:1px solid #e5e5e5;border-radius:22px;padding:13px 14px;font-size:13px;line-height:1.6;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)"></textarea>
+          </div>
+        </sc-if>
+
+        <!-- 5 · Emergency contacts -->
+        <sc-if value="{{ isContacts }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ contactRows }}" as="c" hint-placeholder-count="1">
+              <div data-row="" style="border:1px solid #e5e5e5;border-radius:22px;background:#fff;padding:12px 13px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="width:20px;height:20px;flex:none;border-radius:999px;background:#f5f5f5;color:#737373;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ c.priority }}</span>
+                  <input value="{{ c.name }}" onInput="{{ c.onName }}" placeholder="Full name" style="flex:1;min-width:0;height:34px;border:1px solid #e5e5e5;border-radius:20px;padding:0 12px;font-size:13px;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+                  <sc-if value="{{ c.removable }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ c.remove }}" title="Remove contact" style="height:30px;width:30px;flex:none;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:18px;color:#a3a3a3;cursor:pointer" style-hover="background:#f5f5f5;color:#dc2626">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                    </button>
+                  </sc-if>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <select value="{{ c.cc }}" onChange="{{ c.onCc }}" style="height:34px;width:88px;flex:none;border:1px solid #e5e5e5;border-radius:20px;padding:0 8px;font-size:12.5px;background:#fff;color:#0a0a0a;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer">
+                    <sc-for list="{{ countryCodes }}" as="cc" hint-placeholder-count="4">
+                      <option value="{{ cc.value }}">{{ cc.label }}</option>
+                    </sc-for>
+                  </select>
+                  <input value="{{ c.phone }}" onInput="{{ c.onPhone }}" placeholder="11 5555 5555" style="flex:1;min-width:0;height:34px;border:1px solid #e5e5e5;border-radius:20px;padding:0 12px;font-size:13px;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+                  <select value="{{ c.rel }}" onChange="{{ c.onRel }}" style="height:34px;width:118px;flex:none;border:1px solid #e5e5e5;border-radius:20px;padding:0 10px;font-size:12.5px;background:#fff;color:#0a0a0a;outline:none;-webkit-appearance:none;appearance:none;cursor:pointer">
+                    <sc-for list="{{ relationships }}" as="r" hint-placeholder-count="6">
+                      <option value="{{ r }}">{{ r }}</option>
+                    </sc-for>
+                  </select>
+                </div>
+              </div>
+            </sc-for>
+            <button onClick="{{ addContact }}" style="display:flex;align-items:center;justify-content:center;gap:7px;height:38px;border:1px dashed #d4d4d4;border-radius:22px;background:transparent;color:#404040;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#fff;border-color:#a3a3a3;color:#0a0a0a">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+              <span>Add another contact</span>
+            </button>
+            <p style="margin:2px 0 0;font-size:11.5px;line-height:1.6;color:#a3a3a3;text-wrap:pretty">You can reorder priority anytime in Settings. 911 is always contacted first for real emergencies.</p>
+          </div>
+        </sc-if>
+
+        <!-- 6 · Confirmation -->
+        <sc-if value="{{ isConfirm }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:24px;display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ summaryCards }}" as="s" hint-placeholder-count="3">
+              <div data-row="" style="display:flex;align-items:flex-start;gap:12px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;padding:14px 16px">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:11.5px;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;color:#a3a3a3">{{ s.title }}</div>
+                  <div style="margin-top:4px;font-size:13.5px;line-height:1.55;color:#0a0a0a;text-wrap:pretty">{{ s.body }}</div>
+                </div>
+              </div>
+            </sc-for>
+            <p style="margin:12px 0 0;font-size:13.5px;color:#404040">One last thing — let's connect your first camera.</p>
+          </div>
+        </sc-if>
+
+        <!-- 7 · Spaces -->
+        <sc-if value="{{ isSpace }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:24px;display:flex;flex-direction:column;gap:11px">
+            <sc-for list="{{ spaceRows }}" as="sp" hint-placeholder-count="1">
+              <div data-row="" style="border:1px solid #e5e5e5;border-radius:22px;background:#fff;padding:13px 14px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input value="{{ sp.name }}" onInput="{{ sp.onName }}" placeholder="e.g. Front door, Living room, Backyard" style="flex:1;min-width:0;height:34px;border:1px solid #e5e5e5;border-radius:20px;padding:0 12px;font-size:13px;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+                  <sc-if value="{{ sp.removable }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ sp.remove }}" title="Remove space" style="height:30px;width:30px;flex:none;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:18px;color:#a3a3a3;cursor:pointer" style-hover="background:#f5f5f5;color:#dc2626">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                    </button>
+                  </sc-if>
+                </div>
+
+                <div style="display:flex;gap:6px;margin-top:10px">
+                  <sc-for list="{{ sp.methods }}" as="m" hint-placeholder-count="2">
+                    <button onClick="{{ m.run }}" style="display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid {{ m.border }};border-radius:999px;background:{{ m.bg }};color:{{ m.color }};font-size:12.5px;font-weight:500;cursor:pointer">
+                      <div style="width:13px;height:13px;display:flex;align-items:center;justify-content:center" data-icon="{{ m.icon }}"></div>
+                      <span>{{ m.label }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+
+                <sc-if value="{{ sp.isIp }}" hint-placeholder-val="{{ false }}">
+                  <div data-row="" style="margin-top:10px">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px">
+                      <label style="font-size:11.5px;font-weight:600;color:#404040">Camera IP address</label>
+                      <button onClick="{{ openBrandGuide }}" style="border:none;background:transparent;padding:0;font-size:11.5px;color:#737373;cursor:pointer;text-decoration:underline;text-underline-offset:2px;white-space:nowrap" style-hover="color:#0a0a0a">Find my camera's IP</button>
+                    </div>
+                    <input value="{{ sp.url }}" onInput="{{ sp.onUrl }}" placeholder="192.168.1.42" style="width:100%;height:34px;border:1px solid {{ sp.urlBorder }};border-radius:20px;padding:0 12px;font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#fff;color:#0a0a0a;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)">
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sp.isQr }}" hint-placeholder-val="{{ true }}">
+                  <div data-row="" onClick="{{ sp.startQr }}" style="display:flex;align-items:center;gap:12px;margin-top:10px;border:1px dashed #d4d4d4;border-radius:20px;background:#fafafa;padding:12px 13px;cursor:pointer" style-hover="border-color:#a3a3a3;background:#fff">
+                    <div style="width:44px;height:44px;flex:none;border-radius:18px;background:#fff;border:1px solid #e5e5e5;color:#404040;display:flex;align-items:center;justify-content:center" data-icon="qr"></div>
+                    <div style="flex:1;min-width:0;font-size:12px;line-height:1.55;color:#737373;text-wrap:pretty">Hold your camera's pairing QR code up to this screen, then tap here to pair.</div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sp.statusNote }}" hint-placeholder-val="{{ false }}">
+                  <div data-row="" style="margin-top:9px;font-size:12px;line-height:1.45;color:{{ sp.statusColor }};text-wrap:pretty">{{ sp.statusNote }}</div>
+                </sc-if>
+
+                <sc-if value="{{ sp.live }}" hint-placeholder-val="{{ false }}">
+                  <div data-row="" style="margin-top:11px;border:1px solid #e5e5e5;border-radius:20px;overflow:hidden;background:#e5e5e5;aspect-ratio:16/9">
+                    <image-slot id="{{ sp.slotId }}" placeholder="Live view" shape="rect" style="width:100%;height:100%"></image-slot>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+
+            <button onClick="{{ addSpace }}" style="display:flex;align-items:center;justify-content:center;gap:7px;height:38px;border:1px dashed #d4d4d4;border-radius:22px;background:transparent;color:#404040;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#fff;border-color:#a3a3a3;color:#0a0a0a">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+              <span>Add another space</span>
+            </button>
+
+            <sc-if value="{{ brandGuideOpen }}" hint-placeholder-val="{{ false }}">
+              <div data-row="" style="border:1px solid #e5e5e5;border-radius:22px;background:#fff;padding:14px 15px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                  <div style="font-size:12px;font-weight:600;color:#0a0a0a">Pick your camera brand</div>
+                  <button onClick="{{ closeBrandGuide }}" style="border:none;background:transparent;padding:0;font-size:11.5px;color:#737373;cursor:pointer;text-decoration:underline;text-underline-offset:2px" style-hover="color:#0a0a0a">Hide</button>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px">
+                  <sc-for list="{{ brands }}" as="b" hint-placeholder-count="9">
+                    <button onClick="{{ b.run }}" style="height:30px;padding:0 12px;border:1px solid {{ b.border }};border-radius:999px;background:{{ b.bg }};color:{{ b.color }};font-size:12.5px;font-weight:500;cursor:pointer">{{ b.label }}</button>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ hasBrandSteps }}" hint-placeholder-val="{{ false }}">
+                  <div data-row="" style="display:flex;flex-direction:column;gap:6px;margin-top:14px;padding-top:13px;border-top:1px solid #e5e5e5">
+                    <div style="font-size:12px;font-weight:600;color:#0a0a0a;margin-bottom:3px">{{ brandGuideTitle }}</div>
+                    <sc-for list="{{ brandGuideSteps }}" as="g" hint-placeholder-count="3">
+                      <div style="display:flex;gap:9px;font-size:12.5px;line-height:1.55;color:#737373">
+                        <span style="flex:none;width:16px;height:16px;margin-top:1px;border-radius:999px;background:#f5f5f5;color:#404040;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ g.n }}</span>
+                        <span style="flex:1;text-wrap:pretty">{{ g.text }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- 8 · Done -->
+        <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ showBanner }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:11px;margin-top:24px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;padding:14px 15px">
+              <div style="width:30px;height:30px;flex:none;border-radius:18px;background:#f5f5f5;color:#404040;display:flex;align-items:center;justify-content:center" data-icon="camera"></div>
+              <div style="flex:1;min-width:0;font-size:13px;line-height:1.5;color:#404040;text-wrap:pretty">Connect your first camera to start protection. We'll keep this reminder handy on Home.</div>
+            </div>
+          </sc-if>
+        </sc-if>
+
+      </div>
+    </div>
+
+    <!-- Footer nav -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 18px 20px">
+      <div style="display:flex;align-items:center;min-width:0">
+        <sc-if value="{{ showBack }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ goBack }}" style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border:none;background:transparent;border-radius:22px;color:#737373;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#f5f5f5;color:#0a0a0a">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            <span>Back</span>
+          </button>
+        </sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <sc-if value="{{ showSkip }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ skip }}" style="height:38px;padding:0 16px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;color:#0a0a0a;font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#f5f5f5">{{ skipLabel }}</button>
+        </sc-if>
+        <button onClick="{{ advance }}" disabled="{{ ctaDisabled }}" style="height:38px;padding:0 20px;border:none;border-radius:22px;background:{{ ctaBg }};color:#fafafa;font-size:13.5px;font-weight:500;cursor:{{ ctaCursor }};white-space:nowrap" style-hover="background:{{ ctaHover }}">{{ ctaLabel }}</button>
+      </div>
+    </div>
+
+  </div>
+
+  <sc-if value="{{ alertOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(10,10,10,0.32);animation:overlayIn .16s var(--ease-out) both">
+      <div onClick="{{ closeAlert }}" style="position:absolute;inset:0"></div>
+      <div role="alertdialog" style="position:relative;width:100%;max-width:404px;background:#fff;border:1px solid #e5e5e5;border-radius:26px;padding:26px 26px 22px;box-shadow:0 16px 48px rgba(0,0,0,0.14);animation:dialogIn .2s var(--ease-out) both">
+        <div style="width:34px;height:34px;border-radius:20px;background:#f5f5f5;color:#404040;display:flex;align-items:center;justify-content:center" data-icon="camera"></div>
+        <h2 style="margin:14px 0 0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:23px;line-height:1.15;color:#0a0a0a">No cameras connected yet</h2>
+        <p style="margin:8px 0 0;font-size:13px;line-height:1.6;color:#737373;text-wrap:pretty">Artemisa can't watch over your home until at least one space has a camera. It takes a minute — you'll need the camera's IP stream or its pairing QR.</p>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px">
+          <button onClick="{{ leaveAnyway }}" style="height:36px;padding:0 14px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;color:#0a0a0a;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#f5f5f5">Continue without protection</button>
+          <button onClick="{{ backToSpaces }}" style="height:36px;padding:0 16px;border:none;border-radius:22px;background:#171717;color:#fafafa;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap" style-hover="background:#262626">Set up a camera</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:820}}">
+const CONCERN_PH = [
+  "My mom lives alone and I worry about her mornings",
+  "The back gate doesn't always lock properly",
+  "Packages disappear from the hallway",
+];
+const INSTR_PH = [
+  "Cleaning lady comes Tuesdays at 10am",
+  "Ignore small pet movements in the backyard",
+  "Nobody should be home after 11pm on weekdays",
+  "Front door opens automatically for deliveries between 2-4pm",
+];
+const BRAND_GUIDES = {
+  'TP-Link': ['Open the Tapo or Kasa app and go to the camera settings.', 'Enable "Camera Account" and set a username + password.', 'Your URL is rtsp://user:pass@CAMERA-IP:554/stream1.'],
+  Hikvision: ['Find the camera IP in the Hik-Connect app or your router.', 'Log into the web console with your admin account.', 'Use rtsp://user:pass@IP:554/Streaming/Channels/101.'],
+  Dahua: ['Open DMSS and note the device IP address.', 'Enable RTSP under Network → Advanced.', 'Use rtsp://user:pass@IP:554/cam/realmonitor?channel=1&subtype=0.'],
+  Reolink: ['In the Reolink app open Settings → Network → Advanced → RTSP.', 'Copy the port (default 554) and your device password.', 'Use rtsp://user:pass@IP:554/h264Preview_01_main.'],
+  EZVIZ: ['Enable local RTSP in the EZVIZ app under Settings.', 'The verification code on the camera label is your password.', 'Use rtsp://admin:CODE@IP:554/H.264.'],
+  Imou: ['Open the Imou Life app → Device Settings → enable RTSP.', 'Create a local device account.', 'Use rtsp://user:pass@IP:554/cam/realmonitor?channel=1&subtype=0.'],
+  Foscam: ['Log into the camera web page with your admin account.', 'Check Network → Port for the RTSP port.', 'Use rtsp://user:pass@IP:554/videoMain.'],
+  Amcrest: ['Open the Amcrest View app and note the device IP.', 'Enable RTSP under Network settings.', 'Use rtsp://user:pass@IP:554/cam/realmonitor?channel=1&subtype=0.'],
+  "Other / don't know": ['Find the camera IP in your router\u2019s device list.', 'Search "<brand> <model> RTSP URL" \u2014 most follow rtsp://user:pass@IP:554/.', 'Still stuck? Paste anything you have and we\u2019ll help you finish later.'],
+};
+const ICONS = {
+  home: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
+  shield: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  users: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>',
+  camera: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="m16 11 6-4v10l-6-4"/></svg>',
+  plug: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6"/><path d="M6 8h12v3a6 6 0 0 1-12 0z"/><path d="M12 17v5"/></svg>',
+  spinner: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.2-8.5"/></svg><style>@keyframes spin{to{transform:rotate(360deg)}}</style>',
+  check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  retry: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>',
+  qr: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v3M14 20h6"/></svg>',
+  qrSm: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v3M14 20h6"/></svg>',
+  lan: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/></svg>',
+};
+
+class Component extends DCLogic {
+  state = {
+    step: 0,
+    name: '', location: '',
+    household: '', homeType: '', kids: null, kidAges: '',
+    concerns: [], concernNote: '',
+    instructions: '',
+    contacts: [{ name: '', cc: '+54', phone: '', rel: 'Spouse/Partner' }],
+    spaces: [{ name: '', method: 'qr', url: '', test: 'idle' }],
+    brand: '', brandGuideOpen: false,
+    alertOpen: false,
+    ph: 0,
+  };
+
+  componentDidMount() {
+    this._t = setInterval(() => this.setState((p) => ({ ph: p.ph + 1 })), 3800);
+    this.paintIcons();
+  }
+  componentDidUpdate() { this.paintIcons(); }
+  componentWillUnmount() { clearInterval(this._t); Object.values(this._tests || {}).forEach(clearTimeout); }
+
+  paintIcons() {
+    document.querySelectorAll('[data-icon]').forEach((el) => {
+      const k = el.getAttribute('data-icon');
+      const svg = ICONS[k] || '';
+      if (el.getAttribute('data-painted') !== k) { el.innerHTML = svg; el.setAttribute('data-painted', k); }
+    });
+  }
+
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  pick(k, v) { return () => this.setState({ [k]: v }); }
+
+  pillStyle(on) {
+    return on
+      ? { bg: '#171717', color: '#fafafa', border: '#171717' }
+      : { bg: '#ffffff', color: '#0a0a0a', border: '#e5e5e5' };
+  }
+
+  go(n) { this.setState({ step: Math.max(0, Math.min(8, n)) }); }
+
+  renderVals() {
+    const s = this.state;
+    const step = s.step;
+    const first = (s.name.trim().split(/\s+/)[0]) || 'friend';
+    const liveSpaces = s.spaces.filter((sp) => sp.test === 'ok' && sp.name.trim());
+    const connected = liveSpaces.length > 0;
+    const liveNames = liveSpaces.map((sp) => sp.name.trim());
+    const watchingLine = liveNames.length > 2
+      ? liveNames.length + ' spaces'
+      : liveNames.join(' and ');
+
+    const dots = [1, 2, 3, 4, 5, 6, 7].map((i) => ({
+      w: i === step ? '18px' : '5px',
+      bg: i < step ? '#171717' : i === step ? '#171717' : '#e5e5e5',
+    }));
+
+    const headings = {
+      0: "Let's get your home protected.",
+      1: 'Who are we protecting?',
+      2: 'Tell us about your home.',
+      3: 'What worries you most?',
+      4: 'Teach Artemisa your routine.',
+      5: "Who should we call if something's wrong?",
+      6: 'You\u2019re all set, ' + first + '.',
+      7: 'Set up your spaces.',
+      8: connected ? first + ', you\u2019re protected.' : 'Welcome to Artemisa, ' + first + '.',
+    };
+    const subs = {
+      0: 'A few quick questions so Artemisa understands what matters to you. Takes about 3 minutes.',
+      1: 'Just your name and where home is.',
+      2: 'Context she uses to tell a normal evening from a real problem.',
+      3: 'This helps Artemisa know what to pay closer attention to. Choose as many as apply.',
+      4: 'The more she knows what\u2019s normal, the fewer false alarms you\u2019ll get. You can always add more later.',
+      5: 'Add at least one person. Artemisa will contact them — in order — if she detects a real emergency.',
+      6: 'Here\u2019s what Artemisa knows so far.',
+      7: 'A "space" is anywhere you have a camera. Add as many as you like — by IP stream or by scanning the camera\u2019s QR.',
+      8: connected
+        ? 'Artemisa is watching ' + watchingLine + ' right now.'
+        : 'Your home profile is saved. Add a camera whenever you\u2019re ready.',
+    };
+
+    const householdOpts = ['Just me', '2 people', '3-4 people', '5+ people'];
+    const typeOpts = ['Apartment', 'House', 'Small business'];
+    const homeGroups = [
+      { label: 'How many people live here?', options: householdOpts.map((o) => ({ label: o, run: this.pick('household', o), ...this.pillStyle(s.household === o) })) },
+      { label: 'What kind of home is it?', options: typeOpts.map((o) => ({ label: o, run: this.pick('homeType', o), ...this.pillStyle(s.homeType === o) })) },
+    ];
+    const kidOptions = [
+      { label: 'Yes', run: this.pick('kids', true), ...this.pillStyle(s.kids === true) },
+      { label: 'No', run: () => this.setState({ kids: false, kidAges: '' }), ...this.pillStyle(s.kids === false) },
+    ];
+
+    const concernList = [
+      "Break-ins while we're away",
+      'Someone home alone (kids, elderly parent)',
+      'Deliveries and unknown visitors',
+      'Just general peace of mind',
+    ];
+    const toggleConcern = (c) => () => this.setState((p) => ({
+      concerns: p.concerns.includes(c) ? p.concerns.filter((x) => x !== c) : p.concerns.concat(c),
+    }));
+    const concernOptions = concernList.map((c) => {
+      const on = s.concerns.includes(c);
+      return { label: c, on, run: toggleConcern(c), bg: on ? '#ffffff' : '#ffffff', border: on ? '#d4d4d4' : '#e5e5e5', boxBg: on ? '#737373' : '#ffffff', boxBorder: on ? '#737373' : '#d4d4d4' };
+    });
+
+    const setContact = (i, k) => (e) => this.setState((p) => {
+      const list = p.contacts.slice();
+      list[i] = Object.assign({}, list[i], { [k]: e.target.value });
+      return { contacts: list };
+    });
+    const contactRows = s.contacts.map((c, i) => ({
+      priority: i + 1,
+      name: c.name, phone: c.phone, cc: c.cc, rel: c.rel,
+      onName: setContact(i, 'name'), onPhone: setContact(i, 'phone'), onCc: setContact(i, 'cc'), onRel: setContact(i, 'rel'),
+      removable: s.contacts.length > 1,
+      remove: () => this.setState((p) => ({ contacts: p.contacts.filter((_, j) => j !== i) })),
+    }));
+    const hasContact = s.contacts.some((c) => c.name.trim() && c.phone.trim());
+
+    const filled = s.contacts.filter((c) => c.name.trim() && c.phone.trim());
+
+    const kidsLine = s.kids ? (s.kidAges.trim() ? 'kids (' + s.kidAges.trim() + ')' : 'kids at home') : 'no kids';
+    const summaryCards = [
+      { icon: 'home', title: 'Home', body: [s.homeType || 'Home', s.household || 'household', kidsLine].join(' · ') },
+      { icon: 'shield', title: 'Watching for', body: s.concerns.length ? s.concerns.join(' · ') : 'General peace of mind' },
+      { icon: 'users', title: 'Emergency contacts', body: (filled.length === 1 ? '1 person added' : filled.length + ' people added') + ', 911 first' },
+    ];
+
+    const brands = Object.keys(BRAND_GUIDES).map((b) => ({ label: b, run: () => this.setState({ brand: b, brandGuideOpen: true }), ...this.pillStyle(s.brand === b) }));
+    const guide = BRAND_GUIDES[s.brand] || [];
+
+    const patchSpace = (i, patch) => this.setState((p) => {
+      const list = p.spaces.slice();
+      list[i] = Object.assign({}, list[i], patch);
+      return { spaces: list };
+    });
+    const IP_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
+    this._tests = this._tests || {};
+    const connectSoon = (i, patch, delay) => {
+      if (this._tests[i]) clearTimeout(this._tests[i]);
+      patchSpace(i, Object.assign({ test: 'testing' }, patch));
+      this._tests[i] = setTimeout(() => patchSpace(i, { test: 'ok' }), delay);
+    };
+    const STATUS = {
+      idle: { note: '', color: '#737373' },
+      testing: { note: 'Connecting…', color: '#737373' },
+      ok: { note: '', color: '#171717' },
+    };
+    const spaceRows = s.spaces.map((sp, i) => {
+      const st = STATUS[sp.test] || STATUS.idle;
+      return {
+        name: sp.name, url: sp.url,
+        onName: (e) => patchSpace(i, { name: e.target.value }),
+        onUrl: (e) => {
+          const v = e.target.value;
+          if (this._tests[i]) clearTimeout(this._tests[i]);
+          if (IP_RE.test(v.trim())) connectSoon(i, { url: v }, 900);
+          else patchSpace(i, { url: v, test: 'idle' });
+        },
+        slotId: 'ob-live-' + i,
+        startQr: () => connectSoon(i, { method: 'qr' }, 1700),
+        live: sp.test === 'ok',
+        statusNote: st.note,
+        statusColor: st.color,
+        removable: s.spaces.length > 1,
+        remove: () => this.setState((p) => ({ spaces: p.spaces.filter((_, j) => j !== i) })),
+        isIp: sp.method === 'ip', isQr: sp.method === 'qr',
+        methods: [
+          Object.assign({ label: 'Scan QR', icon: 'qrSm', run: () => connectSoon(i, { method: 'qr' }, 1700) }, this.pillStyle(sp.method === 'qr')),
+          Object.assign({ label: 'IP address', icon: 'lan', run: () => { if (this._tests[i]) clearTimeout(this._tests[i]); patchSpace(i, { method: 'ip', test: IP_RE.test(sp.url.trim()) ? 'ok' : 'idle' }); } }, this.pillStyle(sp.method === 'ip')),
+        ],
+        urlBorder: '#e5e5e5',
+      };
+    });
+
+    const ctas = {
+      0: 'Get started', 1: 'Continue', 2: 'Continue', 3: 'Continue', 4: 'Continue',
+      5: 'Continue', 6: 'Connect a camera', 7: 'Save spaces', 8: 'Go to Artemisa',
+    };
+    const skips = { 4: 'Skip for now', 6: "I'll do this later", 7: "Skip, I'll do this later" };
+    const namedSpaces = s.spaces.filter((sp) => sp.name.trim());
+    const blocked = (step === 1 && !s.name.trim()) || (step === 5 && !hasContact) || (step === 7 && namedSpaces.length === 0);
+
+    const advance = () => {
+      if (blocked) return;
+      if (step === 5) {
+        const keep = s.contacts.filter((c) => c.name.trim() && c.phone.trim());
+        this.setState({ contacts: keep.length ? keep : s.contacts, step: 6 });
+        return;
+      }
+      if (step === 7) { this.setState({ spaces: namedSpaces, step: 8 }); return; }
+      if (step === 8) {
+        if (connected) { window.location.href = 'Home.dc.html'; return; }
+        this.setState({ alertOpen: true });
+        return;
+      }
+      this.go(step + 1);
+    };
+    const skip = () => {
+      if (step === 6 || step === 7) { this.go(8); return; }
+      this.go(step + 1);
+    };
+
+    return {
+      showDots: step >= 1 && step <= 7,
+      dots,
+      stepKey: 'step-' + step,
+      heading: headings[step],
+      subhead: subs[step],
+
+      isPersonal: step === 1, isHome: step === 2, isConcerns: step === 3,
+      isInstructions: step === 4, isContacts: step === 5, isConfirm: step === 6,
+      isSpace: step === 7, isDone: step === 8,
+
+      name: s.name, onName: this.set('name'),
+      location: s.location, onLocation: this.set('location'),
+      tzNote: s.location.trim() ? 'We\u2019ll use this to set your timezone automatically.' : 'City and country is enough.',
+
+      homeGroups, kidOptions, hasKids: s.kids === true,
+      kidAges: s.kidAges, onKidAges: this.set('kidAges'),
+
+      concernOptions,
+      concernNote: s.concernNote, onConcernNote: this.set('concernNote'),
+      rotatingConcern: CONCERN_PH[s.ph % CONCERN_PH.length],
+
+      instructions: s.instructions, onInstructions: this.set('instructions'),
+      rotatingInstruction: INSTR_PH[s.ph % INSTR_PH.length],
+
+      contactRows, addContact: () => this.setState((p) => ({ contacts: p.contacts.concat({ name: '', cc: '+54', phone: '', rel: 'Friend' }) })),
+      countryCodes: [
+        { value: '+54', label: '🇦🇷 +54' }, { value: '+1', label: '🇺🇸 +1' },
+        { value: '+52', label: '🇲🇽 +52' }, { value: '+34', label: '🇪🇸 +34' },
+        { value: '+55', label: '🇧🇷 +55' }, { value: '+56', label: '🇨🇱 +56' },
+      ],
+      relationships: ['Spouse/Partner', 'Parent', 'Sibling', 'Friend', 'Neighbor', 'Other'],
+
+      summaryCards,
+
+      spaceRows,
+      addSpace: () => this.setState((p) => ({ spaces: p.spaces.concat({ name: '', method: 'qr', url: '', test: 'idle' }) })),
+      brands, brandGuideOpen: s.brandGuideOpen,
+      hasBrandSteps: guide.length > 0,
+      brandGuideTitle: 'Finding the RTSP URL on ' + (s.brand || 'your camera'),
+      brandGuideSteps: guide.map((g, i) => ({ n: i + 1, text: g })),
+      openBrandGuide: () => this.setState({ brandGuideOpen: true }),
+      closeBrandGuide: () => this.setState({ brandGuideOpen: false }),
+
+      showBanner: !connected,
+      alertOpen: s.alertOpen,
+      closeAlert: () => this.setState({ alertOpen: false }),
+      leaveAnyway: () => { window.location.href = 'Home.dc.html'; },
+      backToSpaces: () => this.setState({ alertOpen: false, step: 7 }),
+
+      showBack: step > 0 && step < 8,
+      goBack: () => this.go(step - 1),
+      showSkip: !!skips[step],
+      skipLabel: skips[step] || '',
+      skip,
+      advance,
+      ctaLabel: ctas[step],
+      ctaDisabled: blocked,
+      ctaBg: blocked ? '#a3a3a3' : '#171717',
+      ctaHover: blocked ? '#a3a3a3' : '#262626',
+      ctaCursor: blocked ? 'not-allowed' : 'pointer',
+    };
+  }
+}
+</script>
+</body>
+</html>

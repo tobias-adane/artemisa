@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<script src="./artemisa-store.js"></script>
+<style>
+  *{box-sizing:border-box}
+  :root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1);--ease-drawer:cubic-bezier(.32,.72,0,1)}
+  html,body{margin:0;padding:0}
+  body{background:#ffffff;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  button{font-family:inherit;transition:background-color .15s var(--ease-out),color .15s var(--ease-out),border-color .15s var(--ease-out),transform .12s var(--ease-out)}
+  button:active{transform:scale(0.97)}
+  html{scrollbar-width:none;-ms-overflow-style:none}
+  ::-webkit-scrollbar{width:0;height:0;display:none}
+  [data-space-card] image-slot{transition:transform .4s var(--ease-out)}
+  @media (hover:hover) and (pointer:fine){[data-space-card]:hover image-slot{transform:scale(1.03)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes popIn{from{opacity:0;transform:translateY(4px) scale(0.97)}to{opacity:1;transform:none}}
+  @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:none}}
+  @keyframes overlayIn{from{opacity:0}to{opacity:1}}
+  [data-navbtn]{position:relative}
+  [data-navtip]{position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%) translateY(3px);background:#171717;color:#fff;font-size:11px;font-weight:500;letter-spacing:0.01em;padding:5px 9px;border-radius:12px;white-space:nowrap;opacity:0;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.18);transition:opacity .15s var(--ease-out),transform .15s var(--ease-out)}
+  [data-navtip]::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#171717}
+  @media (hover:hover) and (pointer:fine){[data-navbtn]:hover [data-navtip]{opacity:1;transform:translateX(-50%)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes shimmer{0%{background-position:-460px 0}100%{background-position:460px 0}}
+  [data-mi]{color:#404040;transition:color .15s var(--ease-out)}
+  [data-mi]:hover{color:#000000 !important}
+  [data-mi] [data-icon]{color:currentColor !important}
+  [data-mi] svg{stroke:currentColor}
+  [data-mi] span[style*="flex"]{color:inherit !important}
+  @media (max-width:1024px){[data-grid]{grid-template-columns:repeat(2,1fr) !important}[data-main]{padding:24px 28px 140px !important}}
+  @media (max-width:640px){
+    [data-grid]{grid-template-columns:1fr !important}
+    [data-main]{padding:18px 18px 150px !important}
+    [data-headline]{font-size:24px !important}
+    [data-space-card]{aspect-ratio:16/11 !important;border-radius:30px !important}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    [data-step],[data-field],[data-event]{animation:none !important;opacity:1 !important;transform:none !important}
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#ffffff;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+  <header style="position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(255,255,255,0.82);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px)">
+    <dc-import name="AvatarMenu" hint-size="28px,28px"></dc-import>
+    <div style="display:flex;align-items:center;padding:8px 16px;border:none;border-radius:999px;font-size:12px;font-weight:500;color:#000;background:#fff;flex:none;white-space:nowrap">Spaces</div>
+    <div style="position:relative">
+      <button title="More" onClick="{{ toggleMore }}" style="width:28px;height:28px;flex:none;display:flex;align-items:center;justify-content:center;border:0.5px solid {{ moreBorder }};border-radius:999px;background:{{ moreBg }};color:{{ moreColor }};cursor:pointer" style-hover="color:#000000">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
+      </button>
+      <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closeMore }}" style="position:fixed;inset:0;z-index:65"></div>
+        <div style="position:absolute;top:calc(100% + 12px);right:0;z-index:70;min-width:214px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:10px;transform-origin:top right;animation:popIn .17s var(--ease-out)">
+          <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">More</div>
+          <button onClick="{{ addSpace }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+            <div style="width:17px;height:17px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="plus"></div>
+            <span style="flex:1;font-size:14px;color:inherit">Add space</span>
+          </button>
+        </div>
+      </sc-if>
+    </div>
+  </header>
+
+  <main data-main="" style="max-width:1180px;margin:0 auto;padding:30px 56px 140px">
+
+    <div style="margin-bottom:26px">
+      <div style="font-size:13px;color:#737373;margin-bottom:7px">At your home at a glance.</div>
+      <div data-headline="" style="font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:30px;line-height:1.12;color:#0a0a0a;letter-spacing:0.2px">{{ contextMessage }}</div>
+    </div>
+
+    <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <sc-for list="{{ skeletons }}" as="sk" hint-placeholder-count="6">
+        <div style="aspect-ratio:4/3;border-radius:36px;background:linear-gradient(100deg,#e5e5e5 30%,#f5f5f5 50%,#e5e5e5 70%);background-size:920px 100%;animation:shimmer 1.3s linear infinite"></div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ noSpaces }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed #d4d4d4;border-radius:30px;padding:56px 28px;text-align:center">
+      <div style="font-family:'Instrument Serif',Georgia,serif;font-size:24px">Nothing to watch yet</div>
+      <p style="margin:10px auto 18px;max-width:40ch;font-size:13.5px;line-height:1.65;color:#737373">Spaces are how Artemisa understands your home — a room, an entrance, a yard. Add one and point a camera at it.</p>
+      <button onClick="{{ addSpace }}" style="height:34px;padding:0 16px;border:none;border-radius:17px;background:#171717;color:#fafafa;font-size:13px;font-weight:500;cursor:pointer" style-hover="background:#262626">Add your first space</button>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ ready }}" hint-placeholder-val="{{ true }}">
+    <div data-grid="" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <sc-for list="{{ spaces }}" as="space" hint-placeholder-count="6">
+        <div data-space-card="" onClick="{{ space.open }}" style="position:relative;aspect-ratio:4/3;border-radius:36px;overflow:hidden;cursor:pointer;background:#e5e5e5">
+          <image-slot id="{{ space.slotId }}" shape="rect" mask="inset(0)" placeholder="{{ space.placeholder }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+          <div style="position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(to top,rgba(0,0,0,0.55),rgba(0,0,0,0))"></div>
+
+          <div style="position:absolute;left:16px;right:44px;bottom:14px;color:#fff;font-size:12px;font-weight:400;letter-spacing:0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,0.3)">{{ space.name }}</div>
+
+          <sc-if value="{{ space.camLabel }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;left:16px;top:16px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:999px;background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.06);font-size:11.5px;font-weight:500;color:#404040">{{ space.camLabel }}</div>
+          </sc-if>
+
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+  </main>
+
+  <div style="position:fixed;left:0;right:0;bottom:0;z-index:60;width:100%;box-sizing:border-box;display:flex;justify-content:center;padding:24px 0;backdrop-filter:blur(1px);-webkit-backdrop-filter:blur(1px);pointer-events:none">
+  <nav style="pointer-events:auto;display:flex;align-items:center;gap:8px;padding:8px;background:#fff;border:1px solid #e5e5e5;border-radius:999px;box-shadow:0 10px 34px rgba(0,0,0,0.10)">
+    <sc-for list="{{ nav }}" as="n" hint-placeholder-count="3">
+      <button data-navbtn="" onClick="{{ n.run }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid {{ n.borderColor }};border-radius:999px;cursor:pointer;background:{{ n.bg }};color:{{ n.color }}" style-hover="color:#000000">
+        <div style="width:12px;height:12px;display:flex;align-items:center;justify-content:center" data-icon="{{ n.icon }}"></div>
+        <span data-navtip="">{{ n.label }}</span>
+      </button>
+    </sc-for>
+    <div style="width:1px;height:20px;background:#e5e5e5;margin:0 3px"></div>
+    <div style="position:relative">
+      <button data-navbtn="" onClick="{{ togglePlus }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid {{ plusBorder }};border-radius:999px;cursor:pointer;background:{{ plusBg }};color:{{ plusColor }}" style-hover="color:#000000">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        <span data-navtip="">Add</span>
+      </button>
+      <sc-if value="{{ plusOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ closePlus }}" style="position:fixed;inset:0;z-index:65"></div>
+        <div style="position:absolute;bottom:calc(100% + 12px);right:0;z-index:70;min-width:214px;background:#fff;border:1px solid #e5e5e5;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,0.08);padding:10px;transform-origin:bottom right;animation:popIn .17s var(--ease-out)">
+          <div style="padding:5px 8px 3px;font-size:11px;font-weight:600;color:#737373;letter-spacing:0.02em">Add</div>
+          <sc-for list="{{ plusItems }}" as="p" hint-placeholder-count="3">
+            <button onClick="{{ p.run }}" style="display:flex;align-items:center;gap:10px;width:100%;padding:7px 8px;border:none;background:transparent;border-radius:14px;cursor:pointer;text-align:left;color:#404040" data-mi="" style-hover="color:#000000">
+              <div style="width:17px;height:17px;flex:none;display:flex;align-items:center;justify-content:center;color:#737373" data-icon="{{ p.icon }}"></div>
+              <span style="flex:1;font-size:14px;color:inherit">{{ p.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </nav>
+  </div>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:98;display:flex;align-items:center;gap:8px;padding:9px 14px;background:#171717;color:#fafafa;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,0.22);font-size:12.5px;font-weight:500;animation:popIn .18s var(--ease-out)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"></path></svg>
+      <span>{{ toast }}</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:95;background:rgba(20,20,20,0.18);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 18px;animation:overlayIn .16s var(--ease-out)">
+      <div onClick="{{ stop }}" style="width:min(452px,100%);flex:none;margin:auto;background:#ffffff;border:1px solid #e5e5e5;border-radius:26px;padding:4px;padding-bottom:0;box-shadow:0 24px 60px rgba(0,0,0,0.20),0 4px 12px rgba(0,0,0,0.08);animation:modalIn .22s var(--ease-out)">
+
+        <div style="border:1px solid #e5e5e5;border-radius:22px;background:#f7f7f7;padding:34px 32px 28px">
+
+          <h2 style="margin:0;font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:27px;line-height:1.15;letter-spacing:0.2px;text-align:left;color:#0a0a0a">{{ modalTitle }}</h2>
+          <p style="margin:7px 0 0;font-size:13px;line-height:1.6;color:#737373;text-align:left;text-wrap:pretty">{{ modalSubhead }}</p>
+
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px">
+            <sc-for list="{{ modalFields }}" as="f" hint-placeholder-count="2">
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#0a0a0a;margin-bottom:7px;letter-spacing:0.01em">{{ f.label }}</label>
+                <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+                  <input type="text" value="{{ f.value }}" onInput="{{ f.onInput }}" placeholder="{{ f.placeholder }}" style="width:100%;height:38px;border:1px solid #e5e5e5;border-radius:22px;padding:0 14px;font-size:13px;color:#0a0a0a;background:#fff;outline:none" style-focus="border-color:#a3a3a3;box-shadow:0 0 0 3px rgba(163,163,163,0.35)"/>
+                </sc-if>
+                <sc-if value="{{ f.isPills }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:7px">
+                    <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3">
+                      <button type="button" onClick="{{ o.run }}" style="height:32px;padding:0 13px;border:1px solid {{ o.border }};border-radius:999px;background:{{ o.bg }};color:{{ o.color }};font-size:12.5px;font-weight:500;cursor:pointer" style-hover="border-color:#a3a3a3">{{ o.label }}</button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ showQr }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ startQr }}" style="display:flex;align-items:center;gap:12px;margin-top:14px;border:1px dashed #d4d4d4;border-radius:20px;background:#fff;padding:12px 13px;cursor:pointer" style-hover="border-color:#a3a3a3">
+              <div style="width:44px;height:44px;flex:none;border-radius:18px;background:#fff;border:1px solid #e5e5e5;color:#404040;display:flex;align-items:center;justify-content:center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><path d="M14 14h3v3h-3zM20 14v3M14 20h3M20 20h1"></path></svg>
+              </div>
+              <div style="flex:1;min-width:0;font-size:12px;line-height:1.55;color:#737373;text-wrap:pretty">Hold your camera's pairing QR code up to this screen, then tap here to pair.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ statusNote }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:11px;font-size:12px;color:#737373">{{ statusNote }}</div>
+          </sc-if>
+
+          <sc-if value="{{ camLive }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px;border:1px solid #e5e5e5;border-radius:20px;overflow:hidden;background:#e5e5e5;aspect-ratio:16/9">
+              <image-slot id="spaces-cam-live" placeholder="Live view" shape="rect" style="width:100%;height:100%"></image-slot>
+            </div>
+          </sc-if>
+
+          <button type="button" onClick="{{ submitModal }}" style="width:100%;height:40px;margin-top:22px;border:none;border-radius:22px;background:{{ ctaBg }};color:#fafafa;font-size:13.5px;font-weight:500;cursor:{{ ctaCursor }};letter-spacing:0.01em" style-hover="background:{{ ctaHover }}">{{ modalCta }}</button>
+
+        </div>
+
+        <div style="padding:18px 20px">
+          <p style="margin:0;text-align:left;font-size:12.5px;color:#737373">
+            {{ modalFootNote }} <button type="button" onClick="{{ closeModal }}" style="border:none;background:transparent;padding:0;font-size:12.5px;color:#737373;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-weight:500" style-hover="color:#0a0a0a">Cancel</button>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:860},&quot;homeState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;empty&quot;,&quot;family&quot;,&quot;activity&quot;,&quot;alert&quot;],&quot;default&quot;:&quot;empty&quot;,&quot;tsType&quot;:&quot;'empty' | 'family' | 'activity' | 'alert'&quot;},&quot;loading&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { activeNav: 'spaces', plusOpen: false, moreOpen: false, modal: null, camState: 'idle', toast: '',
+    cardMenu: null, renameId: null,
+    shared: { spaces: [], cameras: [], members: [], hidden: [], names: {} },
+    form: { spaceName: '', spaceType: 'Indoor', camName: '', camSpace: 'Living Room', camMethod: 'Scan QR', camIp: '', inviteEmail: '', inviteRole: 'Member', renameName: '' } };
+
+  pillStyleFor(active) {
+    return { border: active ? '#d4d4d4' : '#e5e5e5', bg: active ? '#f5f5f5' : '#ffffff', color: active ? '#0a0a0a' : '#404040' };
+  }
+
+  SPACES = [
+    { id: 'living-room',  name: 'Living Room', placeholder: 'living room' },
+    { id: 'kitchen',      name: 'Kitchen',     placeholder: 'kitchen' },
+    { id: 'entrance',     name: 'Entrance',    placeholder: 'entrance' },
+    { id: 'bedroom',      name: 'Bedroom',     placeholder: 'bedroom' },
+    { id: 'kids-bedroom', name: 'Kids Bedroom',placeholder: 'kids bedroom' },
+    { id: 'backyard',     name: 'Backyard',    placeholder: 'backyard' },
+  ];
+
+  MESSAGES = {
+    empty:    "Your home's empty right now. All secure.",
+    family:   "Your family's home. Everything's calm.",
+    activity: "Activity detected. Check the spaces.",
+    alert:    "Alert in one of your spaces.",
+  };
+
+  // which space (if any) carries the non-active status for a given home state
+  ALERT_MAP = { activity: 'entrance', alert: 'living-room' };
+
+  STATUS = {
+    active:  { color: '#34c759', glow: 'rgba(52,199,89,0.55)',  label: 'Active' },
+    alert:   { color: '#ffcc00', glow: 'rgba(255,204,0,0.6)',   label: 'Alert' },
+    offline: { color: '#737373', glow: 'rgba(0,0,0,0)',         label: 'Offline' },
+  };
+
+  ICONS = {
+    home: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M9 22V12h6v10"></path></svg>',
+    shapes: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z"></path><rect x="3" y="14" width="7" height="7" rx="1"></rect><circle cx="17.5" cy="17.5" r="3.5"></circle></svg>',
+    zap: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>',
+    'add-space': '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M12 8v8M8 12h8"></path></svg>',
+    camera: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>',
+    invite: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>',
+    plus: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>',
+    trash: '<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>',
+  };
+
+  componentDidMount() {
+    this.paintNavIcons();
+    if (window.ArtemisaStore) {
+      this.setState({ shared: window.ArtemisaStore.load() });
+      this._unsub = window.ArtemisaStore.subscribe((d) => this.setState({ shared: d }));
+    }
+    try {
+      const want = sessionStorage.getItem('artemisa_open_modal');
+      if (want) { sessionStorage.removeItem('artemisa_open_modal'); this.setState({ modal: want, camState: 'idle' }); }
+    } catch (e) {}
+    this._onAdd = (ev) => this.setState({ modal: (ev.detail && ev.detail.kind) || 'space', camState: 'idle', plusOpen: false, moreOpen: false });
+    window.addEventListener('artemisa:add', this._onAdd);
+    this._key = (ev) => { if (ev.key === 'Escape' && this.state.modal) this.setState({ modal: null }); };
+    window.addEventListener('keydown', this._key);
+  }
+  componentWillUnmount() {
+    if (this._unsub) this._unsub();
+    window.removeEventListener('keydown', this._key);
+    window.removeEventListener('artemisa:add', this._onAdd);
+    clearTimeout(this._camT);
+    clearTimeout(this._toastT);
+  }
+  componentDidUpdate() { this.paintNavIcons(); }
+
+  navigateTo(url) {
+    window.location.href = url + (typeof window !== 'undefined' ? window.location.search : '');
+  }
+
+  paintNavIcons() {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('[data-icon]').forEach((el) => {
+      const key = el.getAttribute('data-icon');
+      const svg = this.ICONS[key];
+      if (svg && el.innerHTML.indexOf('svg') === -1) el.innerHTML = svg;
+    });
+  }
+
+  statusFor(spaceId) {
+    const homeState = this.props.homeState || 'empty';
+    if (this.ALERT_MAP[homeState] === spaceId) return 'alert';
+    return 'active';
+  }
+
+  renderVals() {
+    const s = this.state;
+    const homeState = this.props.homeState || 'empty';
+    const loading = this.props.loading === true;
+    const camCount = (name) => s.shared.cameras.filter((c) => c.space === name).length;
+    const hidden = s.shared.hidden || [];
+    const names = s.shared.names || {};
+    const allSpaces = this.SPACES.concat(
+      s.shared.spaces
+        .filter((x) => !this.SPACES.some((b) => b.id === x.id))
+        .map((x) => ({ id: x.id, name: x.name, placeholder: x.name.toLowerCase() }))
+    )
+      .filter((x) => hidden.indexOf(x.id) === -1)
+      .map((x) => (names[x.id] ? Object.assign({}, x, { name: names[x.id] }) : x));
+
+    const St0 = window.ArtemisaStore;
+    const spaces = allSpaces.map((sp) => {
+      const st = this.STATUS[this.statusFor(sp.id)];
+      const n = camCount(sp.name);
+      return {
+        slotId: 'spaces-' + sp.id,
+        name: sp.name,
+        placeholder: sp.placeholder,
+        camLabel: n ? (n === 1 ? '1 camera' : n + ' cameras') : '',
+        statusColor: st.color,
+        statusGlow: st.glow,
+        statusLabel: st.label,
+        open: () => { try { sessionStorage.setItem('artemisa_space', sp.id); } catch (e) {} this.navigateTo('Space.dc.html'); },
+      };
+    });
+
+    const NAV_TARGET = { home: 'Home.dc.html', spaces: null, activity: 'Activity.dc.html' };
+    const nav = [
+      { id: 'home',     icon: 'home',   label: 'Home' },
+      { id: 'spaces',   icon: 'shapes', label: 'Spaces' },
+      { id: 'activity', icon: 'zap',    label: 'Activity' },
+    ].map((n) => ({
+      icon: n.icon,
+      label: n.label,
+      borderColor: '#e5e5e5',
+      bg: s.activeNav === n.id ? '#f5f5f5' : '#ffffff',
+      color: s.activeNav === n.id ? '#000000' : '#404040',
+      run: () => {
+        const target = NAV_TARGET[n.id];
+        if (target) { this.navigateTo(target); return; }
+        this.setState({ activeNav: n.id, plusOpen: false });
+      },
+    }));
+
+    const plusItems = [
+      { icon: 'add-space', label: 'New space', key: 'space' },
+      { icon: 'camera',    label: 'Connect a camera', key: 'camera' },
+      { icon: 'invite',    label: 'Invite a member', key: 'invite' },
+    ].map((p) => ({
+      icon: p.icon,
+      label: p.label,
+      run: () => this.setState({ plusOpen: false, modal: p.key, camState: 'idle' }),
+    }));
+
+    const f = s.form;
+    const IP_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const setF = (k) => (ev) => {
+      const v = ev.target.value;
+      this.setState((p) => ({ form: Object.assign({}, p.form, { [k]: v }) }));
+      if (k === 'camIp') {
+        clearTimeout(this._camT);
+        if (IP_RE.test(v.trim())) { this.setState({ camState: 'connecting' }); this._camT = setTimeout(() => this.setState({ camState: 'ok' }), 900); }
+        else this.setState({ camState: 'idle' });
+      }
+    };
+    const input = (label, key, placeholder) => ({ isInput: true, isPills: false, label, placeholder, value: f[key], onInput: setF(key) });
+    const pills = (label, key, options) => ({
+      isInput: false, isPills: true, label, options: options.map((o) => Object.assign({
+        label: o,
+        run: () => this.setState((p) => ({ form: Object.assign({}, p.form, { [key]: o }), camState: key === 'camMethod' ? 'idle' : p.camState })),
+      }, this.pillStyleFor(f[key] === o))),
+    });
+
+    const MODALS = {
+      space: {
+        title: 'New space', cta: 'Create space', foot: 'Changed your mind?',
+        subhead: 'Name the area Artemisa should watch. You can add cameras to it right after.',
+        fields: [input('Space name', 'spaceName', 'e.g. Hallway'), pills('Type', 'spaceType', ['Indoor', 'Outdoor', 'Entry'])],
+        valid: f.spaceName.trim().length > 0,
+      },
+      camera: {
+        title: 'Connect a camera', cta: 'Connect camera', foot: 'Not ready yet?',
+        subhead: 'Pair by QR code, or add the camera by its IP address on your network.',
+        fields: [input('Camera name', 'camName', 'e.g. Kitchen ceiling'), pills('Space', 'camSpace', allSpaces.map((x) => x.name)), pills('Connection', 'camMethod', ['Scan QR', 'IP address'])]
+          .concat(f.camMethod === 'IP address' ? [input('Camera IP address', 'camIp', '192.168.1.42')] : []),
+        valid: f.camName.trim().length > 0 && s.camState === 'ok',
+      },
+      invite: {
+        title: 'Invite a member', cta: 'Send invite', foot: 'Rather not now?',
+        subhead: 'They will get access to the spaces and activity you choose.',
+        fields: [input('Email', 'inviteEmail', 'name@email.com'), pills('Role', 'inviteRole', ['Admin', 'Member', 'Guest'])],
+        valid: /.+@.+\..+/.test(f.inviteEmail.trim()),
+      },
+      rename: {
+        title: 'Rename space', cta: 'Save name', foot: 'Leave it as it is?',
+        subhead: 'The new name shows up everywhere — activity, alerts and anything you ask about it.',
+        fields: [input('Space name', 'renameName', 'e.g. Hallway')],
+        valid: (f.renameName || '').trim().length > 0,
+      },
+    };
+    const m = MODALS[s.modal] || null;
+
+    return {
+      contextMessage: this.MESSAGES[homeState] || this.MESSAGES.empty,
+      loading,
+      ready: !loading && spaces.length > 0,
+      noSpaces: !loading && spaces.length === 0,
+      spaces,
+      skeletons: [0, 1, 2, 3, 4, 5],
+      nav,
+      plusItems,
+      plusOpen: s.plusOpen,
+      plusBorder: s.plusOpen ? '#e5e5e5' : '#e5e5e5',
+      plusBg: s.plusOpen ? '#f5f5f5' : '#ffffff',
+      plusColor: s.plusOpen ? '#000000' : '#404040',
+      togglePlus: () => this.setState((p) => ({ plusOpen: !p.plusOpen })),
+      closePlus: () => this.setState({ plusOpen: false }),
+      toast: s.toast,
+      stop: (ev) => ev.stopPropagation(),
+      modalOpen: !!m,
+      modalTitle: m ? m.title : '',
+      modalSubhead: m ? m.subhead : '',
+      modalFields: m ? m.fields : [],
+      modalCta: m ? m.cta : '',
+      modalFootNote: m ? m.foot : '',
+      ctaBg: m && m.valid ? '#171717' : '#c4c4c4',
+      ctaHover: m && m.valid ? '#262626' : '#c4c4c4',
+      ctaCursor: m && m.valid ? 'pointer' : 'not-allowed',
+      showQr: s.modal === 'camera' && f.camMethod === 'Scan QR',
+      camLive: s.modal === 'camera' && s.camState === 'ok',
+      statusNote: s.modal === 'camera' && s.camState === 'connecting' ? 'Connecting…' : '',
+      startQr: () => {
+        clearTimeout(this._camT);
+        this.setState({ camState: 'connecting' });
+        this._camT = setTimeout(() => this.setState({ camState: 'ok' }), 1700);
+      },
+      submitModal: () => {
+        if (!m || !m.valid) return;
+        const St = window.ArtemisaStore;
+        if (St) {
+          if (s.modal === 'space') St.addSpace({ name: f.spaceName, type: f.spaceType });
+          if (s.modal === 'camera') St.addCamera({ name: f.camName, space: f.camSpace, method: f.camMethod, ip: f.camIp });
+          if (s.modal === 'invite') St.addMember({ email: f.inviteEmail, role: f.inviteRole });
+          if (s.modal === 'rename') St.setSpaceName(s.renameId, f.renameName);
+        }
+        this.setState((p) => ({
+          modal: null, camState: 'idle', renameId: null,
+          toast: s.modal === 'space' ? 'Space created' : s.modal === 'camera' ? 'Camera connected' : s.modal === 'rename' ? 'Space renamed' : 'Invite sent',
+          form: Object.assign({}, p.form, { spaceName: '', camName: '', camIp: '', inviteEmail: '' }),
+        }));
+        clearTimeout(this._toastT);
+        this._toastT = setTimeout(() => this.setState({ toast: '' }), 2600);
+      },
+      closeModal: () => { clearTimeout(this._camT); this.setState({ modal: null, camState: 'idle' }); },
+      moreOpen: s.moreOpen,
+      moreBorder: s.moreOpen ? '#e5e5e5' : '#e5e5e5',
+      moreBg: s.moreOpen ? '#f5f5f5' : '#ffffff',
+      moreColor: s.moreOpen ? '#000000' : '#404040',
+      toggleMore: () => this.setState((p) => ({ moreOpen: !p.moreOpen })),
+      closeMore: () => this.setState({ moreOpen: false }),
+      addSpace: () => this.setState({ moreOpen: false, modal: 'space' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

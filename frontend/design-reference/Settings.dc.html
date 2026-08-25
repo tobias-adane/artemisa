@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
+<script src="./artemisa-store.js"></script>
+<style>
+  *{box-sizing:border-box}
+  :root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+  html,body{margin:0;padding:0}
+  body{background:#ffffff;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  input,select{outline:none;font-family:inherit}
+  input::placeholder{color:#a3a3a3}
+  button{font-family:inherit;transition:background-color .15s var(--ease-out),color .15s var(--ease-out),border-color .15s var(--ease-out),transform .12s var(--ease-out)}
+  button:active{transform:translateY(1px)}
+  html{scrollbar-width:none;-ms-overflow-style:none}
+  ::-webkit-scrollbar{width:0;height:0;display:none}
+  a{color:#737373;text-decoration:underline;text-underline-offset:2px}
+  a:hover{color:#0a0a0a}
+  @keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+  [data-row]{animation:rowIn .26s var(--ease-out) both}
+  [data-toast]{animation:toastIn .22s var(--ease-out) both}
+  @media (max-width:720px){
+    [data-tabs]{overflow-x:auto}
+    [data-two]{grid-template-columns:1fr !important}
+    [data-invite]{flex-direction:column !important;align-items:stretch !important}
+    [data-member]{flex-wrap:wrap}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.12s !important}
+    [data-row],[data-toast]{animation:none !important;opacity:1 !important;transform:none !important}
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#ffffff;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+  <header style="position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:rgba(255,255,255,0.82);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px)">
+    <button title="Back" onClick="{{ goBack }}" style="width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid #e5e5e5;border-radius:999px;background:#fff;color:#404040;cursor:pointer" style-hover="color:#000000">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+    </button>
+    <div style="display:flex;align-items:center;padding:8px 16px;border:none;border-radius:999px;background:#fff;font-size:12px;font-weight:500;color:#000;flex:none;white-space:nowrap">Settings</div>
+    <div style="width:30px"></div>
+  </header>
+
+  <main style="max-width:820px;margin:0 auto;padding:10px 22px 120px">
+
+    <h1 style="font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:31px;line-height:1.14;letter-spacing:0.2px;margin:14px 0 0">{{ pageTitle }}</h1>
+    <p style="margin:9px 0 0;font-size:14px;line-height:1.6;color:#737373;text-wrap:pretty">{{ pageSubtitle }}</p>
+
+    <div data-tabs="" style="display:flex;gap:8px;margin-top:26px;padding-bottom:2px">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+        <button onClick="{{ t.run }}" style="height:34px;padding:0 14px;flex:none;border:1px solid {{ t.border }};border-radius:999px;background:{{ t.bg }};color:{{ t.color }};font-size:13px;font-weight:500;cursor:pointer" style-hover="color:#000000">{{ t.label }}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ isMembers }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:22px;display:flex;flex-direction:column;gap:14px">
+
+        <div style="border:1px solid #e5e5e5;border-radius:26px;background:#fff;padding:4px">
+          <div style="padding:16px 16px 4px">
+            <div style="font-family:'Instrument Serif',Georgia,serif;font-size:21px">Who can see your home</div>
+            <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#737373">Everyone here gets the same live view. Only owners can add cameras or change alert rules.</p>
+          </div>
+          <div style="padding:10px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ members }}" as="m" hint-placeholder-count="3">
+              <div data-row="" data-member="" style="display:flex;align-items:center;gap:12px;border:1px solid #e5e5e5;border-radius:22px;background:#fff;padding:11px 13px">
+                <span style="width:30px;height:30px;flex:none;border-radius:999px;background:#f5f5f5;color:#404040;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ m.initial }}</span>
+                <div style="flex:1;min-width:120px">
+                  <div style="font-size:13.5px;font-weight:600;color:#0a0a0a">{{ m.name }}</div>
+                  <div style="font-size:12px;color:#737373;margin-top:2px">{{ m.email }}</div>
+                </div>
+                <sc-if value="{{ m.pending }}" hint-placeholder-val="{{ false }}">
+                  <span style="flex:none;font-size:11px;font-weight:600;color:#737373;background:#f5f5f5;padding:4px 10px;border-radius:999px">Invited</span>
+                </sc-if>
+                <select value="{{ m.role }}" onChange="{{ m.onRole }}" style="flex:none;height:32px;border:1px solid #e5e5e5;border-radius:20px;padding:0 10px;font-size:12.5px;background:#fff;color:#404040;cursor:pointer">
+                  <sc-for list="{{ m.roleOptions }}" as="r" hint-placeholder-count="3">
+                    <option value="{{ r }}">{{ r }}</option>
+                  </sc-for>
+                </select>
+                <sc-if value="{{ m.removable }}" hint-placeholder-val="{{ true }}">
+                  <button onClick="{{ m.remove }}" title="Remove" style="width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:999px;color:#a3a3a3;cursor:pointer" style-hover="background:#f5f5f5;color:#dc2626">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                  </button>
+                </sc-if>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noMembers }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px dashed #d4d4d4;border-radius:22px;padding:34px 20px;text-align:center">
+                <div style="font-family:'Instrument Serif',Georgia,serif;font-size:19px">Only you, for now</div>
+                <p style="margin:8px auto 0;max-width:40ch;font-size:12.5px;line-height:1.6;color:#737373;text-wrap:pretty">Invite the people who live here so they see the same home you do.</p>
+              </div>
+            </sc-if>
+          </div>
+          <div style="padding:6px 10px 14px">
+            <div data-invite="" style="display:flex;align-items:center;gap:8px;border:1px dashed #d4d4d4;border-radius:22px;padding:10px 12px">
+              <input value="{{ inviteEmail }}" onInput="{{ onInviteEmail }}" placeholder="name@email.com" style="flex:1;min-width:0;height:32px;border:1px solid #e5e5e5;border-radius:20px;padding:0 12px;font-size:13px;background:#fff;color:#0a0a0a">
+              <select value="{{ inviteRole }}" onChange="{{ onInviteRole }}" style="flex:none;height:32px;border:1px solid #e5e5e5;border-radius:20px;padding:0 10px;font-size:12.5px;background:#fff;color:#404040;cursor:pointer">
+                <sc-for list="{{ roles }}" as="r" hint-placeholder-count="3">
+                  <option value="{{ r }}">{{ r }}</option>
+                </sc-for>
+              </select>
+              <button onClick="{{ sendInvite }}" style="flex:none;height:32px;padding:0 14px;border:none;border-radius:20px;background:{{ inviteBg }};color:#fafafa;font-size:13px;font-weight:500;cursor:{{ inviteCursor }}" style-hover="background:{{ inviteHover }}">Invite</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isAlerts }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:22px;display:flex;flex-direction:column;gap:14px">
+
+        <div style="border:1px solid #e5e5e5;border-radius:26px;background:#fff;padding:4px">
+          <div style="padding:16px 16px 4px">
+            <div style="font-family:'Instrument Serif',Georgia,serif;font-size:21px">How we reach you</div>
+            <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#737373">Emergencies always ring through, even during quiet hours.</p>
+          </div>
+          <div style="padding:10px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ channels }}" as="c" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid #e5e5e5;border-radius:22px;padding:12px 14px">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:600">{{ c.label }}</div>
+                  <div style="font-size:12px;color:#737373;margin-top:2px">{{ c.hint }}</div>
+                </div>
+                <button onClick="{{ c.toggle }}" title="{{ c.label }}" style="width:38px;height:22px;flex:none;border:1px solid {{ c.trackBorder }};border-radius:999px;background:{{ c.trackBg }};padding:2px;cursor:pointer;display:flex;justify-content:{{ c.knobSide }}">
+                  <span style="width:16px;height:16px;border-radius:999px;background:{{ c.knobBg }};transition:background-color .15s var(--ease-out)"></span>
+                </button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid #e5e5e5;border-radius:26px;background:#fff;padding:4px">
+          <div style="padding:16px 16px 4px">
+            <div style="font-family:'Instrument Serif',Georgia,serif;font-size:21px">What's worth an alert</div>
+            <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#737373">Everything else still shows up in Activity — it just won't interrupt you.</p>
+          </div>
+          <div style="padding:10px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ rules }}" as="r" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid #e5e5e5;border-radius:22px;padding:12px 14px">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:600">{{ r.label }}</div>
+                  <div style="font-size:12px;color:#737373;margin-top:2px">{{ r.hint }}</div>
+                </div>
+                <button onClick="{{ r.toggle }}" title="{{ r.label }}" style="width:38px;height:22px;flex:none;border:1px solid {{ r.trackBorder }};border-radius:999px;background:{{ r.trackBg }};padding:2px;cursor:pointer;display:flex;justify-content:{{ r.knobSide }}">
+                  <span style="width:16px;height:16px;border-radius:999px;background:{{ r.knobBg }};transition:background-color .15s var(--ease-out)"></span>
+                </button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid #e5e5e5;border-radius:26px;background:#fff;padding:4px">
+          <div style="padding:16px 16px 4px">
+            <div style="font-family:'Instrument Serif',Georgia,serif;font-size:21px">Quiet hours</div>
+            <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:#737373">{{ quietSummary }}</p>
+          </div>
+          <div style="padding:10px">
+            <div style="display:flex;align-items:center;gap:12px;border:1px solid #e5e5e5;border-radius:22px;padding:12px 14px;flex-wrap:wrap">
+              <div style="flex:1;min-width:140px;font-size:13.5px;font-weight:600">Hold non-urgent alerts</div>
+              <input type="time" value="{{ quietFrom }}" onInput="{{ onQuietFrom }}" style="height:32px;border:1px solid #e5e5e5;border-radius:20px;padding:0 10px;font-size:12.5px;background:#fff;color:#0a0a0a">
+              <span style="font-size:12.5px;color:#737373">to</span>
+              <input type="time" value="{{ quietTo }}" onInput="{{ onQuietTo }}" style="height:32px;border:1px solid #e5e5e5;border-radius:20px;padding:0 10px;font-size:12.5px;background:#fff;color:#0a0a0a">
+              <button onClick="{{ toggleQuiet }}" title="Quiet hours" style="width:38px;height:22px;flex:none;border:1px solid {{ quietTrackBorder }};border-radius:999px;background:{{ quietTrackBg }};padding:2px;cursor:pointer;display:flex;justify-content:{{ quietKnobSide }}">
+                <span style="width:16px;height:16px;border-radius:999px;background:{{ quietKnobBg }};transition:background-color .15s var(--ease-out)"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPlan }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:22px;display:flex;flex-direction:column;gap:14px">
+        <div data-two="" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
+            <div data-row="" style="border:1px solid {{ p.border }};border-radius:26px;background:{{ p.bg }};padding:18px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+                <div style="font-family:'Instrument Serif',Georgia,serif;font-size:21px">{{ p.name }}</div>
+                <sc-if value="{{ p.current }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size:11px;font-weight:600;color:#404040;background:#ececec;padding:4px 10px;border-radius:999px">Current</span>
+                </sc-if>
+              </div>
+              <div style="margin-top:8px;font-size:13px;color:#737373">{{ p.price }}</div>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-top:14px">
+                <sc-for list="{{ p.features }}" as="f" hint-placeholder-count="3">
+                  <div style="display:flex;gap:8px;font-size:12.5px;line-height:1.5;color:#404040">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#737373" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="M20 6 9 17l-5-5"></path></svg>
+                    <span>{{ f }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <button onClick="{{ p.run }}" style="width:100%;height:34px;margin-top:16px;border:1px solid {{ p.ctaBorder }};border-radius:17px;background:{{ p.ctaBg }};color:{{ p.ctaColor }};font-size:13px;font-weight:500;cursor:{{ p.ctaCursor }}" style-hover="background:{{ p.ctaHover }}">{{ p.cta }}</button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="border:1px solid #e5e5e5;border-radius:26px;background:#fff;padding:18px">
+          <div style="font-size:13.5px;font-weight:600">Billing</div>
+          <p style="margin:6px 0 0;font-size:12.5px;line-height:1.6;color:#737373">{{ billingNote }}</p>
+        </div>
+      </div>
+    </sc-if>
+
+  </main>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div data-toast="" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:999px;background:#171717;color:#fafafa;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,0.22)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+      <span>{{ toast }}</span>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;members&quot;,&quot;alerts&quot;,&quot;cameras&quot;,&quot;plan&quot;],&quot;default&quot;:&quot;members&quot;,&quot;tsType&quot;:&quot;'members' | 'alerts' | 'cameras' | 'plan'&quot;}}">
+class Component extends DCLogic {
+  state = {
+    tab: 'members',
+    inviteEmail: '',
+    inviteRole: 'Member',
+    toast: '',
+    data: null,
+  };
+
+  ROLES = ['Member', 'Owner', 'Guest'];
+
+  SEED_MEMBERS = [
+    { id: 'seed-you', name: 'Alexander Vidal', email: 'alexander@artemisa.app', role: 'Owner', status: 'Active', seed: true },
+    { id: 'seed-nora', name: 'Nora Vidal', email: 'nora@artemisa.app', role: 'Owner', status: 'Active', seed: true },
+  ];
+
+  CHANNEL_META = {
+    push: { label: 'Push on your phone', hint: 'Arrives within a couple of seconds.' },
+    email: { label: 'Email digest', hint: 'One summary each evening.' },
+    sms: { label: 'Text message', hint: 'Emergencies only, charged by your carrier.' },
+  };
+
+  RULE_META = {
+    person: { label: 'Someone is at the door', hint: 'A person lingers at an entrance.' },
+    unknownFace: { label: 'An unfamiliar face', hint: 'Nobody in your household matches.' },
+    doorLock: { label: 'A door unlocks', hint: 'Front, back or garage.' },
+    packageDrop: { label: 'A package arrives', hint: 'Left at any entrance camera.' },
+    glassBreak: { label: 'Glass breaks', hint: 'Sharp sound near a window.' },
+    motion: { label: 'Any motion at all', hint: 'Noisy — pets and shadows count.' },
+  };
+
+  PLANS = [
+    { name: 'Solo', price: '$0 · one camera, 24h history', features: ['1 camera', '24 hours of clips', 'Push alerts'] },
+    { name: 'Family', price: '$12 / month · up to 8 cameras', features: ['8 cameras', '30 days of clips', 'Alert contacts', 'Unlimited members'] },
+    { name: 'Property', price: '$29 / month · unlimited cameras', features: ['Unlimited cameras', '90 days of clips', 'Priority monitoring', 'Emergency dispatch'] },
+  ];
+
+  componentDidMount() {
+    this.sync();
+    if (window.ArtemisaStore) this._unsub = window.ArtemisaStore.subscribe(() => this.sync());
+    try {
+      const t = sessionStorage.getItem('artemisa_settings_tab');
+      if (t) { sessionStorage.removeItem('artemisa_settings_tab'); this.setState({ tab: t }); }
+    } catch (e) {}
+  }
+  componentWillUnmount() { if (this._unsub) this._unsub(); if (this._toastT) clearTimeout(this._toastT); }
+
+  sync() { if (window.ArtemisaStore) this.setState({ data: window.ArtemisaStore.load() }); }
+
+  flash(msg) {
+    this.setState({ toast: msg });
+    if (this._toastT) clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => this.setState({ toast: '' }), 2200);
+  }
+
+  navigateTo(url) { window.location.href = url + window.location.search; }
+
+  toggleStyle(on) {
+    return {
+      trackBg: on ? '#737373' : '#f5f5f5',
+      trackBorder: on ? '#737373' : '#e5e5e5',
+      knobBg: on ? '#ffffff' : '#a3a3a3',
+      knobSide: on ? 'flex-end' : 'flex-start',
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const St = window.ArtemisaStore;
+    const d = s.data || { spaces: [], cameras: [], members: [], prefs: { channels: {}, rules: {}, quiet: {}, plan: 'Family' } };
+    const prefs = d.prefs;
+
+    const tabDefs = [
+      { key: 'members', label: 'Household' },
+      { key: 'alerts', label: 'Alerts' },
+      { key: 'plan', label: 'Plan' },
+    ];
+    const tabs = tabDefs.map((t) => {
+      const on = s.tab === t.key;
+      return {
+        label: t.label,
+        border: on ? '#d4d4d4' : '#e5e5e5',
+        bg: on ? '#f5f5f5' : '#ffffff',
+        color: on ? '#0a0a0a' : '#737373',
+        run: () => this.setState({ tab: t.key }),
+      };
+    });
+
+    const titles = {
+      members: ['Your household', 'Add the people who should see what you see — and decide how much they can change.'],
+      alerts: ['Alerts', "Artemisa watches everything. You decide what's worth interrupting your day."],
+      plan: ['Plan', 'Change any time. Clips already recorded stay for the length of your current plan.'],
+    };
+
+    const members = this.SEED_MEMBERS.concat(d.members).map((m) => ({
+      name: m.name || (m.email || '').split('@')[0] || 'Invited person',
+      email: m.email,
+      initial: ((m.name || m.email || '?').trim()[0] || '?').toUpperCase(),
+      role: m.role,
+      roleOptions: [m.role].concat(this.ROLES.filter((r) => r !== m.role)),
+      pending: m.status === 'Invited',
+      removable: !m.seed,
+      onRole: (e) => { if (St && !m.seed) { St.updateMember(m.id || m.email, { role: e.target.value }); this.flash('Role updated'); } },
+      remove: () => { if (St) { St.removeMember(m.id || m.email); this.flash('Removed from household'); } },
+    }));
+
+    const validInvite = /.+@.+\..+/.test(s.inviteEmail.trim());
+
+    const channels = Object.keys(this.CHANNEL_META).map((k) => {
+      const on = !!prefs.channels[k];
+      return Object.assign({
+        label: this.CHANNEL_META[k].label,
+        hint: this.CHANNEL_META[k].hint,
+        toggle: () => { if (St) { St.setPrefs({ channels: { [k]: !on } }); } },
+      }, this.toggleStyle(on));
+    });
+
+    const rules = Object.keys(this.RULE_META).map((k) => {
+      const on = !!prefs.rules[k];
+      return Object.assign({
+        label: this.RULE_META[k].label,
+        hint: this.RULE_META[k].hint,
+        toggle: () => { if (St) St.setPrefs({ rules: { [k]: !on } }); },
+      }, this.toggleStyle(on));
+    });
+
+    const quietOn = !!prefs.quiet.on;
+    const quietStyle = this.toggleStyle(quietOn);
+
+    const spaceNames = (d.spaces.length ? d.spaces.map((sp) => sp.name) : ['Living Room', 'Kitchen', 'Entrance', 'Bedroom', 'Kids Bedroom', 'Backyard']);
+
+    const plans = this.PLANS.map((p) => {
+      const current = prefs.plan === p.name;
+      return {
+        name: p.name,
+        price: p.price,
+        features: p.features,
+        current,
+        border: current ? '#d4d4d4' : '#e5e5e5',
+        bg: current ? '#fafafa' : '#ffffff',
+        cta: current ? 'Current plan' : 'Switch to ' + p.name,
+        ctaBg: current ? '#f5f5f5' : '#171717',
+        ctaHover: current ? '#f5f5f5' : '#262626',
+        ctaBorder: current ? '#e5e5e5' : 'transparent',
+        ctaColor: current ? '#a3a3a3' : '#fafafa',
+        ctaCursor: current ? 'default' : 'pointer',
+        run: () => { if (St && !current) { St.setPrefs({ plan: p.name }); this.flash('Now on ' + p.name); } },
+      };
+    });
+
+    return {
+      pageTitle: titles[s.tab][0],
+      pageSubtitle: titles[s.tab][1],
+      tabs,
+      isMembers: s.tab === 'members',
+      isAlerts: s.tab === 'alerts',
+      isPlan: s.tab === 'plan',
+      roles: this.ROLES,
+      members,
+      noMembers: members.length === 0,
+      inviteEmail: s.inviteEmail,
+      inviteRole: s.inviteRole,
+      inviteBg: validInvite ? '#171717' : '#c4c4c4',
+      inviteHover: validInvite ? '#262626' : '#c4c4c4',
+      inviteCursor: validInvite ? 'pointer' : 'not-allowed',
+      onInviteEmail: (e) => this.setState({ inviteEmail: e.target.value }),
+      onInviteRole: (e) => this.setState({ inviteRole: e.target.value }),
+      sendInvite: () => {
+        if (!validInvite || !St) return;
+        St.addMember({ email: s.inviteEmail.trim(), role: s.inviteRole });
+        this.setState({ inviteEmail: '' });
+        this.flash('Invite sent');
+      },
+      channels,
+      rules,
+      quietFrom: prefs.quiet.from,
+      quietTo: prefs.quiet.to,
+      quietSummary: quietOn
+        ? 'Held from ' + prefs.quiet.from + ' to ' + prefs.quiet.to + '. You still get a morning summary.'
+        : 'Off — every alert reaches you the moment it happens.',
+      quietTrackBg: quietStyle.trackBg,
+      quietTrackBorder: quietStyle.trackBorder,
+      quietKnobBg: quietStyle.knobBg,
+      quietKnobSide: quietStyle.knobSide,
+      toggleQuiet: () => { if (St) St.setPrefs({ quiet: { on: !quietOn } }); },
+      onQuietFrom: (e) => { if (St) St.setPrefs({ quiet: { from: e.target.value } }); },
+      onQuietTo: (e) => { if (St) St.setPrefs({ quiet: { to: e.target.value } }); },
+      plans,
+      billingNote: 'Visa ending 4421 · next charge September 1, 2026. Cancel any time and your account drops to Solo at the end of the period.',
+      toast: s.toast,
+      goBack: () => this.navigateTo('Home.dc.html'),
+    };
+  }
+}
+</script>
+</body>
+</html>
