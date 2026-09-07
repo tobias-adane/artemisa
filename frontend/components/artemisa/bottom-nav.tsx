@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Shapes, Zap, Plus } from 'lucide-react';
+import { Home, GalleryHorizontalEnd, Option, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ITEMS = [
   { href: '/home', label: 'Inicio', icon: Home },
-  { href: '/spaces', label: 'Espacios', icon: Shapes },
-  { href: '/activity', label: 'Actividad', icon: Zap },
+  { href: '/spaces', label: 'Espacios', icon: GalleryHorizontalEnd },
+  { href: '/activity', label: 'Actividad', icon: Option },
 ];
 
 export function BottomNav() {

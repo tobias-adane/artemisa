@@ -2,12 +2,22 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUp, Mic, Paperclip, Plus, SquarePen } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowUp, Camera as CameraIcon, Globe, Mic, MoreHorizontal, Paperclip, Plus, SquarePen } from 'lucide-react';
 import { PageHeader } from '@/components/artemisa/page-header';
-import { AlertCard } from '@/components/artemisa/alert-card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockActivity, mockSpaces, mockThreads, mockUser } from '@/lib/mock-data';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { mockSpaces, mockUser } from '@/lib/mock-data';
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string };
 
@@ -35,16 +45,19 @@ function replyFor(msg: string) {
 const QUICK_ACTIONS = ['¿Cómo está mi familia?', '¿Qué está pasando en casa?', 'Actividad reciente'];
 
 export default function HomePage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [toast, setToast] = useState('');
 
   const greeting = useMemo(() => greetingFor(new Date()), []);
-  const day1 = mockActivity.length === 0;
   const conversing = messages.length > 0 || thinking;
 
-  const attentionThread = mockThreads.find((t) => t.classification === 'attention' && !t.escalated_to_reasoning);
-  const attentionSpace = attentionThread ? mockSpaces.find((s) => s.id === attentionThread.space_id) : undefined;
+  function flash(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(''), 2400);
+  }
 
   function send(text?: string) {
     const msg = (text ?? input).trim();
@@ -56,6 +69,21 @@ export default function HomePage() {
       setMessages((m) => [...m, { role: 'assistant', text: replyFor(msg) }]);
       setThinking(false);
     }, 900);
+  }
+
+  function pickFile() {
+    const el = document.createElement('input');
+    el.type = 'file';
+    el.multiple = true;
+    el.click();
+  }
+
+  function pickPhoto() {
+    const el = document.createElement('input');
+    el.type = 'file';
+    el.accept = 'image/*';
+    el.setAttribute('capture', 'environment');
+    el.click();
   }
 
   return (
@@ -79,9 +107,7 @@ export default function HomePage() {
             <h1 className="heading-display text-3xl">
               {greeting}, <span className="text-[#bcbcbc]">{mockUser.name.split(' ')[0]}</span>
             </h1>
-            <p className="heading-display text-3xl text-foreground">
-              {day1 ? 'Recién empezamos a cuidar tu hogar.' : 'Todo está en orden en casa.'}
-            </p>
+            <p className="heading-display text-3xl text-foreground">Todo está en orden en casa.</p>
           </div>
         )}
 
@@ -94,7 +120,7 @@ export default function HomePage() {
                     {m.text}
                   </div>
                 ) : (
-                  <div className="heading-display max-w-[94%] text-lg leading-snug">{m.text}</div>
+                  <div className="max-w-[94%] text-[14.5px] leading-relaxed">{m.text}</div>
                 )}
               </div>
             ))}
@@ -107,12 +133,6 @@ export default function HomePage() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {attentionThread && attentionSpace && !conversing && (
-          <div className="mt-6 w-full">
-            <AlertCard thread={attentionThread} spaceName={attentionSpace.name} />
           </div>
         )}
 
@@ -130,9 +150,37 @@ export default function HomePage() {
             className="h-auto border-none px-1 py-2 text-sm shadow-none focus-visible:ring-0"
           />
           <div className="mt-1 flex items-center gap-1.5">
-            <button title="Adjuntar" className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground">
-              <Plus className="h-3 w-3" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button title="Opciones" className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground">
+                  <Plus className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-[220px]">
+                <DropdownMenuLabel>Opciones</DropdownMenuLabel>
+                <DropdownMenuItem onClick={pickFile}>
+                  <Paperclip className="h-4 w-4" /> Agregar Archivos o Fotos
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={pickPhoto}>
+                  <CameraIcon className="h-4 w-4" /> Tomar Foto
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>Espacios</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    {mockSpaces.map((sp) => (
+                      <DropdownMenuItem key={sp.id} onClick={() => flash(`Espacio ${sp.name} agregado al contexto`)}>
+                        {sp.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuItem onClick={() => flash('A tu Alrededor llega pronto')}>
+                  <Globe className="h-4 w-4" /> A tu Alrededor
+                  <span className="ml-auto text-[11px] font-semibold text-[#2563eb]">Beta</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="flex-1" />
             {input.trim() ? (
               <button onClick={() => send()} title="Enviar" className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -148,7 +196,7 @@ export default function HomePage() {
 
         {!conversing && (
           <div className="mt-5 flex flex-wrap justify-center gap-2.5">
-            {(day1 ? QUICK_ACTIONS.slice(0, 2) : QUICK_ACTIONS).map((q) => (
+            {QUICK_ACTIONS.map((q) => (
               <button
                 key={q}
                 onClick={() => send(q)}
@@ -168,19 +216,30 @@ export default function HomePage() {
               <Link
                 key={space.id}
                 href={`/spaces/${space.id}`}
-                className="group relative aspect-[4/3] overflow-hidden rounded-3xl bg-secondary"
+                className="flex aspect-[4/3] flex-col rounded-3xl border border-border bg-secondary p-1"
               >
-                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/55 to-transparent" />
-                <span className="absolute bottom-3.5 left-4 text-xs text-white [text-shadow:0_1px_8px_rgba(0,0,0,0.3)]">
-                  {space.name}
-                </span>
-                {space.status === 'offline' && (
-                  <span className="absolute right-3.5 top-3.5 h-2 w-2 rounded-full" style={{ background: 'var(--status-offline)' }} />
-                )}
+                <div className="flex min-h-0 flex-1 flex-col justify-end rounded-[18px] border border-border bg-secondary p-2">
+                  <div className="flex items-center gap-2 rounded-xl px-1.5 py-1">
+                    <span className="flex-1 truncate text-sm">{space.name}</span>
+                    <button
+                      title="Más"
+                      onClick={(e) => e.preventDefault()}
+                      className="flex h-4 w-4 flex-none items-center justify-center text-muted-foreground hover:text-foreground"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
         </section>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground shadow-lg">
+          {toast}
+        </div>
       )}
     </div>
   );

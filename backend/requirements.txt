@@ -1,0 +1,22 @@
+# Runtime del servicio (ver backend/CLAUDE.md, sección Stack).
+fastapi
+uvicorn[standard]
+pydantic>=2
+python-dotenv
+
+# Paso 1 — detección de movimiento
+opencv-python-headless
+numpy
+
+# Clientes de servicios externos (imports diferidos en clients/* — ver
+# clients/base.py: nunca se importan hasta que la key correspondiente
+# está configurada, así el servicio corre en modo mock sin instalarlos).
+openai
+groq
+twilio
+supabase
+sentry-sdk
+
+# Tests
+pytest
+httpx

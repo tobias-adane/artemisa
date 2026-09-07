@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, MoreHorizontal, RefreshCw, Sparkles } from 'lucide-react';
+import { ChevronLeft, MessageCircle, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { mockActivity, mockSpaces } from '@/lib/mock-data';
 
@@ -37,14 +37,11 @@ export default function SpaceDetailPage() {
       </header>
 
       <main className="mx-auto max-w-2xl px-5 pb-20 pt-5">
-        <div className="flex items-center gap-2.5">
-          <span
-            className="h-2.5 w-2.5 rounded-full"
-            style={{
-              background: isOffline ? 'var(--status-offline)' : 'var(--status-normal)',
-              boxShadow: isOffline ? 'none' : '0 0 0 4px rgba(34,197,94,0.3)',
-            }}
-          />
+        <div className="rounded-3xl border border-border bg-secondary p-1">
+          <div className="h-[280px] rounded-[22px] border border-border bg-secondary" />
+        </div>
+
+        <div className="mt-5">
           <span className="text-[12.5px] text-muted-foreground">
             {isOffline ? 'Desconectada · sin señal hace 12 min' : reconnecting ? 'Reconectando…' : 'Activa · última actualización hace 2 min'}
           </span>
@@ -99,7 +96,7 @@ export default function SpaceDetailPage() {
 
       <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center">
         <Button onClick={() => router.push(`/home?space=${space.id}`)} className="rounded-full px-5 py-3 shadow-lg">
-          <Sparkles className="h-3.5 w-3.5" /> Preguntar lo que sea
+          <MessageCircle className="h-3.5 w-3.5" /> Pregunta lo que quieras
         </Button>
       </div>
     </div>
