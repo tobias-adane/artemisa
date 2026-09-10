@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useI18n, format } from '@/lib/i18n/context';
 
 type Mode = 'login' | 'signup' | 'forgot' | 'verify';
 
@@ -28,6 +29,7 @@ function AppleIcon() {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { dict } = useI18n();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -60,27 +62,27 @@ export default function LoginPage() {
 
           {mode === 'forgot' ? (
             <>
-              <h1 className="heading-display mt-4 text-center text-[29px] leading-tight">Recuperá tu contraseña</h1>
+              <h1 className="heading-display mt-4 text-center text-[29px] leading-tight">{dict.login.forgotTitle}</h1>
               <p className="mt-2 text-center text-[13px] leading-relaxed text-muted-foreground">
                 {sent
-                  ? `Si existe una cuenta con ${email || 'ese email'}, te enviamos un link para recuperarla.`
-                  : 'Te mandamos un link a tu email para que elijas una nueva.'}
+                  ? format(dict.login.forgotBodySent, { email: email || dict.login.forgotBodyDefault })
+                  : dict.login.forgotBodyPreSend}
               </p>
               {!sent && (
                 <div className="mt-8">
-                  <label className="mb-1.5 block text-xs font-semibold">Correo electrónico</label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@email.com" />
+                  <label className="mb-1.5 block text-xs font-semibold">{dict.login.emailLabel}</label>
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={dict.login.emailPlaceholder} />
                 </div>
               )}
               <Button className="mt-5 w-full" onClick={submit} disabled={sent && false}>
-                {sent ? 'Reenviar link' : 'Enviar link'}
+                {sent ? dict.login.resendLink : dict.login.sendLink}
               </Button>
             </>
           ) : mode === 'verify' ? (
             <>
-              <h1 className="heading-display mt-4 text-center text-[29px] leading-tight">Verificá tu email</h1>
+              <h1 className="heading-display mt-4 text-center text-[29px] leading-tight">{dict.login.verifyTitle}</h1>
               <p className="mt-2 text-center text-[13px] leading-relaxed text-muted-foreground">
-                Te mandamos un código de 6 dígitos a {email || 'tu email'}.
+                {format(dict.login.verifyBody, { email: email || dict.login.verifyBodyDefault })}
               </p>
               <div className="mt-8 flex justify-center gap-2">
                 {code.map((d, i) => (
@@ -98,57 +100,55 @@ export default function LoginPage() {
                 ))}
               </div>
               <button className="mx-auto mt-4 block text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground">
-                Reenviar código
+                {dict.login.resendCode}
               </button>
               <Button className="mt-5 w-full" onClick={submit} disabled={code.some((d) => !d)}>
-                Verificar
+                {dict.login.verify}
               </Button>
             </>
           ) : (
             <>
               <h1 className="heading-display mt-4 text-center text-[29px] leading-tight">
-                {mode === 'signup' ? 'Creá tu cuenta de Artemisa' : 'Iniciá sesión en Artemisa'}
+                {mode === 'signup' ? dict.login.signupTitle : dict.login.loginTitle}
               </h1>
               <p className="mt-2 text-center text-[13px] leading-relaxed text-muted-foreground">
-                {mode === 'signup'
-                  ? 'Configurá tu hogar, invitá a tu familia y empezá a monitorear en minutos.'
-                  : '¡Qué bueno tenerte de vuelta! Tus espacios te esperan.'}
+                {mode === 'signup' ? dict.login.signupBody : dict.login.loginBody}
               </p>
 
               <div className="mt-8 flex flex-col gap-2.5">
                 <button className="flex h-10 w-full items-center justify-center gap-2.5 rounded-[22px] border border-border bg-background text-[13.5px] font-medium hover:bg-secondary">
-                  <GoogleIcon /> {mode === 'signup' ? 'Registrarte con Google' : 'Continuar con Google'}
+                  <GoogleIcon /> {mode === 'signup' ? dict.login.signupGoogle : dict.login.continueGoogle}
                 </button>
                 <button className="flex h-10 w-full items-center justify-center gap-2.5 rounded-[22px] border border-border bg-background text-[13.5px] font-medium hover:bg-secondary">
-                  <AppleIcon /> {mode === 'signup' ? 'Registrarte con Apple' : 'Continuar con Apple'}
+                  <AppleIcon /> {mode === 'signup' ? dict.login.signupApple : dict.login.continueApple}
                 </button>
               </div>
 
               <div className="my-6 flex items-center gap-3">
                 <div className="h-px flex-1 bg-border" />
-                <span className="text-[11px] tracking-wide text-muted-foreground/70">O</span>
+                <span className="text-[11px] tracking-wide text-muted-foreground/70">{dict.login.or}</span>
                 <div className="h-px flex-1 bg-border" />
               </div>
 
               <div className="flex flex-col gap-3.5">
                 {mode === 'signup' && (
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold">Nombre</label>
-                    <Input placeholder="María Álvarez" />
+                    <label className="mb-1.5 block text-xs font-semibold">{dict.login.nameLabel}</label>
+                    <Input placeholder={dict.login.namePlaceholder} />
                   </div>
                 )}
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold">Correo electrónico</label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@email.com" />
+                  <label className="mb-1.5 block text-xs font-semibold">{dict.login.emailLabel}</label>
+                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={dict.login.emailPlaceholder} />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold">Contraseña</label>
-                  <Input type="password" placeholder="mínimo 8 caracteres" />
+                  <label className="mb-1.5 block text-xs font-semibold">{dict.login.passwordLabel}</label>
+                  <Input type="password" placeholder={dict.login.passwordPlaceholder} />
                 </div>
                 {mode === 'signup' && (
                   <div>
-                    <label className="mb-1.5 block text-xs font-semibold">Confirmar contraseña</label>
-                    <Input type="password" placeholder="repetí la contraseña" />
+                    <label className="mb-1.5 block text-xs font-semibold">{dict.login.confirmPasswordLabel}</label>
+                    <Input type="password" placeholder={dict.login.confirmPasswordPlaceholder} />
                   </div>
                 )}
               </div>
@@ -156,7 +156,7 @@ export default function LoginPage() {
               {mode === 'login' && (
                 <div className="mt-2.5 flex justify-end">
                   <button onClick={() => setMode('forgot')} className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground">
-                    ¿Olvidaste tu contraseña?
+                    {dict.login.forgotPassword}
                   </button>
                 </div>
               )}
@@ -171,7 +171,7 @@ export default function LoginPage() {
                   submit();
                 }}
               >
-                {mode === 'signup' ? 'Crear cuenta' : 'Iniciar sesión'}
+                {mode === 'signup' ? dict.login.createAccount : dict.login.signIn}
               </Button>
             </>
           )}
@@ -186,16 +186,16 @@ export default function LoginPage() {
               }}
               className="font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground"
             >
-              Volver a iniciar sesión
+              {dict.login.backToLogin}
             </button>
           ) : (
             <>
-              {mode === 'signup' ? '¿Ya tenés una cuenta?' : '¿Todavía no tenés cuenta?'}{' '}
+              {mode === 'signup' ? dict.login.alreadyHaveAccount : dict.login.noAccountYet}{' '}
               <button
                 onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
                 className="font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground"
               >
-                {mode === 'signup' ? 'Iniciar sesión' : 'Creá una cuenta'}
+                {mode === 'signup' ? dict.login.signInLink : dict.login.createAccountLink}
               </button>
             </>
           )}

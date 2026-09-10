@@ -32,9 +32,9 @@ def test_plan_dispatch_informar_has_no_steps():
     assert plan.cancel_window_seconds == 0
 
 
-def test_call_911_step_always_raises_and_never_calls_twilio():
+def test_call_911_step_raises_by_default_and_never_calls_twilio():
     store = InMemoryStore()
-    dispatch_client = FakeDispatchClient()
+    dispatch_client = FakeDispatchClient()  # enable_911_autodial=False por default
     with pytest.raises(Dispatch911Blocked):
         execute_dispatch_step(
             store=store,
@@ -46,6 +46,26 @@ def test_call_911_step_always_raises_and_never_calls_twilio():
             twiml_url="https://example.com/twiml",
         )
     assert dispatch_client.calls == []  # nunca llegó a tocar el cliente de Twilio
+
+
+def test_call_911_step_executes_when_flag_enabled():
+    store = InMemoryStore()
+    dispatch_client = FakeDispatchClient(enable_911_autodial=True)
+    thread_id, user_id = uuid4(), uuid4()
+
+    log = execute_dispatch_step(
+        store=store,
+        dispatch_client=dispatch_client,
+        thread_id=thread_id,
+        user_id=user_id,
+        step="call_911",
+        to_phone="+5491100000000",
+        twiml_url="https://example.com/twiml",
+    )
+
+    assert log is not None
+    assert log.action == "call_911"
+    assert dispatch_client.calls == [("call_911", "+5491100000000")]
 
 
 def test_execute_call_contacts_step_logs_dispatch():

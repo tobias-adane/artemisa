@@ -4,30 +4,32 @@ import { useState } from 'react';
 import { AlignJustify, EllipsisVertical, MessageCircle, MessageSquareMore, Option, Phone, Share } from 'lucide-react';
 import { PageHeader } from '@/components/artemisa/page-header';
 import { mockActivity, mockThreads, STATUS_COLOR_VAR, STATUS_LABEL } from '@/lib/mock-data';
-
-const MORE_ITEMS = [
-  { key: 'reasoning', icon: AlignJustify, label: 'Acciones & Razonamiento' },
-  { key: 'thread', icon: Option, label: 'Hilo Completo' },
-  { key: 'share', icon: Share, label: 'Compartir' },
-  { key: 'comments', icon: MessageSquareMore, label: 'Comentarios' },
-] as const;
+import { useI18n } from '@/lib/i18n/context';
 
 export default function ActivityPage() {
+  const { dict } = useI18n();
   const [reasonOpen, setReasonOpen] = useState<Record<string, boolean>>({});
   const [moreOpenId, setMoreOpenId] = useState<string | null>(null);
 
+  const MORE_ITEMS = [
+    { key: 'reasoning', icon: AlignJustify, label: dict.activity.itemReasoning },
+    { key: 'thread', icon: Option, label: dict.activity.itemThread },
+    { key: 'share', icon: Share, label: dict.activity.itemShare },
+    { key: 'comments', icon: MessageSquareMore, label: dict.activity.itemComments },
+  ] as const;
+
   return (
     <div>
-      <PageHeader title="Actividad" />
+      <PageHeader title={dict.activity.pageTitle} />
       <main className="mx-auto max-w-2xl px-6 pb-16 pt-8 sm:px-14">
-        <div className="mb-1.5 text-sm text-muted-foreground">Todo lo que pasó en tu hogar.</div>
-        <h1 className="heading-display mb-8 text-4xl">Un día tranquilo.</h1>
+        <div className="mb-1.5 text-sm text-muted-foreground">{dict.activity.subtitle}</div>
+        <h1 className="heading-display mb-8 text-4xl">{dict.activity.headline}</h1>
 
         {mockActivity.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-[#d4d4d4] px-6 py-14 text-center">
-            <div className="heading-display text-xl">Todavía no hay actividad</div>
+            <div className="heading-display text-xl">{dict.activity.emptyTitle}</div>
             <p className="mx-auto mt-2.5 max-w-[42ch] text-[13.5px] leading-relaxed text-muted-foreground">
-              Apenas una cámara esté mirando un espacio, todo lo que note va a aparecer acá, en orden, lo más reciente primero.
+              {dict.activity.emptyBody}
             </p>
           </div>
         ) : (
@@ -38,7 +40,7 @@ export default function ActivityPage() {
               .map((e) => {
                 const thread = e.thread_id ? mockThreads.find((t) => t.id === e.thread_id) : undefined;
                 const classification = thread?.classification ?? 'normal';
-                const reasoning = thread?.reasoning ?? 'No hace falta que hagas nada por ahora.';
+                const reasoning = thread?.reasoning ?? dict.activity.defaultReasoning;
                 const open = !!reasonOpen[e.id];
 
                 return (
@@ -54,7 +56,7 @@ export default function ActivityPage() {
                         </div>
                         <div className="relative flex-none">
                           <button
-                            title="Más"
+                            title={dict.activity.moreTooltip}
                             onClick={() => setMoreOpenId((id) => (id === e.id ? null : e.id))}
                             className="flex h-4 w-4 items-center justify-center text-muted-foreground hover:text-foreground"
                           >
@@ -64,7 +66,7 @@ export default function ActivityPage() {
                             <>
                               <div className="fixed inset-0 z-[65]" onClick={() => setMoreOpenId(null)} />
                               <div className="absolute right-0 top-[calc(100%+6px)] z-[70] w-[214px] rounded-[22px] border border-border bg-background p-1 shadow-lg">
-                                <div className="px-2 py-1.5 text-xs text-muted-foreground">Opciones</div>
+                                <div className="px-2 py-1.5 text-xs text-muted-foreground">{dict.activity.moreOptions}</div>
                                 {MORE_ITEMS.map((mi) => (
                                   <button
                                     key={mi.key}
@@ -88,7 +90,7 @@ export default function ActivityPage() {
 
                       {open && (
                         <div className="mt-3">
-                          <div className="text-xs font-medium text-muted-foreground">Por qué importó</div>
+                          <div className="text-xs font-medium text-muted-foreground">{dict.activity.whyMattered}</div>
                           <p className="mt-2 max-w-[520px] text-[12.5px] leading-relaxed text-muted-foreground">{reasoning}</p>
                         </div>
                       )}
@@ -101,10 +103,10 @@ export default function ActivityPage() {
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <button className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-[13px] font-medium hover:bg-secondary">
-                            <Phone className="h-3.5 w-3.5" /> Solicitar ayuda
+                            <Phone className="h-3.5 w-3.5" /> {dict.activity.requestHelp}
                           </button>
                           <button className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3 text-[13px] font-medium text-primary-foreground hover:bg-primary/90">
-                            <MessageCircle className="h-3.5 w-3.5" /> Pregunta lo que quieras
+                            <MessageCircle className="h-3.5 w-3.5" /> {dict.activity.askAnything}
                           </button>
                         </div>
                       </div>

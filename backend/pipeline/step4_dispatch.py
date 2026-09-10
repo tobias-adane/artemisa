@@ -12,9 +12,11 @@ avanzar el "reloj" explícitamente en vez de esperar de verdad.
 Nivel 3 (contactar): ventana -> push/WhatsApp cancelable -> si no
 cancela, llama al contacto de mayor prioridad confirmado.
 Nivel 4 (emergencia): ventana -> IVR al usuario -> si no cancela,
-contactos confirmados en orden -> si persiste, 911 (BLOQUEADO, ver
-Dispatch911Blocked en clients/dispatch_client.py — nunca se ejecuta
-en este pase).
+contactos confirmados en orden -> si persiste, 911 — implementado,
+pero `dispatch_client.call_911()` lanza Dispatch911Blocked mientras
+`Settings.enable_911_autodial` sea False (default). El interruptor
+vive en el cliente, no acá, para que este módulo no necesite saber
+si el paso está habilitado o no.
 """
 
 from __future__ import annotations
@@ -25,7 +27,7 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from artemisa_models import ActionLevel, EmergencyContact, UserPreferences, DispatchLog
-from clients.dispatch_client import DispatchClient, Dispatch911Blocked
+from clients.dispatch_client import DispatchClient
 from clients.store import Store
 
 DispatchStep = Literal["call_user", "call_contacts", "call_911", "none"]
@@ -70,16 +72,14 @@ def execute_dispatch_step(
     twiml_url: str,
 ) -> DispatchLog | None:
     """
-    Ejecuta UN paso del plan y audita el resultado. `call_911` siempre
-    lanza Dispatch911Blocked por diseño (ver clients/dispatch_client.py)
-    — este wrapper la deja propagar (nunca la traga) para que quien
-    orqueste notifique a un humano en vez de reintentar.
+    Ejecuta UN paso del plan y audita el resultado. Si `call_911` está
+    apagado (default), `dispatch_client.call_911()` lanza
+    Dispatch911Blocked — este wrapper la deja propagar (nunca la
+    traga) para que quien orqueste notifique a un humano en vez de
+    reintentar.
     """
     if step == "none":
         return None
-
-    if step == "call_911":
-        raise Dispatch911Blocked  # nunca se ejecuta — ver docstring del módulo.
 
     if step == "call_user":
         sid = dispatch_client.call_ivr(to_phone=to_phone, twiml_url=twiml_url)
@@ -87,6 +87,9 @@ def execute_dispatch_step(
     elif step == "call_contacts":
         sid = dispatch_client.call_contact(to_phone=to_phone, twiml_url=twiml_url)
         action = "call_contacts"
+    elif step == "call_911":
+        sid = dispatch_client.call_911(to_phone=to_phone, twiml_url=twiml_url)
+        action = "call_911"
     else:
         raise ValueError(f"Paso de dispatch desconocido: {step}")
 

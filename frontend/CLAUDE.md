@@ -267,7 +267,8 @@ app/
   (auth)/          login, signup, forgot-password, verify-email
   (onboarding)/    steps 1-6
   (app)/
-    home/          dashboard principal (incluye el chat como estado, no ruta aparte)
+    home/          dashboard principal (desktop: incluye el chat como estado, no ruta aparte)
+    chat/          SOLO mobile — send() navega acá en vez de expandir el chat inline en Home. Pendiente de construir.
     activity/      historial de eventos
     spaces/        lista de espacios (MVP: 1 space = 1 cámara)
     spaces/[id]/   detalle de espacio

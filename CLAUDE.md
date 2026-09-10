@@ -127,6 +127,11 @@ Se activa solo si:
 - Niveles 3-4: dispatch Twilio (llamada + WhatsApp)
 - El dispatch corre **server-side** — no depende de que la app esté abierta
 - Ventana de cancelación en la llamada misma (IVR) y en WhatsApp
+- El paso "llamar al 911" (dentro de Nivel 4) está **implementado**, pero
+  apagado por default vía `Settings.enable_911_autodial` (env
+  `ENABLE_911_AUTODIAL=false`) hasta resolver la consulta legal sobre
+  autodial en Argentina — ver `backend/CLAUDE.md`. Nivel 3 (contactar a
+  persona de confianza) no depende de este flag.
 
 ### Cuándo Artemisa interrumpe proactivamente vs. solo registra
 
@@ -342,8 +347,8 @@ layers (
 )
 
 threads (
-  id, space_id, narrative, classification, confidence,
-  reasoning, action, start_time, end_time,
+  id, space_id, layers, narrative, classification, confidence,
+  severity_score, reasoning, alert_level, action, start_time, end_time,
   escalated_to_reasoning
 )
 
@@ -388,13 +393,22 @@ AlertSensitivity:    low | balanced | high
 ### Mapeo Classification → Action
 
 ```
-normal     → null                      (solo se registra)
-attention  → severityHigh ? "alertar" : "informar"
-emergency  → severityHigh ? "emergencia" : "contactar"
+normal     → alert_level 1 → action: informar   (solo se registra)
+attention  → severity_score < 0.7  → alert_level 2 → action: alertar
+           → severity_score >= 0.7 → alert_level 3 → action: contactar
+emergency  → severity_high == True  → alert_level 4 → action: emergencia
+           → severity_high == False → alert_level 3 → action: contactar (degradado)
 ```
 
-`severityHigh` lo decide el modelo de razonamiento (Paso 3) dentro de cada clasificación.
-Implementar como función determinística `resolveActionLevel()` con exhaustiveness check.
+`severity_score` (Paso 2b, Groq) decide Nivel 2 vs Nivel 3 dentro de `attention` —
+es distinto de `confidence`. `severity_high` lo decide el modelo de razonamiento
+(Paso 3, GPT-4.1 mini) y solo es relevante cuando `classification == emergency`,
+que siempre escala a Paso 3 antes de resolver la acción.
+
+Implementado como función determinística `resolve_action_level()` /
+`resolveActionLevel()` con exhaustiveness check — ver
+`backend/artemisa_models.py` y `frontend/lib/types/artemisa-types.ts`
+(ya sincronizados entre sí; esta tabla los espeja, no al revés).
 
 ### Teléfonos
 `emergency_contacts.phone` usa formato **E.164**: `+5491122334455`. Validar en frontend antes de guardar.
@@ -484,8 +498,8 @@ app/
   (onboarding)/page.tsx        ← flujo completo (steps 1-6)
   (app)/
     layout.tsx                 ← bottom nav + providers
-    home/page.tsx
-    chat/page.tsx
+    home/page.tsx               ← desktop: incluye el chat como estado, no ruta aparte
+    chat/page.tsx                ← SOLO se renderiza/navega en mobile — ver nota abajo
     activity/page.tsx
     spaces/page.tsx
     spaces/[id]/page.tsx
@@ -512,6 +526,13 @@ lib/
   types.ts
   utils.ts
 ```
+
+**Chat como ruta separada es exclusivo de mobile.** En desktop, Home ya
+incluye el chat como estado interno (no navega a otra pantalla — igual
+que `frontend/design-reference/Home.dc.html`, que no tiene un
+`Chat.dc.html` separado). En mobile, `send()` navega a `chat/page.tsx`
+en vez de expandir el chat inline en Home. Todavía no está construido
+— queda pendiente para una sesión aparte.
 
 ---
 
@@ -606,14 +627,16 @@ Copy de estado ya validado:
 
 ## 12. PANTALLAS YA DISEÑADAS (no tocar sin motivo)
 
-9 pantallas en formato `.dc.html` como especificación visual:
+8 pantallas en formato `.dc.html` como especificación visual (en
+`frontend/design-reference/` — no hay un `Chat.dc.html` separado; el
+chat vive dentro de `Home.dc.html` como estado, salvo en mobile — ver
+sección 8):
 
 | Pantalla | Contenido |
 |---|---|
 | **Auth** | Login/signup — Google, Apple, email/password |
 | **Onboarding** | Nombre, hogar, safety concerns, custom instructions, contactos, cámara |
-| **Home** | Saludo contextual, chat input, chips de acceso rápido, grid de espacios |
-| **Chat** | Conversación con Artemisa, menú "+" (Attach, Around me) |
+| **Home** | Saludo contextual, chat input (incluye la conversación como estado en desktop), chips de acceso rápido, grid de espacios |
 | **Activity** | Timeline por día — Living Memory |
 | **Spaces** | Grid de todos los espacios, estado por cámara |
 | **Space** | Vista individual de espacio |
@@ -688,8 +711,11 @@ FASE 5 — Paso 4: Acción / Twilio
 **1. Scope del MVP** — falta una lista explícita de qué entra y qué queda post-beta.
 
 **2. Legalidad del dispatch automatizado al 911** — sin resolver con abogado argentino.
-Si la respuesta es restrictiva, cambia la arquitectura del Nivel 4. Resolver **antes**
-de programar la Fase 5.
+El código ya está implementado (`dispatch_client.call_911()`), gateado por
+`Settings.enable_911_autodial = False` por default — no requiere más trabajo de
+ingeniería para "prender" el paso, solo la resolución legal. Si la respuesta es
+restrictiva, sí puede cambiar la arquitectura del Nivel 4 (ej. sacar el paso
+directamente en vez de solo apagarlo).
 
 **3. Economía de unidad** — costo IA (~$4.70/mes por hogar) supera el pricing de beta.
 Las 3 palancas están identificadas: heartbeat adaptativo, prompt caching, Batch API.

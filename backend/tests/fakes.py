@@ -32,10 +32,17 @@ class FakeVerificationClient:
 
 
 class FakeDispatchClient:
-    """Registra cada intento en vez de llamar a Twilio de verdad."""
+    """
+    Registra cada intento en vez de llamar a Twilio de verdad.
 
-    def __init__(self):
+    `enable_911_autodial` espeja `Settings.enable_911_autodial` — con
+    el default (False), `call_911` se comporta como el cliente real
+    con el flag apagado (lanza Dispatch911Blocked, sin tocar `calls`).
+    """
+
+    def __init__(self, enable_911_autodial: bool = False):
         self.calls: list[tuple[str, str]] = []
+        self.enable_911_autodial = enable_911_autodial
 
     def call_ivr(self, *, to_phone: str, twiml_url: str) -> str:
         self.calls.append(("call_ivr", to_phone))
@@ -50,6 +57,9 @@ class FakeDispatchClient:
         return "SM_fake"
 
     def call_911(self, *, to_phone: str, twiml_url: str) -> str:
-        from clients.dispatch_client import Dispatch911Blocked
+        if not self.enable_911_autodial:
+            from clients.dispatch_client import Dispatch911Blocked
 
-        raise Dispatch911Blocked
+            raise Dispatch911Blocked
+        self.calls.append(("call_911", to_phone))
+        return "CA_fake_911"

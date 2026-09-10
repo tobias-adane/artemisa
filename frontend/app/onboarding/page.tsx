@@ -6,18 +6,20 @@ import { ChevronLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { useI18n, format } from '@/lib/i18n/context';
 
 const STEPS = ['personal', 'home', 'contacts', 'space', 'done'] as const;
-const HOME_TYPES = [
-  { key: 'house', label: 'Casa' },
-  { key: 'apartment', label: 'Departamento' },
-  { key: 'small_business', label: 'Comercio' },
-] as const;
 
 const IP_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { dict } = useI18n();
+  const HOME_TYPES = [
+    { key: 'house', label: dict.onboarding.homeTypes.house },
+    { key: 'apartment', label: dict.onboarding.homeTypes.apartment },
+    { key: 'small_business', label: dict.onboarding.homeTypes.small_business },
+  ] as const;
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [homeType, setHomeType] = useState<(typeof HOME_TYPES)[number]['key']>('house');
@@ -30,7 +32,7 @@ export default function OnboardingPage() {
   const [camState, setCamState] = useState<'idle' | 'testing' | 'ok' | 'error'>('idle');
 
   const key = STEPS[step];
-  const first = name.trim().split(/\s+/)[0] || 'vecino';
+  const first = name.trim().split(/\s+/)[0] || dict.onboarding.defaultName;
 
   function testCamera(ip: string) {
     setCamIp(ip);
@@ -63,7 +65,7 @@ export default function OnboardingPage() {
           <div className="flex items-center justify-between">
             {step > 0 ? (
               <button onClick={() => setStep((s) => Math.max(0, s - 1))} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-                <ChevronLeft className="h-3.5 w-3.5" /> Atrás
+                <ChevronLeft className="h-3.5 w-3.5" /> {dict.onboarding.back}
               </button>
             ) : (
               <span />
@@ -76,24 +78,24 @@ export default function OnboardingPage() {
           </div>
 
           <h1 className="heading-display mt-6 text-[28px] leading-tight">
-            {key === 'personal' && 'Empecemos a proteger tu hogar.'}
-            {key === 'home' && '¿A quién estamos protegiendo?'}
-            {key === 'contacts' && '¿A quién llamamos si pasa algo?'}
-            {key === 'space' && 'Configurá tus espacios.'}
-            {key === 'done' && `Listo, ${first}.`}
+            {key === 'personal' && dict.onboarding.stepPersonalTitle}
+            {key === 'home' && dict.onboarding.stepHomeTitle}
+            {key === 'contacts' && dict.onboarding.stepContactsTitle}
+            {key === 'space' && dict.onboarding.stepSpaceTitle}
+            {key === 'done' && format(dict.onboarding.stepDoneTitle, { name: first })}
           </h1>
 
           {key === 'personal' && (
             <div className="mt-6">
-              <label className="mb-1.5 block text-xs font-semibold">Tu nombre</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="María Álvarez" />
+              <label className="mb-1.5 block text-xs font-semibold">{dict.onboarding.nameLabel}</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={dict.onboarding.namePlaceholder} />
             </div>
           )}
 
           {key === 'home' && (
             <div className="mt-5 flex flex-col gap-5">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold">Tipo de hogar</label>
+                <label className="mb-1.5 block text-xs font-semibold">{dict.onboarding.homeTypeLabel}</label>
                 <div className="flex flex-wrap gap-2">
                   {HOME_TYPES.map((h) => (
                     <button
@@ -110,17 +112,17 @@ export default function OnboardingPage() {
               </div>
               <div className="flex items-center justify-between rounded-2xl border border-border bg-background p-3.5">
                 <div>
-                  <div className="text-[13.5px] font-semibold">¿Viven chicos en casa?</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">Ajusta cómo Artemisa distingue lo normal de lo que amerita tu atención.</div>
+                  <div className="text-[13.5px] font-semibold">{dict.onboarding.hasChildrenLabel}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{dict.onboarding.hasChildrenHint}</div>
                 </div>
                 <Switch checked={hasChildren} onCheckedChange={setHasChildren} />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold">¿Qué es lo que más te preocupa?</label>
+                <label className="mb-1.5 block text-xs font-semibold">{dict.onboarding.concernsLabel}</label>
                 <textarea
                   value={customInstructions}
                   onChange={(e) => setCustomInstructions(e.target.value)}
-                  placeholder="Ej: la mucama viene los martes a las 10am. Nadie debería estar en casa después de las 23hs entre semana."
+                  placeholder={dict.onboarding.concernsPlaceholder}
                   className="min-h-[96px] w-full resize-none rounded-2xl border border-border bg-background p-3 text-sm outline-none"
                 />
               </div>
@@ -130,15 +132,15 @@ export default function OnboardingPage() {
           {key === 'contacts' && (
             <div className="mt-5 flex flex-col gap-4">
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Agregá al menos una persona de confianza. Artemisa la va a contactar — en orden — si detecta una emergencia real. El 911 siempre se contacta primero.
+                {dict.onboarding.contactsBody}
               </p>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold">Nombre</label>
-                <Input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Valentina Vidal" />
+                <label className="mb-1.5 block text-xs font-semibold">{dict.onboarding.contactNameLabel}</label>
+                <Input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder={dict.onboarding.contactNamePlaceholder} />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold">Teléfono</label>
-                <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+54 9 11 2233 4455" />
+                <label className="mb-1.5 block text-xs font-semibold">{dict.onboarding.contactPhoneLabel}</label>
+                <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder={dict.onboarding.contactPhonePlaceholder} />
               </div>
             </div>
           )}
@@ -146,27 +148,27 @@ export default function OnboardingPage() {
           {key === 'space' && (
             <div className="mt-5 flex flex-col gap-4">
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Un espacio es cualquier lugar donde tengas una cámara. Nombralo y probá la conexión — podés agregar el resto una vez adentro.
+                {dict.onboarding.spaceBody}
               </p>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold">Nombre del espacio</label>
-                <Input value={spaceName} onChange={(e) => setSpaceName(e.target.value)} placeholder="Living" />
+                <label className="mb-1.5 block text-xs font-semibold">{dict.onboarding.spaceNameLabel}</label>
+                <Input value={spaceName} onChange={(e) => setSpaceName(e.target.value)} placeholder={dict.onboarding.spaceNamePlaceholder} />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold">Dirección IP de la cámara</label>
-                <Input value={camIp} onChange={(e) => testCamera(e.target.value)} placeholder="192.168.1.42" />
+                <label className="mb-1.5 block text-xs font-semibold">{dict.onboarding.camIpLabel}</label>
+                <Input value={camIp} onChange={(e) => testCamera(e.target.value)} placeholder={dict.onboarding.camIpPlaceholder} />
               </div>
-              {camState === 'testing' && <p className="text-xs text-muted-foreground">Probando conexión…</p>}
-              {camState === 'ok' && <p className="text-xs font-medium text-[var(--status-normal)]">Conectada correctamente.</p>}
+              {camState === 'testing' && <p className="text-xs text-muted-foreground">{dict.onboarding.testingConnection}</p>}
+              {camState === 'ok' && <p className="text-xs font-medium text-[var(--status-normal)]">{dict.onboarding.connectedOk}</p>}
               {camState === 'error' && (
                 <div className="rounded-2xl border border-[#f0d4d4] bg-[#fdf2f2] p-3.5">
-                  <p className="text-[13px] font-medium text-[#dc2626]">No pudimos conectar.</p>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Revisá la URL o intentá de nuevo — el resto del formulario queda como está.</p>
+                  <p className="text-[13px] font-medium text-[#dc2626]">{dict.onboarding.connectFailedTitle}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{dict.onboarding.connectFailedBody}</p>
                   <button
                     onClick={() => testCamera(camIp)}
                     className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-foreground underline underline-offset-2"
                   >
-                    <RefreshCw className="h-3 w-3" /> Reintentar
+                    <RefreshCw className="h-3 w-3" /> {dict.onboarding.retry}
                   </button>
                 </div>
               )}
@@ -175,12 +177,12 @@ export default function OnboardingPage() {
 
           {key === 'done' && (
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              Guardamos tu perfil de hogar. Vamos a tu Inicio para que veas cómo se siente Artemisa.
+              {dict.onboarding.doneBody}
             </p>
           )}
 
           <Button onClick={advance} disabled={!canContinue} className="mt-8 w-full">
-            {key === 'done' ? 'Ir a Artemisa' : 'Continuar'}
+            {key === 'done' ? dict.onboarding.goToArtemisa : dict.onboarding.continueBtn}
           </Button>
         </div>
       </div>

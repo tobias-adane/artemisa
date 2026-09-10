@@ -24,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { mockEmergencyContacts, mockUser } from '@/lib/mock-data';
+import { useI18n, format } from '@/lib/i18n/context';
+import type { Dictionary } from '@/lib/i18n/es';
 
 type SectionKey =
   | 'perfil'
@@ -40,30 +42,31 @@ type SectionKey =
   | 'terminos'
   | 'ayuda';
 
-const SECTIONS: Record<
-  SectionKey,
-  { label: string; icon: typeof UserRound; group: 0 | 1 | 2; placeholder?: string[] }
-> = {
-  perfil: { label: 'Perfil', icon: UserRound, group: 0, placeholder: ['Nombre y contacto', 'Foto de perfil', 'Zona horaria'] },
-  suscripcion: { label: 'Suscripción', icon: CreditCard, group: 0 },
-  espacios: { label: 'Mis Espacios', icon: GalleryHorizontalEnd, group: 0, placeholder: ['Cámaras conectadas', 'Nombres de espacios'] },
-  familia: { label: 'Familia', icon: Users, group: 0 },
-  seguridad: { label: 'Seguridad', icon: ShieldCheck, group: 0, placeholder: ['Contraseña', 'Verificación en dos pasos', 'Sesiones activas'] },
-  privacidad: { label: 'Privacidad y Datos', icon: Lock, group: 1, placeholder: ['Retención de actividad', 'Exportar mis datos', 'Eliminar cuenta'] },
-  contactos: { label: 'Contactos de Emergencia', icon: PhoneCall, group: 1 },
-  instrucciones: { label: 'Instrucciones del Hogar', icon: SlidersHorizontal, group: 1, placeholder: ['Rutinas y horarios habituales', 'Quién vive en la casa'] },
-  alertas: { label: 'Alertas y Emergencias', icon: Bell, group: 1 },
-  idioma: { label: 'Idioma', icon: Globe, group: 1, placeholder: ['Español (Argentina)'] },
-  recursos: { label: 'Recursos', icon: Folders, group: 2, placeholder: ['Centro de ayuda', 'Guías de instalación'] },
-  terminos: { label: 'Términos y Privacidad', icon: FileText, group: 2, placeholder: ['Términos de Servicio', 'Política de Privacidad'] },
-  ayuda: { label: 'Ayuda', icon: HelpCircle, group: 2, placeholder: ['Contactar soporte', 'Preguntas frecuentes'] },
-};
-
-const GROUP_LABELS = ['Mi cuenta', 'Sistema', 'Acerca'];
+function sectionsFor(dict: Dictionary): Record<SectionKey, { label: string; icon: typeof UserRound; group: 0 | 1 | 2; placeholder?: string[] }> {
+  const s = dict.settings.sections;
+  return {
+    perfil: { label: s.perfil.label, icon: UserRound, group: 0, placeholder: s.perfil.placeholder },
+    suscripcion: { label: s.suscripcion.label, icon: CreditCard, group: 0 },
+    espacios: { label: s.espacios.label, icon: GalleryHorizontalEnd, group: 0, placeholder: s.espacios.placeholder },
+    familia: { label: s.familia.label, icon: Users, group: 0 },
+    seguridad: { label: s.seguridad.label, icon: ShieldCheck, group: 0, placeholder: s.seguridad.placeholder },
+    privacidad: { label: s.privacidad.label, icon: Lock, group: 1, placeholder: s.privacidad.placeholder },
+    contactos: { label: s.contactos.label, icon: PhoneCall, group: 1 },
+    instrucciones: { label: s.instrucciones.label, icon: SlidersHorizontal, group: 1, placeholder: s.instrucciones.placeholder },
+    alertas: { label: s.alertas.label, icon: Bell, group: 1 },
+    idioma: { label: s.idioma.label, icon: Globe, group: 1 },
+    recursos: { label: s.recursos.label, icon: Folders, group: 2, placeholder: s.recursos.placeholder },
+    terminos: { label: s.terminos.label, icon: FileText, group: 2, placeholder: s.terminos.placeholder },
+    ayuda: { label: s.ayuda.label, icon: HelpCircle, group: 2, placeholder: s.ayuda.placeholder },
+  };
+}
 
 function SettingsInner() {
   const router = useRouter();
   const search = useSearchParams();
+  const { dict, locale, setLocale } = useI18n();
+  const SECTIONS = sectionsFor(dict);
+  const GROUP_LABELS = [dict.settings.groupAccount, dict.settings.groupSystem, dict.settings.groupAbout];
   const initialTab = (search.get('tab') as SectionKey) ?? 'familia';
   const [tab, setTab] = useState<SectionKey>(SECTIONS[initialTab] ? initialTab : 'familia');
   const [channels, setChannels] = useState({ push: true, email: false, sms: true });
@@ -96,7 +99,7 @@ function SettingsInner() {
         <button onClick={() => router.push('/home')} className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <div className="rounded-full bg-background px-4 py-2 text-xs font-medium">Configuración</div>
+        <div className="rounded-full bg-background px-4 py-2 text-xs font-medium">{dict.settings.pageTitle}</div>
         <div className="w-8" />
       </header>
 
@@ -126,7 +129,7 @@ function SettingsInner() {
                     className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm text-foreground hover:bg-secondary"
                   >
                     <LogOut className="h-4 w-4 flex-none" />
-                    <span className="flex-1">Cerrar sesión</span>
+                    <span className="flex-1">{dict.settings.logout}</span>
                   </button>
                 )}
               </div>
@@ -154,15 +157,15 @@ function SettingsInner() {
           {tab === 'familia' && (
             <div className="mt-6 rounded-3xl border border-border bg-background p-1">
               <div className="p-4 pb-1">
-                <div className="heading-display text-xl">Quién puede ver tu hogar</div>
+                <div className="heading-display text-xl">{dict.settings.familia.title}</div>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                  Todos acá tienen la misma visibilidad sobre lo que pasa en tu hogar. Solo los dueños pueden agregar cámaras o cambiar las reglas de alerta.
+                  {dict.settings.familia.body}
                 </p>
               </div>
               <div className="flex flex-col gap-2 p-2.5">
                 {[
-                  { name: mockUser.name, email: mockUser.email, role: 'Administrador' },
-                  { name: 'Valentina Vidal', email: 'valentina@artemisa.app', role: 'Administrador' },
+                  { name: mockUser.name, email: mockUser.email, role: dict.settings.familia.role },
+                  { name: 'Valentina Vidal', email: 'valentina@artemisa.app', role: dict.settings.familia.role },
                 ].map((m) => (
                   <div key={m.email} className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3">
                     <span className="flex h-7.5 w-7.5 flex-none items-center justify-center rounded-full bg-secondary text-xs font-semibold">
@@ -184,8 +187,8 @@ function SettingsInner() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {(
                   [
-                    { name: 'Founding' as const, price: '$[PRECIO FOUNDING] ARS / mes', note: 'Precio congelado mientras dure la beta', features: ['1 cámara', 'Comprensión contextual completa', 'Contactos de emergencia', 'Memoria de actividad sin límite'] },
-                    { name: 'Premium' as const, price: '$[PRECIO PREMIUM] ARS / mes', note: '', features: ['Hasta [N] cámaras', 'Todo lo de Founding', 'Soporte prioritario', 'Contactos ilimitados'] },
+                    { name: 'Founding' as const, price: dict.settings.suscripcion.founding.price, note: dict.settings.suscripcion.founding.note, features: dict.settings.suscripcion.founding.features },
+                    { name: 'Premium' as const, price: dict.settings.suscripcion.premium.price, note: '', features: dict.settings.suscripcion.premium.features },
                   ]
                 ).map((p) => {
                   const isCurrent = plan === p.name;
@@ -193,7 +196,7 @@ function SettingsInner() {
                     <div key={p.name} className={`rounded-3xl border p-4.5 ${isCurrent ? 'border-[#d4d4d4] bg-secondary/40' : 'border-border'}`}>
                       <div className="flex items-baseline justify-between gap-2">
                         <div className="heading-display text-xl">{p.name}</div>
-                        {isCurrent && <span className="rounded-full bg-[#ececec] px-2.5 py-1 text-[11px] font-semibold">Actual</span>}
+                        {isCurrent && <span className="rounded-full bg-[#ececec] px-2.5 py-1 text-[11px] font-semibold">{dict.settings.suscripcion.current}</span>}
                       </div>
                       <div className="mt-2 text-[13px] text-muted-foreground">{p.price}</div>
                       {p.note && <div className="mt-0.5 text-[11.5px] text-muted-foreground/70">{p.note}</div>}
@@ -211,16 +214,16 @@ function SettingsInner() {
                         onClick={() => setPlan(p.name)}
                         className="mt-4 w-full"
                       >
-                        {isCurrent ? 'Plan actual' : `Cambiar a ${p.name}`}
+                        {isCurrent ? dict.settings.suscripcion.currentPlan : format(dict.settings.suscripcion.changeTo, { plan: p.name })}
                       </Button>
                     </div>
                   );
                 })}
               </div>
               <div className="rounded-3xl border border-border bg-background p-4.5">
-                <div className="text-[12.5px] font-semibold">Facturación</div>
+                <div className="text-[12.5px] font-semibold">{dict.settings.suscripcion.billingTitle}</div>
                 <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
-                  Tarjeta terminada en 4421 · próximo cobro el 1 de septiembre de 2026. Si cambiás de plan, el nuevo precio aplica en tu próximo ciclo.
+                  {dict.settings.suscripcion.billingBody}
                 </p>
               </div>
             </div>
@@ -229,7 +232,7 @@ function SettingsInner() {
           {tab === 'contactos' && (
             <div className="mt-6 flex flex-col gap-3.5">
               <p className="text-sm text-muted-foreground">
-                Artemisa los contacta, en orden, si detecta una emergencia real. El 911 siempre antecede a esta lista.
+                {dict.settings.contactos.body}
               </p>
               <div className="flex flex-col gap-2">
                 {contacts.map((c) => (
@@ -242,11 +245,11 @@ function SettingsInner() {
                       <div className="mt-0.5 text-xs text-muted-foreground">{c.phone}</div>
                     </div>
                     <span className="rounded-full border border-border px-2.5 py-1 text-[11.5px] text-muted-foreground">
-                      {c.confirmed ? 'Confirmado' : 'Pendiente'}
+                      {c.confirmed ? dict.settings.contactos.confirmed : dict.settings.contactos.pending}
                     </span>
                     <button
                       onClick={() => setContacts((cs) => cs.filter((x) => x.id !== c.id))}
-                      title="Quitar"
+                      title={dict.settings.contactos.remove}
                       className="flex h-6.5 w-6.5 flex-none items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -256,17 +259,17 @@ function SettingsInner() {
               </div>
               <div className="flex flex-col gap-2 rounded-2xl border border-dashed border-[#d4d4d4] p-3.5 sm:flex-row sm:items-center">
                 <Input
-                  placeholder="Nombre"
+                  placeholder={dict.settings.contactos.namePlaceholder}
                   value={newContact.name}
                   onChange={(e) => setNewContact((n) => ({ ...n, name: e.target.value }))}
                 />
                 <Input
-                  placeholder="+54 9 11 ..."
+                  placeholder={dict.settings.contactos.phonePlaceholder}
                   value={newContact.phone}
                   onChange={(e) => setNewContact((n) => ({ ...n, phone: e.target.value }))}
                 />
                 <Button onClick={addContact} disabled={!newContact.name.trim() || !newContact.phone.trim()}>
-                  Agregar
+                  {dict.settings.contactos.add}
                 </Button>
               </div>
             </div>
@@ -276,15 +279,15 @@ function SettingsInner() {
             <div className="mt-6 flex flex-col gap-3.5">
               <div className="rounded-3xl border border-border bg-background p-1">
                 <div className="p-4 pb-1">
-                  <div className="heading-display text-xl">Cómo te contactamos</div>
-                  <p className="mt-1.5 text-[13px] text-muted-foreground">Las emergencias siempre te llegan, incluso en horario silencioso.</p>
+                  <div className="heading-display text-xl">{dict.settings.alertas.title}</div>
+                  <p className="mt-1.5 text-[13px] text-muted-foreground">{dict.settings.alertas.body}</p>
                 </div>
                 <div className="flex flex-col gap-2 p-2.5">
                   {(
                     [
-                      ['push', 'Push en tu teléfono', 'Llega en un par de segundos.'],
-                      ['email', 'Resumen por email', 'Un resumen cada noche.'],
-                      ['sms', 'Mensaje de texto', 'Solo emergencias, con costo de tu operador.'],
+                      ['push', dict.settings.alertas.push.label, dict.settings.alertas.push.hint],
+                      ['email', dict.settings.alertas.email.label, dict.settings.alertas.email.hint],
+                      ['sms', dict.settings.alertas.sms.label, dict.settings.alertas.sms.hint],
                     ] as const
                   ).map(([key, label, hint]) => (
                     <div key={key} className="flex items-center gap-3 rounded-2xl border border-border p-3.5">
@@ -296,6 +299,29 @@ function SettingsInner() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {tab === 'idioma' && (
+            <div className="mt-6">
+              <p className="text-sm text-muted-foreground">{dict.settings.idioma.body}</p>
+              <div className="mt-4 flex flex-col">
+                {(
+                  [
+                    ['es', dict.settings.idioma.spanish],
+                    ['en', dict.settings.idioma.english],
+                  ] as const
+                ).map(([code, label]) => (
+                  <button
+                    key={code}
+                    onClick={() => setLocale(code)}
+                    className="flex items-center justify-between gap-2.5 border-b border-border py-3 text-left text-[13px] text-foreground"
+                  >
+                    <span>{label}</span>
+                    {locale === code && <span className="text-muted-foreground">✓</span>}
+                  </button>
+                ))}
               </div>
             </div>
           )}

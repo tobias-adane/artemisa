@@ -30,6 +30,14 @@ class Settings:
     twilio_auth_token: str | None
     twilio_from_number: str | None
     sentry_dsn: str | None
+    enable_911_autodial: bool = False
+    """
+    Interruptor legal para el autodial al 911 (Paso 4, Nivel 4).
+    Default False: el código está implementado y listo, pero
+    `call_911()` sigue lanzando Dispatch911Blocked mientras esto sea
+    False. Ver backend/CLAUDE.md — recién puede pasar a True cuando
+    se resuelva la consulta legal sobre autodial en Argentina.
+    """
 
     @property
     def has_openai(self) -> bool:
@@ -68,4 +76,5 @@ def get_settings() -> Settings:
         twilio_auth_token=os.environ.get("TWILIO_AUTH_TOKEN"),
         twilio_from_number=os.environ.get("TWILIO_FROM_NUMBER"),
         sentry_dsn=os.environ.get("SENTRY_DSN"),
+        enable_911_autodial=os.environ.get("ENABLE_911_AUTODIAL", "false").strip().lower() in ("1", "true", "yes"),
     )

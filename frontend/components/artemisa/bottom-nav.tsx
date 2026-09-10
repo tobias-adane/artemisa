@@ -4,15 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, GalleryHorizontalEnd, Option, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const ITEMS = [
-  { href: '/home', label: 'Inicio', icon: Home },
-  { href: '/spaces', label: 'Espacios', icon: GalleryHorizontalEnd },
-  { href: '/activity', label: 'Actividad', icon: Option },
-];
+import { useI18n } from '@/lib/i18n/context';
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { dict } = useI18n();
+
+  const ITEMS = [
+    { href: '/home', label: dict.nav.home, icon: Home },
+    { href: '/spaces', label: dict.nav.spaces, icon: GalleryHorizontalEnd },
+    { href: '/activity', label: dict.nav.activity, icon: Option },
+  ];
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-6">
@@ -37,7 +39,7 @@ export function BottomNav() {
         <div className="mx-1 h-5 w-px bg-border" />
         <Link
           href="/spaces?add=camera"
-          title="Agregar"
+          title={dict.nav.addTooltip}
           className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
         >
           <Plus className="h-4 w-4" strokeWidth={2} />

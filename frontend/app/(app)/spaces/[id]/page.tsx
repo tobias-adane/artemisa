@@ -5,10 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronLeft, MessageCircle, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { mockActivity, mockSpaces } from '@/lib/mock-data';
+import { useI18n, format } from '@/lib/i18n/context';
 
 export default function SpaceDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { dict } = useI18n();
   const [reconnected, setReconnected] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
 
@@ -43,37 +45,37 @@ export default function SpaceDetailPage() {
 
         <div className="mt-5">
           <span className="text-[12.5px] text-muted-foreground">
-            {isOffline ? 'Desconectada · sin señal hace 12 min' : reconnecting ? 'Reconectando…' : 'Activa · última actualización hace 2 min'}
+            {isOffline ? dict.spaceDetail.offlineNote : reconnecting ? dict.spaceDetail.reconnectingNote : dict.spaceDetail.activeNote}
           </span>
         </div>
 
         <h1 className="heading-display mt-3.5 text-[28px] leading-tight">
-          {isOffline ? 'Sin señal de esta cámara.' : `${space.name} está tranquilo${space.name.endsWith('a') ? 'a' : ''} ahora mismo.`}
+          {isOffline
+            ? dict.spaceDetail.offlineHeadline
+            : format(dict.spaceDetail.calmHeadline, { name: space.name, genderSuffix: space.name.endsWith('a') ? 'a' : '' })}
         </h1>
         <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
-          {isOffline
-            ? 'Perdimos la conexión hace unos minutos. El resto de tus espacios sigue funcionando con normalidad — esto no es una emergencia.'
-            : 'Nada fuera de lo común por acá. Todo está tal como debería estar.'}
+          {isOffline ? dict.spaceDetail.offlineBody : dict.spaceDetail.calmBody}
         </p>
 
         {isOffline && (
           <Button onClick={reconnect} disabled={reconnecting} className="mt-4">
-            <RefreshCw className={`h-3.5 w-3.5 ${reconnecting ? 'animate-spin' : ''}`} /> Reconectar
+            <RefreshCw className={`h-3.5 w-3.5 ${reconnecting ? 'animate-spin' : ''}`} /> {dict.spaceDetail.reconnect}
           </Button>
         )}
 
         <div className="mt-10">
           <div className="mb-3.5 flex items-center justify-between">
-            <div className="heading-display text-xl">Actividad</div>
+            <div className="heading-display text-xl">{dict.spaceDetail.activityTitle}</div>
             <Button variant="outline" size="sm" onClick={() => router.push('/activity')}>
-              Ver todo
+              {dict.spaceDetail.seeAll}
             </Button>
           </div>
           {events.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-[#d4d4d4] px-6 py-12 text-center">
-              <div className="heading-display text-lg">Todavía no pasó nada acá</div>
+              <div className="heading-display text-lg">{dict.spaceDetail.noActivityTitle}</div>
               <p className="mx-auto mt-2 max-w-[40ch] text-[13.5px] leading-relaxed text-muted-foreground">
-                Apuntá una cámara a este espacio y Artemisa va a empezar a contar su historia.
+                {dict.spaceDetail.noActivityBody}
               </p>
             </div>
           ) : (
@@ -96,7 +98,7 @@ export default function SpaceDetailPage() {
 
       <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center">
         <Button onClick={() => router.push(`/home?space=${space.id}`)} className="rounded-full px-5 py-3 shadow-lg">
-          <MessageCircle className="h-3.5 w-3.5" /> Pregunta lo que quieras
+          <MessageCircle className="h-3.5 w-3.5" /> {dict.spaceDetail.askAnything}
         </Button>
       </div>
     </div>

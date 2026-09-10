@@ -15,11 +15,12 @@ from clients.base import NotConfiguredError
 
 class Dispatch911Blocked(RuntimeError):
     """
-    Ver backend/CLAUDE.md, Paso 4: el autodial al 911 está BLOQUEADO
-    hasta resolver la consulta legal sobre legalidad del autodial en
-    jurisdicción argentina. Esta excepción es intencional y no debe
-    silenciarse ni recibir un try/except que la ignore — si esto se
-    dispara, el flujo correcto es notificar a un humano, no reintentar.
+    Ver backend/CLAUDE.md, Paso 4: el autodial al 911 está apagado por
+    default (`Settings.enable_911_autodial = False`) hasta resolver la
+    consulta legal sobre legalidad del autodial en jurisdicción
+    argentina. Esta excepción es intencional y no debe silenciarse ni
+    recibir un try/except que la ignore — si esto se dispara, el flujo
+    correcto es notificar a un humano, no reintentar.
     """
 
 
@@ -52,7 +53,13 @@ class DispatchClient:
         return msg.sid
 
     def call_911(self, *, to_phone: str, twiml_url: str) -> str:
-        raise Dispatch911Blocked(
-            "El autodial al 911 está bloqueado — ver backend/CLAUDE.md, Paso 4. "
-            "Requiere opinión legal sobre legalidad del autodial en Argentina antes de implementarse."
-        )
+        if not self._settings.enable_911_autodial:
+            raise Dispatch911Blocked(
+                "El autodial al 911 está implementado pero apagado por default "
+                "(ENABLE_911_AUTODIAL=false) — ver backend/CLAUDE.md, Paso 4. "
+                "Requiere opinión legal sobre legalidad del autodial en Argentina "
+                "antes de habilitarse."
+            )
+        client = self._require_twilio()
+        call = client.calls.create(to=to_phone, from_=self._settings.twilio_from_number, url=twiml_url)
+        return call.sid

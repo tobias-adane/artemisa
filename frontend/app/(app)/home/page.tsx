@@ -18,40 +18,37 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { mockSpaces, mockUser } from '@/lib/mock-data';
+import { useI18n, format } from '@/lib/i18n/context';
+import type { Dictionary } from '@/lib/i18n/es';
 
 type ChatMessage = { role: 'user' | 'assistant'; text: string };
 
-function greetingFor(date: Date) {
+function greetingFor(date: Date, dict: Dictionary) {
   const h = date.getHours();
-  if (h < 6) return 'Buenas noches';
-  if (h < 12) return 'Buenos días';
-  if (h < 20) return 'Buenas tardes';
-  return 'Buenas noches';
+  if (h < 12) return dict.home.greetingMorning;
+  if (h < 20) return dict.home.greetingAfternoon;
+  return dict.home.greetingNight;
 }
 
-function replyFor(msg: string) {
+function replyFor(msg: string, dict: Dictionary) {
   const m = msg.toLowerCase();
-  if (/(familia|chicos|quien esta|quién está|todo el mundo)/.test(m))
-    return 'Están todos en casa. Vi a Sofía en la cocina hace unos 20 minutos, y Rocky está dormido cerca de la puerta de atrás desde las 8. Nadie salió desde que llegaste.';
-  if (/(actividad|paso|pasó|reciente|hoy)/.test(m))
-    return 'Un día tranquilo. La puerta principal se cerró sola a las 21:14, y a las 14:30 dejaron un paquete que todavía nadie retiró. Nada que necesitara tu atención urgente.';
-  if (/(pasando|ahora|estado)/.test(m))
-    return 'Todo tranquilo por ahora. La cámara de la entrada está sin señal, el resto de tus espacios sigue mirando con normalidad.';
-  if (/(puerta|cerrad|llave)/.test(m))
-    return 'Todas las puertas están cerradas. La principal se cerró por última vez a las 21:14.';
-  return 'Estoy mirando la casa y todo parece tranquilo. Preguntame quién está en casa, qué pasó hoy, o por cualquier habitación, y te cuento lo que veo.';
+  if (/(familia|chicos|quien esta|quién está|todo el mundo|family|kids|who.?s home)/.test(m)) return dict.home.replyFamily;
+  if (/(actividad|paso|pasó|reciente|hoy|activity|happened|today)/.test(m)) return dict.home.replyActivity;
+  if (/(pasando|ahora|estado|going on|status)/.test(m)) return dict.home.replyStatus;
+  if (/(puerta|cerrad|llave|door|lock)/.test(m)) return dict.home.replyDoors;
+  return dict.home.replyDefault;
 }
-
-const QUICK_ACTIONS = ['¿Cómo está mi familia?', '¿Qué está pasando en casa?', 'Actividad reciente'];
 
 export default function HomePage() {
   const router = useRouter();
+  const { dict } = useI18n();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const [toast, setToast] = useState('');
 
-  const greeting = useMemo(() => greetingFor(new Date()), []);
+  const QUICK_ACTIONS = [dict.home.quick1, dict.home.quick2, dict.home.quick3];
+  const greeting = useMemo(() => greetingFor(new Date(), dict), [dict]);
   const conversing = messages.length > 0 || thinking;
 
   function flash(msg: string) {
@@ -66,7 +63,7 @@ export default function HomePage() {
     setInput('');
     setThinking(true);
     setTimeout(() => {
-      setMessages((m) => [...m, { role: 'assistant', text: replyFor(msg) }]);
+      setMessages((m) => [...m, { role: 'assistant', text: replyFor(msg, dict) }]);
       setThinking(false);
     }, 900);
   }
@@ -89,10 +86,10 @@ export default function HomePage() {
   return (
     <div>
       <PageHeader
-        title="Inicio"
+        title={dict.home.pageTitle}
         right={
           <button
-            title="Chat nuevo"
+            title={dict.home.newChatTooltip}
             onClick={() => setMessages([])}
             className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground"
           >
@@ -107,7 +104,7 @@ export default function HomePage() {
             <h1 className="heading-display text-3xl">
               {greeting}, <span className="text-[#bcbcbc]">{mockUser.name.split(' ')[0]}</span>
             </h1>
-            <p className="heading-display text-3xl text-foreground">Todo está en orden en casa.</p>
+            <p className="heading-display text-3xl text-foreground">{dict.home.subtitle}</p>
           </div>
         )}
 
@@ -146,48 +143,48 @@ export default function HomePage() {
                 send();
               }
             }}
-            placeholder="Preguntá lo que quieras sobre tu casa"
+            placeholder={dict.home.inputPlaceholder}
             className="h-auto border-none px-1 py-2 text-sm shadow-none focus-visible:ring-0"
           />
           <div className="mt-1 flex items-center gap-1.5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button title="Opciones" className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground">
+                <button title={dict.home.optionsTooltip} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground">
                   <Plus className="h-3 w-3" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-[220px]">
-                <DropdownMenuLabel>Opciones</DropdownMenuLabel>
+                <DropdownMenuLabel>{dict.home.optionsTooltip}</DropdownMenuLabel>
                 <DropdownMenuItem onClick={pickFile}>
-                  <Paperclip className="h-4 w-4" /> Agregar Archivos o Fotos
+                  <Paperclip className="h-4 w-4" /> {dict.home.addFilesPhotos}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={pickPhoto}>
-                  <CameraIcon className="h-4 w-4" /> Tomar Foto
+                  <CameraIcon className="h-4 w-4" /> {dict.home.takePhoto}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Espacios</DropdownMenuSubTrigger>
+                  <DropdownMenuSubTrigger>{dict.home.spacesSubmenu}</DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {mockSpaces.map((sp) => (
-                      <DropdownMenuItem key={sp.id} onClick={() => flash(`Espacio ${sp.name} agregado al contexto`)}>
+                      <DropdownMenuItem key={sp.id} onClick={() => flash(format(dict.home.spaceAddedToast, { name: sp.name }))}>
                         {sp.name}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
-                <DropdownMenuItem onClick={() => flash('A tu Alrededor llega pronto')}>
-                  <Globe className="h-4 w-4" /> A tu Alrededor
-                  <span className="ml-auto text-[11px] font-semibold text-[#2563eb]">Beta</span>
+                <DropdownMenuItem onClick={() => flash(dict.home.aroundMeSoonToast)}>
+                  <Globe className="h-4 w-4" /> {dict.home.aroundMe}
+                  <span className="ml-auto text-[11px] font-semibold text-[#2563eb]">{dict.home.aroundMeBeta}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <div className="flex-1" />
             {input.trim() ? (
-              <button onClick={() => send()} title="Enviar" className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <button onClick={() => send()} title={dict.home.sendTooltip} className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <ArrowUp className="h-3.5 w-3.5" />
               </button>
             ) : (
-              <button title="Voz" className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground">
+              <button title={dict.home.voiceTooltip} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground">
                 <Mic className="h-3.5 w-3.5" />
               </button>
             )}
@@ -222,7 +219,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 rounded-xl px-1.5 py-1">
                     <span className="flex-1 truncate text-sm">{space.name}</span>
                     <button
-                      title="Más"
+                      title={dict.spaces.moreTooltip}
                       onClick={(e) => e.preventDefault()}
                       className="flex h-4 w-4 flex-none items-center justify-center text-muted-foreground hover:text-foreground"
                     >

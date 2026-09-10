@@ -135,11 +135,15 @@ en voz humana del resultado (nunca volcar el `reasoning` técnico de
 #   2. Si no cancela -> llamar a contactos de emergencia confirmados.
 #   3. Si persiste -> llamar al 911.
 #
-# ⚠️  BLOQUEADO: el paso de "llamar al 911" requiere opinión legal
-#     sobre legalidad del autodial en jurisdicción argentina.
-#     No implementar autodial al 911 hasta resolver la consulta legal.
-#     Nivel 3 (contactar a persona de confianza, no 911) no está
-#     bloqueado por esto.
+# ⚠️  El paso de "llamar al 911" está IMPLEMENTADO pero APAGADO por
+#     default: Settings.enable_911_autodial (env ENABLE_911_AUTODIAL)
+#     es False mientras no se resuelva la opinión legal sobre
+#     legalidad del autodial en jurisdicción argentina. Con el flag
+#     en False, dispatch_client.call_911() sigue lanzando
+#     Dispatch911Blocked igual que antes — no cambia el comportamiento
+#     en producción hasta que alguien prenda el flag a propósito.
+#     Nivel 3 (contactar a persona de confianza, no 911) no depende
+#     de este flag.
 
 class DispatchLog(BaseModel):
     id: UUID
@@ -195,6 +199,9 @@ TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_FROM_NUMBER=     # número E.164
 
+# Autodial al 911 (Paso 4, Nivel 4) — default false, ver sección Paso 4
+ENABLE_911_AUTODIAL=false
+
 # Sentry
 SENTRY_DSN=
 ```
@@ -216,9 +223,10 @@ SENTRY_DSN=
    `select *`.
 
 4. **NUNCA auto-llamar al 911 sin verificación humana** hasta
-   resolver consulta legal. Nivel 3 (contactar a persona de
-   confianza) sí puede automatizarse, con su propia ventana de
-   cancelación de 90s.
+   resolver consulta legal — hoy garantizado por
+   `Settings.enable_911_autodial = False` (default), no por ausencia
+   de código. Nivel 3 (contactar a persona de confianza) sí puede
+   automatizarse, con su propia ventana de cancelación de 90s.
 
 5. **El Nivel 4 requiere doble verificación**: Paso 2b clasifica
    `emergency` -> Paso 3 (GPT-4.1 mini) confirma `severity_high: True`
