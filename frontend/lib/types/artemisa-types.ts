@@ -85,6 +85,20 @@ export interface Space {
  * Supabase hecho desde el frontend. */
 export type SpacePublic = Omit<Space, 'camera_url'>;
 
+/** Payload para crear un space — Onboarding y "Agregar espacio" en Spaces. */
+export interface SpaceCreatePayload {
+  user_id: string;
+  name: string;
+  camera_url: string;
+  camera_type?: CameraType;
+}
+
+/** Respuesta de POST /spaces/test-connection (backend/artemisa_models.py). */
+export interface SpaceTestConnectionResult {
+  success: boolean;
+  error_message?: string | null;
+}
+
 // ============================================================
 // LAYERS (Paso 2a — Descripción, puramente factual)
 // ============================================================
@@ -182,6 +196,15 @@ export interface EmergencyContact {
   /** True solo después de confirmación vía Twilio. Un contacto no
    * confirmado no se llama. */
   confirmed: boolean;
+}
+
+/** Payload para crear un contacto — arranca sin confirmar (ver EmergencyContact). */
+export interface EmergencyContactCreatePayload {
+  user_id: string;
+  name: string;
+  phone: string;
+  relationship: ContactRelationship;
+  priority?: number;
 }
 
 // ============================================================

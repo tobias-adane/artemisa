@@ -31,6 +31,7 @@ from artemisa_models import (
     Layer,
     LayerCreate,
     Space,
+    SpaceCreate,
     SpaceStatus,
     Thread,
     ThreadCreate,
@@ -60,6 +61,9 @@ class Store(ABC):
 
     @abstractmethod
     def get_space(self, space_id: UUID) -> Space | None: ...
+
+    @abstractmethod
+    def create_space(self, payload: SpaceCreate) -> Space: ...
 
     @abstractmethod
     def set_space_status(self, space_id: UUID, status: SpaceStatus, *, last_frame: datetime | None = None) -> None: ...
@@ -142,6 +146,19 @@ class InMemoryStore(Store):
 
     def get_space(self, space_id):
         return self._spaces.get(space_id)
+
+    def create_space(self, payload: SpaceCreate) -> Space:
+        space = Space(
+            id=uuid4(),
+            user_id=payload.user_id,
+            name=payload.name,
+            camera_url=payload.camera_url,
+            camera_type=payload.camera_type,
+            status=SpaceStatus.PENDING,
+            last_update=datetime.now(timezone.utc),
+        )
+        self._spaces[space.id] = space
+        return space
 
     def set_space_status(self, space_id, status, *, last_frame=None):
         space = self._spaces.get(space_id)
@@ -293,6 +310,9 @@ class SupabaseStore(Store):
 
     def get_space(self, space_id):
         self._unimplemented("get_space")
+
+    def create_space(self, payload):
+        self._unimplemented("create_space")
 
     def set_space_status(self, space_id, status, *, last_frame=None):
         self._unimplemented("set_space_status")

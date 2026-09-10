@@ -531,8 +531,8 @@ lib/
 incluye el chat como estado interno (no navega a otra pantalla — igual
 que `frontend/design-reference/Home.dc.html`, que no tiene un
 `Chat.dc.html` separado). En mobile, `send()` navega a `chat/page.tsx`
-en vez de expandir el chat inline en Home. Todavía no está construido
-— queda pendiente para una sesión aparte.
+en vez de expandir el chat inline en Home. Construido — el estado y la
+lógica de reply se comparten entre Home y Chat vía `lib/use-chat.ts`.
 
 ---
 
@@ -645,32 +645,38 @@ sección 8):
 
 ---
 
-## 13. LO QUE FALTA CONSTRUIR (frontend)
+## 13. ESTADO DEL FRONTEND
 
-Priorizado:
+Los 7 gaps priorizados que vivían acá (Alert card Nivel 2, estado de fallo en test de
+cámara, Offline completo en Spaces/Space, "Why this mattered", empty state "Día 1",
+flujos secundarios de Auth, pricing sin mención a clips) **ya están construidos.**
+También: chat de pantalla completa exclusivo de mobile (`app/(app)/chat/page.tsx`),
+los componentes nombrados en la sección 8 (`AlertBanner`, `StatusDot`, `ThreadCard`,
+`SpaceCard`, `CameraStatus`, `ReasoningThread`, `ContextualLayers`), y una conexión
+HTTP real entre el frontend y `backend/` (`frontend/lib/api.ts`) con fallback a
+`mock-data.ts` cuando el servicio Python no está corriendo.
 
-**1. Alert card simple** — Nivel 2 (Attention). Card blanca: ícono de estado + título +
-descripción. Sin dispatch. Aparece en Home/Activity.
+### Conexión frontend ↔ backend — estado real
 
-**2. Estado de fallo en test de conexión de cámara** (Onboarding) —
-"Couldn't connect. Check the URL or try again", con reintento sin perder el formulario.
-La URL RTSP es la mayor fricción real del onboarding.
-
-**3. Estado "Offline" completo** en Spaces/Space — card con acción "Reconnect"
-cuando una cámara activa se cae. Tono calmo: una cámara caída no es emergencia.
-
-**4. "Why this mattered"** — bloque colapsable debajo de la descripción en Activity,
-mostrando `threads.reasoning` en voz humana. Para Nivel 3-4: log de acciones del
-dispatch (a quién se llamó, cuándo, si se canceló).
-
-**5. Empty state "Día 1"** — qué ve el usuario en Home/Activity cuando terminó el
-onboarding pero no hay threads todavía.
-
-**6. Auth — flujos secundarios** — forgot password completo, verificación por código.
-
-**7. Corregir pricing en Settings** — el copy actual menciona "clips" de video,
-lo cual **contradice la arquitectura zero-video**. Reemplazar por estructura real:
-ARS, tiers Founding / Premium.
+- **Backend Python real**: `frontend/lib/api.ts` le pega directo a `backend/` (`GET
+  /me`, `/spaces`, `POST /spaces`, `/spaces/test-connection`, `/activity`,
+  `/contacts`) vía `NEXT_PUBLIC_ARTEMISA_API_URL`. Sin sesión de Clerk todavía, `GET
+  /me` resuelve el usuario de demo fijo sembrado en `InMemoryStore`
+  (`backend/main.py DEMO_USER_ID`). Cada función devuelve `{ok, data}` — el caller
+  decide si cae a `mock-data.ts` cuando el fetch falla (backend no levantado, CORS,
+  etc.), nunca tira. Wireado en: Onboarding (test de cámara — TCP real), Spaces
+  (lista real de spaces), Space detail (busca el space por id en real + mock),
+  Settings → Contactos (lista y alta real).
+- **Supabase**: `frontend/lib/supabase/{client,server}.ts` existen y están listos
+  (usan `@supabase/supabase-js`), pero inertes — devuelven `null` sin
+  `NEXT_PUBLIC_SUPABASE_URL`/`SUPABASE_SERVICE_KEY` reales. Nada los llama todavía;
+  la fuente de datos real hoy es el backend Python de arriba, no Supabase directo.
+- **Clerk — deliberadamente NO wireado.** Instalar `@clerk/nextjs` y envolver
+  `layout.tsx`/middleware sin keys reales tumba la app entera en cada request (a
+  diferencia de Supabase, acá no hay fallback posible — es middleware de auth, no
+  un cliente de datos). Login/Onboarding siguen siendo pantallas propias sin
+  autenticación real hasta que existan `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` /
+  `CLERK_SECRET_KEY` — ver `frontend/.env.local.example`.
 
 ### Explícitamente descartado
 

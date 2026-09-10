@@ -268,7 +268,7 @@ app/
   (onboarding)/    steps 1-6
   (app)/
     home/          dashboard principal (desktop: incluye el chat como estado, no ruta aparte)
-    chat/          SOLO mobile — send() navega acá en vez de expandir el chat inline en Home. Pendiente de construir.
+    chat/          SOLO mobile — send() navega acá en vez de expandir el chat inline en Home. Construido (lib/use-chat.ts).
     activity/      historial de eventos
     spaces/        lista de espacios (MVP: 1 space = 1 cámara)
     spaces/[id]/   detalle de espacio
@@ -302,36 +302,31 @@ Referencia visual en `frontend/design-reference/`:
 `Auth · Onboarding · Home (incluye Chat) · Activity · Spaces · Space
 · Settings · AvatarMenu`.
 
-### Pendientes de diseñar y construir (no están en los mockups)
+### Estados sin mockup propio — ya construidos siguiendo el estilo maia
 
-Verificado contra los `.dc.html` — estos estados **no existen** en
-ningún archivo, hay que diseñarlos siguiendo el estilo maia:
+Ninguno de estos existe en los `.dc.html` (no había mockup de referencia), pero ya
+están implementados en el código real:
 
-1. **Alert card Nivel 2 (Attention)** — card blanca simple: ícono de
-   estado + título + descripción. Sin dispatch, sin llamada. En
-   Home/Activity.
-2. **Estado de fallo en test de conexión de cámara** (Onboarding) —
-   hoy solo existen `idle / testing / ok`. Falta `error`: "No pudimos
-   conectar. Revisá la URL o intentá de nuevo", con reintento sin
-   perder el resto del formulario.
-3. **Estado "Offline" completo** en Spaces/Space — hoy solo hay un
-   dot gris + label. Falta la card con botón "Reconectar" cuando una
-   cámara activa se cae. Tono calmo: una cámara caída no es una
+1. **Alert card Nivel 2 (Attention)** — `components/artemisa/alert-banner.tsx`.
+   Card blanca simple: ícono de estado + título + descripción. Sin dispatch, sin
+   llamada. En Home/Activity.
+2. **Estado de fallo en test de conexión de cámara** (Onboarding) — `idle /
+   testing / ok / error`, con reintento sin perder el resto del formulario. Wireado
+   contra el backend real (`POST /spaces/test-connection`) con fallback simulado si
+   el servicio Python no está corriendo.
+3. **Estado "Offline" completo** en Spaces/Space — card con botón "Reconectar"
+   cuando una cámara activa se cae. Tono calmo: una cámara caída no es una
    emergencia.
-4. **"Por qué importó"** ("Why this mattered") — bloque colapsable
-   bajo la descripción en Activity, mostrando `Thread.reasoning` en
-   voz humana. Para Nivel 3-4 se convierte en el log de
-   `DispatchLog` (a quién se llamó, cuándo, si se canceló).
-5. **Empty state "Día 1"** — Home/Activity cuando terminó el
-   onboarding pero todavía no hay threads.
-6. **Auth — flujos secundarios** — forgot password completo,
-   verificación por código si el registro es por email. Hoy `Auth`
-   solo tiene el link "¿Olvidaste tu contraseña?", sin la pantalla.
-7. **Pricing en Settings** — el mockup actual tiene planes
-   "Solo/Family/Property" en USD con "24h/30d/90d of clips" — **esto
-   contradice la arquitectura de cero-video** y hay que reemplazarlo
-   por completo. Estructura real: ARS, tiers Founding / Premium, no
-   USD por cantidad de cámaras, sin ninguna mención a clips/grabación.
+4. **"Por qué importó"** ("Why this mattered") — bloque colapsable bajo la
+   descripción en Activity, ahora con el `ReasoningThread` de 4 nodos completo
+   (no solo el texto de `Thread.reasoning`).
+5. **Empty state "Día 1"** — Home/Activity cuando terminó el onboarding pero
+   todavía no hay threads (`lib/day1.ts`, flag por sessionStorage seteado al
+   terminar Onboarding).
+6. **Auth — flujos secundarios** — forgot password completo, verificación por
+   código.
+7. **Pricing en Settings** — ARS, tiers Founding / Premium, sin ninguna mención a
+   clips/grabación.
 
 ### Explícitamente descartado — no construir
 
@@ -371,6 +366,18 @@ in-app.
 
 ---
 
+## Backend Python — conexión real
+
+`lib/api.ts` es el cliente HTTP contra `backend/` (ver `backend/api/routes.py`).
+Cada función devuelve `{ok, data} | {ok:false, error}` en vez de tirar — el caller
+decide si cae a `lib/mock-data.ts` cuando el fetch falla (backend no levantado,
+CORS, etc.). `lib/use-backend-user.ts` resuelve el `user_id` vía `GET /me` (usuario
+de demo fijo sembrado en `InMemoryStore` — no hay sesión de Clerk real todavía).
+Wireado en Onboarding (test de cámara), Spaces, Space detail y Settings →
+Contactos. Ver `NEXT_PUBLIC_ARTEMISA_API_URL` en `.env.local.example`.
+
+---
+
 ## Supabase — real-time
 
 ```typescript
@@ -400,6 +407,14 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 // Client components
 import { useUser, useAuth } from '@clerk/nextjs';
 ```
+
+**No wireado todavía.** `@clerk/nextjs` no está instalado ni hay
+provider/middleware — sin `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` /
+`CLERK_SECRET_KEY` reales, el middleware de Clerk tira en cada
+request y tumba la app entera (a diferencia de Supabase, acá no hay
+fallback posible). Login/Onboarding son pantallas propias sin
+autenticación real por ahora — `lib/use-backend-user.ts` resuelve un
+usuario de demo fijo en su lugar (ver sección "Backend Python" arriba).
 
 ---
 

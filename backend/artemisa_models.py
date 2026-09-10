@@ -179,6 +179,26 @@ class SpaceCreate(BaseModel):
     camera_type: CameraType = CameraType.RTSP
 
 
+class SpacePublic(BaseModel):
+    """
+    Shape que efectivamente sale hacia el frontend — Space sin
+    camera_url. Todo endpoint que devuelva un Space al cliente usa
+    esto como response_model, nunca Space directo. Espejo de
+    SpacePublic en frontend/lib/types/artemisa-types.ts.
+    """
+    id: UUID
+    user_id: UUID
+    name: str
+    camera_type: CameraType = CameraType.RTSP
+    status: SpaceStatus = SpaceStatus.PENDING
+    last_frame: Optional[datetime] = None
+    last_update: datetime
+
+    @classmethod
+    def from_space(cls, space: "Space") -> "SpacePublic":
+        return cls(**space.model_dump(exclude={"camera_url"}))
+
+
 class SpaceTestConnectionResult(BaseModel):
     """Respuesta del endpoint de test de conexión en Onboarding."""
     success: bool

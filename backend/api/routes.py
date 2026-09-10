@@ -19,6 +19,7 @@ from artemisa_models import (
     EmergencyContact,
     EmergencyContactCreate,
     SpaceCreate,
+    SpacePublic,
     SpaceTestConnectionResult,
 )
 from clients.store import Store
@@ -30,9 +31,14 @@ def get_store_dep() -> Store:  # pragma: no cover - overridden in main.py via de
     raise RuntimeError("get_store_dep debe overridearse en main.py con la instancia real del Store")
 
 
-@router.get("/spaces")
+@router.get("/spaces", response_model=list[SpacePublic])
 def list_spaces(user_id: UUID, store: Store = Depends(get_store_dep)):
-    return store.list_spaces(user_id)
+    return [SpacePublic.from_space(s) for s in store.list_spaces(user_id)]
+
+
+@router.post("/spaces", response_model=SpacePublic)
+def create_space(payload: SpaceCreate, store: Store = Depends(get_store_dep)):
+    return SpacePublic.from_space(store.create_space(payload))
 
 
 @router.post("/spaces/test-connection", response_model=SpaceTestConnectionResult)

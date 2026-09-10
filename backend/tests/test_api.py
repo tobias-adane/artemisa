@@ -33,6 +33,39 @@ def test_test_connection_rejects_malformed_url():
     assert resp.json()["success"] is False
 
 
+def test_me_returns_demo_user():
+    resp = client.get("/me")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["email"] == "tomas@artemisa.app"
+    assert "id" in body
+
+
+def test_list_spaces_never_leaks_camera_url():
+    user_id = client.get("/me").json()["id"]
+    resp = client.get("/spaces", params={"user_id": user_id})
+    assert resp.status_code == 200
+    spaces = resp.json()
+    assert len(spaces) >= 1
+    for space in spaces:
+        assert "camera_url" not in space
+
+
+def test_create_space_roundtrip_and_no_camera_url_leak():
+    user_id = client.get("/me").json()["id"]
+    resp = client.post(
+        "/spaces",
+        json={"user_id": user_id, "name": "Pasillo", "camera_url": "rtsp://192.168.1.50/stream"},
+    )
+    assert resp.status_code == 200
+    created = resp.json()
+    assert created["name"] == "Pasillo"
+    assert "camera_url" not in created
+
+    listed = client.get("/spaces", params={"user_id": user_id}).json()
+    assert any(s["id"] == created["id"] for s in listed)
+
+
 def test_create_and_list_contact_roundtrip():
     user_id = "11111111-1111-1111-1111-111111111111"
     resp = client.post(

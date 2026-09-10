@@ -30,6 +30,7 @@ class Settings:
     twilio_auth_token: str | None
     twilio_from_number: str | None
     sentry_dsn: str | None
+    cors_allowed_origins: list[str]
     enable_911_autodial: bool = False
     """
     Interruptor legal para el autodial al 911 (Paso 4, Nivel 4).
@@ -76,5 +77,10 @@ def get_settings() -> Settings:
         twilio_auth_token=os.environ.get("TWILIO_AUTH_TOKEN"),
         twilio_from_number=os.environ.get("TWILIO_FROM_NUMBER"),
         sentry_dsn=os.environ.get("SENTRY_DSN"),
+        cors_allowed_origins=[
+            o.strip()
+            for o in os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+            if o.strip()
+        ],
         enable_911_autodial=os.environ.get("ENABLE_911_AUTODIAL", "false").strip().lower() in ("1", "true", "yes"),
     )

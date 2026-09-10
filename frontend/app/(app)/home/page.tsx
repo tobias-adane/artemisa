@@ -3,8 +3,10 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowUp, Camera as CameraIcon, Globe, Mic, MoreHorizontal, Paperclip, Plus, SquarePen } from 'lucide-react';
+import { ArrowUp, Camera as CameraIcon, Globe, Mic, Paperclip, Plus, SquarePen } from 'lucide-react';
 import { PageHeader } from '@/components/artemisa/page-header';
+import { AlertBanner } from '@/components/artemisa/alert-banner';
+import { SpaceCard } from '@/components/artemisa/space-card';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -17,11 +19,13 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { mockSpaces, mockUser } from '@/lib/mock-data';
+import { mockActivity, mockSpaces, mockThreads, mockUser } from '@/lib/mock-data';
 import { useI18n, format } from '@/lib/i18n/context';
 import type { Dictionary } from '@/lib/i18n/es';
-
-type ChatMessage = { role: 'user' | 'assistant'; text: string };
+import { useDay1 } from '@/lib/day1';
+import { useChatThread } from '@/lib/use-chat';
+import { useIsMobile } from '@/lib/use-mobile';
+import { CHAT_SEED_KEY } from '@/lib/chat-seed';
 
 function greetingFor(date: Date, dict: Dictionary) {
   const h = date.getHours();
@@ -30,26 +34,21 @@ function greetingFor(date: Date, dict: Dictionary) {
   return dict.home.greetingNight;
 }
 
-function replyFor(msg: string, dict: Dictionary) {
-  const m = msg.toLowerCase();
-  if (/(familia|chicos|quien esta|quién está|todo el mundo|family|kids|who.?s home)/.test(m)) return dict.home.replyFamily;
-  if (/(actividad|paso|pasó|reciente|hoy|activity|happened|today)/.test(m)) return dict.home.replyActivity;
-  if (/(pasando|ahora|estado|going on|status)/.test(m)) return dict.home.replyStatus;
-  if (/(puerta|cerrad|llave|door|lock)/.test(m)) return dict.home.replyDoors;
-  return dict.home.replyDefault;
-}
-
 export default function HomePage() {
   const router = useRouter();
   const { dict } = useI18n();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const isMobile = useIsMobile();
+  const { messages, thinking, sendMessage, reset } = useChatThread(dict);
   const [input, setInput] = useState('');
-  const [thinking, setThinking] = useState(false);
   const [toast, setToast] = useState('');
 
-  const QUICK_ACTIONS = [dict.home.quick1, dict.home.quick2, dict.home.quick3];
+  const day1 = useDay1();
+  const QUICK_ACTIONS = day1 ? [dict.home.quick1, dict.home.quick2] : [dict.home.quick1, dict.home.quick2, dict.home.quick3];
   const greeting = useMemo(() => greetingFor(new Date(), dict), [dict]);
   const conversing = messages.length > 0 || thinking;
+
+  const attentionThread = day1 ? undefined : mockThreads.find((t) => t.classification === 'attention' && !t.escalated_to_reasoning);
+  const attentionActivity = attentionThread ? mockActivity.find((a) => a.thread_id === attentionThread.id) : undefined;
 
   function flash(msg: string) {
     setToast(msg);
@@ -59,13 +58,18 @@ export default function HomePage() {
   function send(text?: string) {
     const msg = (text ?? input).trim();
     if (!msg || thinking) return;
-    setMessages((m) => [...m, { role: 'user', text: msg }]);
+    if (isMobile) {
+      try {
+        sessionStorage.setItem(CHAT_SEED_KEY, msg);
+      } catch {
+        // best-effort
+      }
+      setInput('');
+      router.push('/chat');
+      return;
+    }
+    sendMessage(msg);
     setInput('');
-    setThinking(true);
-    setTimeout(() => {
-      setMessages((m) => [...m, { role: 'assistant', text: replyFor(msg, dict) }]);
-      setThinking(false);
-    }, 900);
   }
 
   function pickFile() {
@@ -90,7 +94,7 @@ export default function HomePage() {
         right={
           <button
             title={dict.home.newChatTooltip}
-            onClick={() => setMessages([])}
+            onClick={reset}
             className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground"
           >
             <SquarePen className="h-3 w-3" />
@@ -104,7 +108,7 @@ export default function HomePage() {
             <h1 className="heading-display text-3xl">
               {greeting}, <span className="text-[#bcbcbc]">{mockUser.name.split(' ')[0]}</span>
             </h1>
-            <p className="heading-display text-3xl text-foreground">{dict.home.subtitle}</p>
+            <p className="heading-display text-3xl text-foreground">{day1 ? dict.home.day1Subtitle : dict.home.subtitle}</p>
           </div>
         )}
 
@@ -131,6 +135,16 @@ export default function HomePage() {
               </div>
             )}
           </div>
+        )}
+
+        {attentionThread && attentionActivity && !conversing && (
+          <Link href="/activity" className="mt-6 w-full">
+            <AlertBanner
+              title={attentionActivity.title}
+              description={attentionActivity.description}
+              classification={attentionThread.classification}
+            />
+          </Link>
         )}
 
         <div className="mt-8 w-full rounded-[36px] border border-border bg-background p-4 shadow-[0_6px_28px_rgba(0,0,0,0.05)]">
@@ -210,24 +224,7 @@ export default function HomePage() {
         <section className="mx-auto max-w-5xl px-6 pb-8 sm:px-10">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {mockSpaces.map((space) => (
-              <Link
-                key={space.id}
-                href={`/spaces/${space.id}`}
-                className="flex aspect-[4/3] flex-col rounded-3xl border border-border bg-secondary p-1"
-              >
-                <div className="flex min-h-0 flex-1 flex-col justify-end rounded-[18px] border border-border bg-secondary p-2">
-                  <div className="flex items-center gap-2 rounded-xl px-1.5 py-1">
-                    <span className="flex-1 truncate text-sm">{space.name}</span>
-                    <button
-                      title={dict.spaces.moreTooltip}
-                      onClick={(e) => e.preventDefault()}
-                      className="flex h-4 w-4 flex-none items-center justify-center text-muted-foreground hover:text-foreground"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </Link>
+              <SpaceCard key={space.id} space={space} moreTooltip={dict.spaces.moreTooltip} />
             ))}
           </div>
         </section>

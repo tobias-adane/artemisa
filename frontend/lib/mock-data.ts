@@ -1,6 +1,7 @@
 import type {
   ActivityLogEntry,
   EmergencyContact,
+  Layer,
   SpacePublic,
   Thread,
   User,
@@ -35,10 +36,18 @@ export const mockSpaces: SpacePublic[] = [
   { id: 'office', user_id: mockUser.id, name: 'Oficina', camera_type: 'rtsp', status: 'active', last_frame: '2026-06-27T21:40:00Z', last_update: '2026-06-27T21:40:00Z' },
 ];
 
+export const mockLayers: Layer[] = [
+  { id: 'ly-1', space_id: 'entrance', description: 'Un cadete se acerca a la puerta principal con una caja en brazos.', confidence: 0.91, timestamp: '2026-06-27T14:29:40Z', metadata: {} },
+  { id: 'ly-2', space_id: 'entrance', description: 'Deja la caja apoyada en el felpudo y se va caminando.', confidence: 0.88, timestamp: '2026-06-27T14:30:05Z', metadata: {} },
+  { id: 'ly-3', space_id: 'entrance', description: 'La caja sigue en el felpudo, sin que nadie la haya retirado.', confidence: 0.85, timestamp: '2026-06-27T14:31:00Z', metadata: {} },
+  { id: 'ly-4', space_id: 'living', description: 'Una mujer entra por la puerta del living con bolsas de compras.', confidence: 0.93, timestamp: '2026-06-27T18:15:10Z', metadata: {} },
+  { id: 'ly-5', space_id: 'living', description: 'Deja las bolsas sobre la mesada de la cocina y se queda en el living.', confidence: 0.9, timestamp: '2026-06-27T18:16:00Z', metadata: {} },
+];
+
 export const mockThreads: Thread[] = [
   {
     id: 'th-1', space_id: 'entrance',
-    layers: [],
+    layers: ['ly-1', 'ly-2', 'ly-3'],
     narrative: 'Llegó un paquete a la entrada. Nadie lo retiró todavía.',
     classification: 'attention', confidence: 0.78, severity_score: 0.4,
     reasoning: 'No había ninguna entrega esperada según lo que nos contaste. No es una situación de riesgo, pero vale la pena que sepas que quedó ahí.',
@@ -48,7 +57,7 @@ export const mockThreads: Thread[] = [
   },
   {
     id: 'th-2', space_id: 'living',
-    layers: [],
+    layers: ['ly-4', 'ly-5'],
     narrative: 'Llegó tu mujer. Entró con las compras.',
     classification: 'normal', confidence: 0.95, severity_score: 0.05,
     reasoning: 'Coincide con su horario habitual de vuelta los viernes.',

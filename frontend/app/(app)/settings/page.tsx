@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Bell,
@@ -26,6 +26,8 @@ import { Switch } from '@/components/ui/switch';
 import { mockEmergencyContacts, mockUser } from '@/lib/mock-data';
 import { useI18n, format } from '@/lib/i18n/context';
 import type { Dictionary } from '@/lib/i18n/es';
+import { useBackendUser } from '@/lib/use-backend-user';
+import { listContacts, createContact } from '@/lib/api';
 
 type SectionKey =
   | 'perfil'
@@ -71,26 +73,49 @@ function SettingsInner() {
   const [tab, setTab] = useState<SectionKey>(SECTIONS[initialTab] ? initialTab : 'familia');
   const [channels, setChannels] = useState({ push: true, email: false, sms: true });
   const [plan, setPlan] = useState<'Founding' | 'Premium'>('Founding');
+  const { userId, available } = useBackendUser();
   const [contacts, setContacts] = useState(mockEmergencyContacts);
   const [newContact, setNewContact] = useState({ name: '', phone: '' });
 
   const current = SECTIONS[tab];
 
-  function addContact() {
+  useEffect(() => {
+    if (!available) return;
+    let cancelled = false;
+    listContacts(userId).then((res) => {
+      if (!cancelled && res.ok) setContacts(res.data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [available, userId]);
+
+  async function addContact() {
     if (!newContact.name.trim() || !newContact.phone.trim()) return;
+    const name = newContact.name.trim();
+    const phone = newContact.phone.trim();
+    setNewContact({ name: '', phone: '' });
+
+    if (available) {
+      const res = await createContact({ user_id: userId, name, phone, relationship: 'other', priority: contacts.length + 1 });
+      if (res.ok) {
+        setContacts((c) => [...c, res.data]);
+        return;
+      }
+    }
+    // Backend Python no disponible acá — se agrega solo localmente.
     setContacts((c) => [
       ...c,
       {
         id: `ec-${Date.now()}`,
         user_id: mockUser.id,
-        name: newContact.name.trim(),
-        phone: newContact.phone.trim(),
+        name,
+        phone,
         relationship: 'other',
         priority: c.length + 1,
         confirmed: false,
       },
     ]);
-    setNewContact({ name: '', phone: '' });
   }
 
   return (

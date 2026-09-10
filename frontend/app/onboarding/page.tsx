@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useI18n, format } from '@/lib/i18n/context';
+import { markDay1 } from '@/lib/day1';
+import { testCameraConnection, DEMO_USER_ID } from '@/lib/api';
 
 const STEPS = ['personal', 'home', 'contacts', 'space', 'done'] as const;
 
@@ -34,21 +36,33 @@ export default function OnboardingPage() {
   const key = STEPS[step];
   const first = name.trim().split(/\s+/)[0] || dict.onboarding.defaultName;
 
-  function testCamera(ip: string) {
+  async function testCamera(ip: string) {
     setCamIp(ip);
     if (!IP_RE.test(ip.trim())) {
       setCamState('idle');
       return;
     }
     setCamState('testing');
+    const res = await testCameraConnection({
+      user_id: DEMO_USER_ID,
+      name: spaceName || 'Test',
+      camera_url: `rtsp://${ip.trim()}:554/stream`,
+    });
+    if (res.ok) {
+      setCamState(res.data.success ? 'ok' : 'error');
+      return;
+    }
+    // Backend Python no disponible acá (deploy solo-frontend, o no se
+    // levantó en dev) — simulamos el resultado para no trabar el demo.
+    // 192.168.1.1 deliberately reproduces the connection-error state.
     setTimeout(() => {
-      // 192.168.1.1 deliberately reproduces the connection-error state.
       setCamState(ip.trim() === '192.168.1.1' ? 'error' : 'ok');
     }, 900);
   }
 
   function advance() {
     if (step === STEPS.length - 1) {
+      markDay1();
       router.push('/home');
       return;
     }
