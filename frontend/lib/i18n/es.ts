@@ -36,6 +36,7 @@ export const es = {
     greetingNight: 'Buenas noches',
     subtitle: 'Todo está en orden en casa.',
     day1Subtitle: 'Recién empezamos a cuidar tu hogar. Todavía no pasó nada para contarte.',
+    focusedSubtitle: 'Enfocado en {name}. ¿En qué te ayudo?',
     inputPlaceholder: 'Preguntá lo que quieras sobre tu casa',
     optionsTooltip: 'Opciones',
     addFilesPhotos: 'Agregar Archivos o Fotos',
@@ -49,6 +50,14 @@ export const es = {
     quick1: '¿Cómo está mi familia?',
     quick2: '¿Qué está pasando en casa?',
     quick3: 'Actividad reciente',
+    quickBySpace: {
+      living: ['Mostrame la vista en vivo', '¿Hubo movimiento acá hoy?', 'Apagá las luces'],
+      kitchen: ['Mostrame la vista en vivo', '¿Entró alguien?', '¿La puerta de atrás está cerrada?'],
+      entrance: ['¿Quién vino a la puerta?', '¿Está cerrada?', 'Mostrame las visitas recientes'],
+      bedroom: ['¿Hay alguien acá?', 'Cambiá a modo noche', 'Última actividad acá'],
+      backyard: ['Mostrame la vista en vivo', '¿Hubo movimiento afuera?', '¿El portón está cerrado?'],
+      office: ['Mostrame la vista en vivo', '¿Hubo actividad hoy?', 'Cerrá todo'],
+    } as Record<string, string[]>,
     aroundMeSoonToast: 'A tu Alrededor llega pronto',
     replyFamily:
       'Están todos en casa. Vi a Sofía en la cocina hace unos 20 minutos, y Rocky está dormido cerca de la puerta de atrás desde las 8. Nadie salió desde que llegaste.',

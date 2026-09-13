@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, SquarePen } from 'lucide-react';
 import { ChatComposer } from '@/components/artemisa/chat-composer';
+import { SpaceFocusCard } from '@/components/artemisa/space-focus-card';
+import { mockSpaces } from '@/lib/mock-data';
 import { useI18n } from '@/lib/i18n/context';
 import { useChatThread } from '@/lib/use-chat';
 import { CHAT_SEED_KEY } from '@/lib/chat-seed';
@@ -16,9 +18,11 @@ import { CHAT_SEED_KEY } from '@/lib/chat-seed';
 export default function ChatPage() {
   const router = useRouter();
   const { dict } = useI18n();
-  const { messages, thinking, sendMessage, reset, context, setContext } = useChatThread(dict);
+  const { messages, thinking, sendMessage, reset } = useChatThread(dict);
   const [input, setInput] = useState('');
   const [toast, setToast] = useState('');
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const activeSpace = selectedSpaceId ? mockSpaces.find((s) => s.id === selectedSpaceId) : undefined;
   const seeded = useRef(false);
 
   useEffect(() => {
@@ -92,13 +96,18 @@ export default function ChatPage() {
           )}
         </div>
 
+        {activeSpace && (
+          <div className="mb-2 w-full">
+            <SpaceFocusCard space={activeSpace} onClear={() => setSelectedSpaceId(null)} />
+          </div>
+        )}
+
         <div className="mt-4">
           <ChatComposer
             input={input}
             onInputChange={setInput}
             onSend={send}
-            context={context}
-            onSetContext={setContext}
+            onSelectSpace={(sp) => setSelectedSpaceId(sp.id)}
             onAroundMe={() => flash(dict.home.aroundMeSoonToast)}
             dict={dict}
             autoFocus

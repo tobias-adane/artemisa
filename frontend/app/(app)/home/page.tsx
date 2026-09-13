@@ -8,8 +8,9 @@ import { PageHeader } from '@/components/artemisa/page-header';
 import { AlertBanner } from '@/components/artemisa/alert-banner';
 import { SpaceCard } from '@/components/artemisa/space-card';
 import { ChatComposer } from '@/components/artemisa/chat-composer';
+import { SpaceFocusCard } from '@/components/artemisa/space-focus-card';
 import { mockActivity, mockSpaces, mockThreads, mockUser } from '@/lib/mock-data';
-import { useI18n } from '@/lib/i18n/context';
+import { useI18n, format } from '@/lib/i18n/context';
 import type { Dictionary } from '@/lib/i18n/es';
 import { useDay1 } from '@/lib/day1';
 import { useChatThread } from '@/lib/use-chat';
@@ -27,12 +28,18 @@ export default function HomePage() {
   const router = useRouter();
   const { dict } = useI18n();
   const isMobile = useIsMobile();
-  const { messages, thinking, sendMessage, reset, context, setContext } = useChatThread(dict);
+  const { messages, thinking, sendMessage, reset } = useChatThread(dict);
   const [input, setInput] = useState('');
   const [toast, setToast] = useState('');
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
 
   const day1 = useDay1();
-  const QUICK_ACTIONS = day1 ? [dict.home.quick1, dict.home.quick2] : [dict.home.quick1, dict.home.quick2, dict.home.quick3];
+  const activeSpace = selectedSpaceId ? mockSpaces.find((s) => s.id === selectedSpaceId) : undefined;
+  const QUICK_ACTIONS = activeSpace
+    ? dict.home.quickBySpace[activeSpace.id] ?? []
+    : day1
+      ? [dict.home.quick1, dict.home.quick2]
+      : [dict.home.quick1, dict.home.quick2, dict.home.quick3];
   const greeting = useMemo(() => greetingFor(new Date(), dict), [dict]);
   const conversing = messages.length > 0 || thinking;
 
@@ -48,9 +55,8 @@ export default function HomePage() {
     const msg = (text ?? input).trim();
     if (!msg || thinking) return;
     if (isMobile) {
-      const prefix = context ? `[${context.label}] ` : '';
       try {
-        sessionStorage.setItem(CHAT_SEED_KEY, prefix + msg);
+        sessionStorage.setItem(CHAT_SEED_KEY, msg);
       } catch {
         // best-effort
       }
@@ -83,7 +89,9 @@ export default function HomePage() {
             <h1 className="heading-display text-3xl">
               {greeting}, <span className="text-[#bcbcbc]">{mockUser.name.split(' ')[0]}</span>
             </h1>
-            <p className="heading-display text-3xl text-foreground">{day1 ? dict.home.day1Subtitle : dict.home.subtitle}</p>
+            <p className="heading-display text-3xl text-foreground">
+              {activeSpace ? format(dict.home.focusedSubtitle, { name: activeSpace.name }) : day1 ? dict.home.day1Subtitle : dict.home.subtitle}
+            </p>
           </div>
         )}
 
@@ -122,15 +130,22 @@ export default function HomePage() {
           </Link>
         )}
 
-        <ChatComposer
-          input={input}
-          onInputChange={setInput}
-          onSend={() => send()}
-          context={context}
-          onSetContext={setContext}
-          onAroundMe={() => flash(dict.home.aroundMeSoonToast)}
-          dict={dict}
-        />
+        {activeSpace && (
+          <div className="mt-8 w-full">
+            <SpaceFocusCard space={activeSpace} onClear={() => setSelectedSpaceId(null)} />
+          </div>
+        )}
+
+        <div className={activeSpace ? 'mt-2 w-full transition-[margin] duration-300' : 'mt-8 w-full transition-[margin] duration-300'}>
+          <ChatComposer
+            input={input}
+            onInputChange={setInput}
+            onSend={() => send()}
+            onSelectSpace={(sp) => setSelectedSpaceId(sp.id)}
+            onAroundMe={() => flash(dict.home.aroundMeSoonToast)}
+            dict={dict}
+          />
+        </div>
 
         {!conversing && (
           <div className="mt-5 flex flex-wrap justify-center gap-2.5">

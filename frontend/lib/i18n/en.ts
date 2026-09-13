@@ -35,6 +35,7 @@ export const en: Dictionary = {
     greetingNight: 'Good evening',
     subtitle: 'Everything feels right at home.',
     day1Subtitle: "We just started watching over your home. Nothing to tell you yet.",
+    focusedSubtitle: 'Focused on {name}. How can I assist you?',
     inputPlaceholder: 'Ask anything about your home',
     optionsTooltip: 'Options',
     addFilesPhotos: 'Add Files or Photos',
@@ -48,6 +49,14 @@ export const en: Dictionary = {
     quick1: 'How is my family?',
     quick2: "What's going on at home?",
     quick3: 'Recent activity',
+    quickBySpace: {
+      living: ['Show me the live view', 'Any motion in here today?', 'Turn the lights off'],
+      kitchen: ['Show me the live view', 'Did anyone come in?', 'Is the back door locked?'],
+      entrance: ["Who's been at the door?", 'Is it locked?', 'Show recent visitors'],
+      bedroom: ['Is anyone in here?', 'Switch to night mode', 'Last activity here'],
+      backyard: ['Show me the live view', 'Any motion outside?', 'Is the gate locked?'],
+      office: ['Show me the live view', 'Any activity today?', 'Lock it up'],
+    },
     aroundMeSoonToast: 'Around me is coming soon',
     replyFamily:
       "Everyone's home. I saw Sofía in the kitchen about 20 minutes ago, and Rocky's been asleep by the back door since 8. No one's left since you got in.",
