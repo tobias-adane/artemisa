@@ -103,7 +103,7 @@ export function ChatComposer({
             </DropdownMenuSub>
             <DropdownMenuItem onClick={onAroundMe}>
               <Globe className="h-4 w-4" /> {dict.home.aroundMe}
-              <span className="ml-auto rounded-full bg-[#eff6ff] px-1.5 py-0.5 text-[10px] font-semibold text-[#2563eb]">{dict.home.aroundMeBeta}</span>
+              <span className="ml-auto text-[11px] font-semibold text-[#60a5fa]">{dict.home.aroundMeBeta}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -11,12 +11,11 @@ import type { SpacePublic } from '@/lib/types/artemisa-types';
 export function SpaceFocusCard({ space, onClear }: { space: SpacePublic; onClear: () => void }) {
   return (
     <div className="flex w-full items-start justify-end">
-      <div className="relative h-20 w-20 flex-none rounded-[32px] bg-background p-1 shadow-[0_6px_20px_rgba(0,0,0,0.10)] ring-[0.5px] ring-black/[0.06] animate-pop-in">
-        <div className="h-full w-full overflow-hidden rounded-[26px] bg-secondary" />
+      <div className="relative h-20 w-20 flex-none animate-pop-in rounded-[22px] border border-border bg-muted">
         <button
           onClick={onClear}
           title="Cerrar"
-          className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background/95 text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.18)] backdrop-blur-sm hover:bg-background"
+          className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.18)] hover:bg-secondary"
         >
           <X className="h-3 w-3" />
         </button>
