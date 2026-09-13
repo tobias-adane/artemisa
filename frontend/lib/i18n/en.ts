@@ -48,7 +48,6 @@ export const en: Dictionary = {
     quick1: 'How is my family?',
     quick2: "What's going on at home?",
     quick3: 'Recent activity',
-    spaceAddedToast: '{name} added to context',
     aroundMeSoonToast: 'Around me is coming soon',
     replyFamily:
       "Everyone's home. I saw Sofía in the kitchen about 20 minutes ago, and Rocky's been asleep by the back door since 8. No one's left since you got in.",

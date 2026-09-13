@@ -3,24 +3,13 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowUp, Camera as CameraIcon, Globe, Mic, Paperclip, Plus, SquarePen } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 import { PageHeader } from '@/components/artemisa/page-header';
 import { AlertBanner } from '@/components/artemisa/alert-banner';
 import { SpaceCard } from '@/components/artemisa/space-card';
-import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { ChatComposer } from '@/components/artemisa/chat-composer';
 import { mockActivity, mockSpaces, mockThreads, mockUser } from '@/lib/mock-data';
-import { useI18n, format } from '@/lib/i18n/context';
+import { useI18n } from '@/lib/i18n/context';
 import type { Dictionary } from '@/lib/i18n/es';
 import { useDay1 } from '@/lib/day1';
 import { useChatThread } from '@/lib/use-chat';
@@ -38,7 +27,7 @@ export default function HomePage() {
   const router = useRouter();
   const { dict } = useI18n();
   const isMobile = useIsMobile();
-  const { messages, thinking, sendMessage, reset } = useChatThread(dict);
+  const { messages, thinking, sendMessage, reset, context, setContext } = useChatThread(dict);
   const [input, setInput] = useState('');
   const [toast, setToast] = useState('');
 
@@ -59,8 +48,9 @@ export default function HomePage() {
     const msg = (text ?? input).trim();
     if (!msg || thinking) return;
     if (isMobile) {
+      const prefix = context ? `[${context.label}] ` : '';
       try {
-        sessionStorage.setItem(CHAT_SEED_KEY, msg);
+        sessionStorage.setItem(CHAT_SEED_KEY, prefix + msg);
       } catch {
         // best-effort
       }
@@ -70,21 +60,6 @@ export default function HomePage() {
     }
     sendMessage(msg);
     setInput('');
-  }
-
-  function pickFile() {
-    const el = document.createElement('input');
-    el.type = 'file';
-    el.multiple = true;
-    el.click();
-  }
-
-  function pickPhoto() {
-    const el = document.createElement('input');
-    el.type = 'file';
-    el.accept = 'image/*';
-    el.setAttribute('capture', 'environment');
-    el.click();
   }
 
   return (
@@ -147,63 +122,15 @@ export default function HomePage() {
           </Link>
         )}
 
-        <div className="mt-8 w-full rounded-[36px] border border-border bg-background p-4 shadow-[0_6px_28px_rgba(0,0,0,0.05)]">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            placeholder={dict.home.inputPlaceholder}
-            className="h-auto border-none px-1 py-2 text-sm shadow-none focus-visible:ring-0"
-          />
-          <div className="mt-1 flex items-center gap-1.5">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button title={dict.home.optionsTooltip} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground hover:text-foreground">
-                  <Plus className="h-3 w-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-[220px]">
-                <DropdownMenuLabel>{dict.home.optionsTooltip}</DropdownMenuLabel>
-                <DropdownMenuItem onClick={pickFile}>
-                  <Paperclip className="h-4 w-4" /> {dict.home.addFilesPhotos}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={pickPhoto}>
-                  <CameraIcon className="h-4 w-4" /> {dict.home.takePhoto}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>{dict.home.spacesSubmenu}</DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {mockSpaces.map((sp) => (
-                      <DropdownMenuItem key={sp.id} onClick={() => flash(format(dict.home.spaceAddedToast, { name: sp.name }))}>
-                        {sp.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuItem onClick={() => flash(dict.home.aroundMeSoonToast)}>
-                  <Globe className="h-4 w-4" /> {dict.home.aroundMe}
-                  <span className="ml-auto text-[11px] font-semibold text-[#2563eb]">{dict.home.aroundMeBeta}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <div className="flex-1" />
-            {input.trim() ? (
-              <button onClick={() => send()} title={dict.home.sendTooltip} className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <ArrowUp className="h-3.5 w-3.5" />
-              </button>
-            ) : (
-              <button title={dict.home.voiceTooltip} className="flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted-foreground">
-                <Mic className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-        </div>
+        <ChatComposer
+          input={input}
+          onInputChange={setInput}
+          onSend={() => send()}
+          context={context}
+          onSetContext={setContext}
+          onAroundMe={() => flash(dict.home.aroundMeSoonToast)}
+          dict={dict}
+        />
 
         {!conversing && (
           <div className="mt-5 flex flex-wrap justify-center gap-2.5">

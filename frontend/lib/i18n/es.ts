@@ -49,7 +49,6 @@ export const es = {
     quick1: '¿Cómo está mi familia?',
     quick2: '¿Qué está pasando en casa?',
     quick3: 'Actividad reciente',
-    spaceAddedToast: 'Espacio {name} agregado al contexto',
     aroundMeSoonToast: 'A tu Alrededor llega pronto',
     replyFamily:
       'Están todos en casa. Vi a Sofía en la cocina hace unos 20 minutos, y Rocky está dormido cerca de la puerta de atrás desde las 8. Nadie salió desde que llegaste.',
