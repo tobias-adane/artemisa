@@ -59,7 +59,7 @@ export function ThreadCard({
                   <span className="sr-only">{dict.moreTooltip}</span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[214px]">
+              <DropdownMenuContent align="end" className="w-[214px] rounded-[22px]">
                 <DropdownMenuLabel>{dict.moreOptions}</DropdownMenuLabel>
                 {moreItems.map((mi) => (
                   <DropdownMenuItem
