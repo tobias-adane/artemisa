@@ -1,6 +1,7 @@
 import { EllipsisVertical, MessageCircle, Phone } from 'lucide-react';
 import { ReasoningThread } from '@/components/artemisa/reasoning-thread';
 import { ContextualLayers } from '@/components/artemisa/contextual-layers';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { STATUS_COLOR_VAR, STATUS_LABEL } from '@/lib/mock-data';
 import type { ActivityLogEntry, Classification, Layer, SpacePublic, Thread } from '@/lib/types/artemisa-types';
 import type { Dictionary } from '@/lib/i18n/es';
@@ -48,34 +49,31 @@ export function ThreadCard({
             <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">{entry.description}</p>
           </div>
           <div className="relative flex-none">
-            <button
-              title={dict.moreTooltip}
-              onClick={onToggleMore}
-              className="flex h-4 w-4 items-center justify-center text-muted-foreground hover:text-foreground"
-            >
-              <EllipsisVertical className="h-4 w-4" />
-            </button>
-            {moreOpen && (
-              <>
-                <div className="fixed inset-0 z-[65]" onClick={onCloseMore} />
-                <div className="absolute right-0 top-[calc(100%+6px)] z-[70] w-[214px] rounded-[22px] border border-border bg-background p-1 shadow-lg">
-                  <div className="px-2 py-1.5 text-xs text-muted-foreground">{dict.moreOptions}</div>
-                  {moreItems.map((mi) => (
-                    <button
-                      key={mi.key}
-                      onClick={() => {
-                        onCloseMore();
-                        if (mi.key === 'reasoning' || mi.key === 'thread') onSelectPanel(mi.key);
-                      }}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left text-sm text-foreground hover:bg-secondary"
-                    >
-                      <mi.icon className="h-4 w-4 flex-none" />
-                      <span className="flex-1">{mi.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            <DropdownMenu open={moreOpen} onOpenChange={(open) => (open ? onToggleMore() : onCloseMore())}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  title={dict.moreTooltip}
+                  className="flex h-4 w-4 items-center justify-center text-muted-foreground hover:text-foreground"
+                >
+                  <EllipsisVertical className="h-4 w-4" />
+                  <span className="sr-only">{dict.moreTooltip}</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[214px]">
+                <DropdownMenuLabel>{dict.moreOptions}</DropdownMenuLabel>
+                {moreItems.map((mi) => (
+                  <DropdownMenuItem
+                    key={mi.key}
+                    onClick={() => {
+                      if (mi.key === 'reasoning' || mi.key === 'thread') onSelectPanel(mi.key);
+                    }}
+                  >
+                    <mi.icon className="h-4 w-4 flex-none" />
+                    <span className="flex-1">{mi.label}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

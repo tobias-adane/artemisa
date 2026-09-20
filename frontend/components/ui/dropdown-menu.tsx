@@ -16,6 +16,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger>
 >(({ className, children, ...props }, ref) => (
   <DropdownMenuPrimitive.SubTrigger
+    data-slot="dropdown-menu-sub-trigger"
     ref={ref}
     className={cn(
       'flex cursor-pointer select-none items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm text-muted-foreground outline-none transition-colors focus:bg-secondary focus:text-foreground data-[state=open]:bg-secondary data-[state=open]:text-foreground',
@@ -34,6 +35,7 @@ const DropdownMenuSubContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.SubContent
+    data-slot="dropdown-menu-sub-content"
     ref={ref}
     className={cn(
       'z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-lg',
@@ -50,6 +52,7 @@ const DropdownMenuContent = React.forwardRef<
 >(({ className, sideOffset = 8, ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
     <DropdownMenuPrimitive.Content
+      data-slot="dropdown-menu-content"
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
@@ -67,6 +70,7 @@ const DropdownMenuItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item>
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
+    data-slot="dropdown-menu-item"
     ref={ref}
     className={cn(
       'relative flex cursor-pointer select-none items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm text-muted-foreground outline-none transition-colors focus:bg-secondary focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
@@ -82,6 +86,7 @@ const DropdownMenuLabel = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label>
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Label
+    data-slot="dropdown-menu-label"
     ref={ref}
     className={cn('px-2.5 pb-0.5 pt-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground', className)}
     {...props}
@@ -93,7 +98,7 @@ const DropdownMenuSeparator = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-  <DropdownMenuPrimitive.Separator ref={ref} className={cn('my-1.5 h-px bg-border', className)} {...props} />
+  <DropdownMenuPrimitive.Separator data-slot="dropdown-menu-separator" ref={ref} className={cn('my-1.5 h-px bg-border', className)} {...props} />
 ));
 DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
 
