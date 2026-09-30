@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-MIGRATIONS = Path(__file__).resolve().parents[2] / "supabase" / "migrations"
+SUPABASE = Path(__file__).resolve().parents[2] / "supabase"
 
 FORBIDDEN_TYPE = re.compile(r"\bbytea\b", re.IGNORECASE)
 FORBIDDEN_NAME = re.compile(r"image|frame|video|clip|snapshot|jpeg|rtsp|password", re.IGNORECASE)
@@ -40,10 +40,14 @@ def forbidden_columns(sql: str) -> list[str]:
 def test_migrations_have_no_visual_or_credential_columns() -> None:
     offenders = {
         path.name: bad
-        for path in sorted(MIGRATIONS.glob("*.sql"))
+        for path in sorted(SUPABASE.glob("*/*.sql"))
         if (bad := forbidden_columns(path.read_text()))
     }
     assert offenders == {}
+
+
+def test_there_are_migrations_to_check() -> None:
+    assert list(SUPABASE.glob("migrations/*.sql"))
 
 
 def test_guard_catches_forbidden_columns() -> None:
