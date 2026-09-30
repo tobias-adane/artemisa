@@ -131,3 +131,27 @@ este repo.
 - El preset de shadcn web (`npx shadcn@latest init --preset bbVJxce --template
   next`) se usa **solo para prototipar pantallas en Claude Design**. Comparte
   los tokens de `09-DISENO.md`. Nada de ese código entra al repo de la app.
+
+---
+
+## 2026-09-30
+
+### 10. Modelos vía Vercel AI Gateway en la Fase 0
+
+- En lugar de claves directas de OpenAI y Groq, un solo cliente con el SDK de
+  openai contra `https://ai-gateway.vercel.sh/v1`. La clave va en
+  `AI_GATEWAY_API_KEY`.
+- El registro usa los ids del gateway, que llevan el prefijo del creador
+  (`openai/gpt-4.1-nano`, `openai/gpt-oss-20b`). Cada rol fija quién lo sirve
+  con `providerOptions.gateway.only`: `["openai"]` para los modelos de OpenAI y
+  `["groq"]` para los `gpt-oss`.
+- `providers/` tiene un solo `gateway.py`, junto a `expo_push.py`. La
+  dependencia `groq` sale del servidor.
+- `tts` queda abierto hasta el paso 15: el gateway no lo sirve por el SDK de
+  openai.
+- Los precios se verifican contra el gateway. `openai/gpt-oss-20b` queda
+  pendiente: el registro dice 0.075 de entrada y Vercel lista 0.08.
+- Vercel pasa a ser un intermediario más: se declara en la política de
+  privacidad y se verifican sus términos de retención antes de la Fase 1.
+- Integrado en `04-MODELOS.md`, `08-CONSTRUCCION.md`, `models.yaml` y
+  `CLAUDE.md`.

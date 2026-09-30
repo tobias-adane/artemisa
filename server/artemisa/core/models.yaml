@@ -1,10 +1,12 @@
 # Generado desde docs/04-MODELOS.md. Si cambia allá, se actualiza acá.
+# Fase 0: todo pasa por Vercel AI Gateway. `model` es el id del gateway (prefijo
+# del creador); `provider` es quien lo sirve, fijado con providerOptions.gateway.only.
 verified_at: 2026-09-21
 
 roles:
   describe:
     provider: openai
-    model: gpt-4.1-nano
+    model: openai/gpt-4.1-nano
     temperature: 0.2
     max_output_tokens: 80
     image_detail: low
@@ -12,7 +14,7 @@ roles:
     fallback: describe_fallback
   describe_fallback:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.2
     max_output_tokens: 80
     image_detail: low
@@ -35,13 +37,13 @@ roles:
     fallback: analyze_fallback
   analyze_fallback:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.3
     max_output_tokens: 400
     timeout_s: 10
   reason:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.2
     max_output_tokens: 600
     timeout_s: 20
@@ -55,7 +57,7 @@ roles:
     timeout_s: 20
   live_read:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.6
     max_output_tokens: 250
     image_detail: low
@@ -71,7 +73,7 @@ roles:
     fallback: chat_fallback
   chat_fallback:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.5
     max_output_tokens: 400
     stream: true
@@ -86,6 +88,6 @@ roles:
 prices_usd_per_1m:
   openai/gpt-4.1-nano:   { input: 0.10,  cached_input: 0.025, output: 0.40 }
   openai/gpt-4.1-mini:   { input: 0.40,  cached_input: 0.10,  output: 1.60 }
-  groq/openai/gpt-oss-20b:  { input: 0.075, output: 0.30 }
-  groq/openai/gpt-oss-120b: { input: 0.15,  output: 0.60 }
+  openai/gpt-oss-20b:    { input: 0.075, output: 0.30 }   # servido por groq; pendiente de verificar (Vercel lista 0.08 de entrada)
+  openai/gpt-oss-120b:   { input: 0.15,  output: 0.60 }   # servido por groq
   openai/tts-1: { per_1m_characters: null }   # verificar antes de la Fase 0
