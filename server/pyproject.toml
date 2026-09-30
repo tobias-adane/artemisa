@@ -1,0 +1,37 @@
+[project]
+name = "artemisa"
+version = "0.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pydantic",
+]
+
+[dependency-groups]
+dev = [
+    "mypy",
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# Generado desde docs/04-MODELOS.md; el contenido no se reescribe.
+"artemisa/core/schemas.py" = ["UP042"]
