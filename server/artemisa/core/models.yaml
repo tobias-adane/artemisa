@@ -1,7 +1,7 @@
 # Generado desde docs/04-MODELOS.md. Si cambia allá, se actualiza acá.
 # Fase 0: todo pasa por Vercel AI Gateway. `model` es el id del gateway (prefijo
 # del creador); `provider` es quien lo sirve, fijado con providerOptions.gateway.only.
-verified_at: 2026-09-21
+verified_at: 2026-09-30
 
 roles:
   describe:
@@ -85,9 +85,11 @@ roles:
     format: mp3
     timeout_s: 10
 
+# Precios de Vercel AI Gateway, sin los niveles priority ni fast. Los de groq se
+# comparan con el costo real del panel de Vercel tras la primera llamada.
 prices_usd_per_1m:
   openai/gpt-4.1-nano:   { input: 0.10,  cached_input: 0.025, output: 0.40 }
   openai/gpt-4.1-mini:   { input: 0.40,  cached_input: 0.10,  output: 1.60 }
-  openai/gpt-oss-20b:    { input: 0.075, output: 0.30 }   # servido por groq; pendiente de verificar (Vercel lista 0.08 de entrada)
+  openai/gpt-oss-20b:    { input: 0.08,  output: 0.30 }   # servido por groq
   openai/gpt-oss-120b:   { input: 0.15,  output: 0.60 }   # servido por groq
   openai/tts-1: { per_1m_characters: null }   # verificar antes de la Fase 0
