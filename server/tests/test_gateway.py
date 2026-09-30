@@ -104,6 +104,7 @@ def test_request_pins_provider_and_parameters() -> None:
     assert body["max_completion_tokens"] == 800
     assert body["store"] is False
     assert body["response_format"]["type"] == "json_schema"
+    assert body["response_format"]["json_schema"]["schema"]["additionalProperties"] is False
     assert result.output.narrative == "A package arrived."
     assert result.role == "analyze"
 

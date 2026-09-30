@@ -5,9 +5,11 @@ Cada intento, exitoso o no, escribe una fila en pipeline_runs (04-MODELOS.md,
 Validación y reintentos).
 """
 
+import copy
 import os
 import time
 from dataclasses import dataclass
+from functools import cache
 from typing import Any
 from uuid import UUID
 
@@ -24,6 +26,58 @@ BASE_URL = "https://ai-gateway.vercel.sh/v1"
 SCHEMA_RETRY = (
     "Your previous answer did not match the schema: {error}. Answer again with only the JSON."
 )
+
+
+# Restricciones que los proveedores rechazan en modo estricto. Pydantic las valida
+# igual al recibir la respuesta, así que se quitan de la copia que se manda.
+UNSUPPORTED_KEYWORDS = frozenset(
+    {
+        "default",
+        "minLength",
+        "maxLength",
+        "minimum",
+        "maximum",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "minItems",
+        "maxItems",
+        "pattern",
+        "format",
+    }
+)
+
+
+@cache
+def provider_schema(schema: type[BaseModel]) -> dict[str, Any]:
+    """El esquema de Pydantic en la forma estricta que piden los proveedores.
+
+    Sobre una copia: cada objeto (también los de $defs) lleva
+    additionalProperties: false y todas sus propiedades en required, y se quitan
+    las restricciones de UNSUPPORTED_KEYWORDS. Los campos opcionales siguen
+    aceptando null por su anyOf.
+    """
+    strict: dict[str, Any] = strict_node(copy.deepcopy(schema.model_json_schema()))
+    return strict
+
+
+def strict_node(node: Any) -> Any:
+    if isinstance(node, list):
+        return [strict_node(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+    out: dict[str, Any] = {}
+    for key, value in node.items():
+        if key in UNSUPPORTED_KEYWORDS:
+            continue
+        if key in ("properties", "$defs"):
+            out[key] = {name: strict_node(sub) for name, sub in value.items()}
+        else:
+            out[key] = strict_node(value)
+    if out.get("type") == "object" or "properties" in out:
+        properties = out.get("properties", {})
+        out["additionalProperties"] = False
+        out["required"] = list(properties)
+    return out
 
 
 class ModelCallFailed(Exception):
@@ -115,7 +169,7 @@ class Gateway:
                 max_completion_tokens=config.max_output_tokens or openai.omit,
                 response_format={
                     "type": "json_schema",
-                    "json_schema": {"name": schema.__name__, "schema": schema.model_json_schema()},
+                    "json_schema": {"name": schema.__name__, "schema": provider_schema(schema)},
                 },
                 store=False,
                 timeout=config.timeout_s,
