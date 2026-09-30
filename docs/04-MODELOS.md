@@ -21,14 +21,14 @@ que lo sirve se fija con `providerOptions.gateway.only`.
 
 ## Modelos por rol
 
-Verificados el **21 de septiembre de 2026**. Precios en USD por millón de
+Verificados el **30 de septiembre de 2026**. Precios en USD por millón de
 tokens. El modelo es su id en Vercel AI Gateway; el proveedor es quien lo sirve.
 
 | Rol | Proveedor | Modelo | Entrada | Salida | Para qué |
 |---|---|---|---|---|---|
 | `describe` | OpenAI | `openai/gpt-4.1-nano` | 0.10 (0.025 cacheado) | 0.40 | Paso 2a: una oración por frame |
 | `describe_fallback` | OpenAI | `openai/gpt-4.1-mini` | 0.40 (0.10 cacheado) | 1.60 | Paso 2a si el modelo por defecto falla |
-| `analyze` | Groq | `openai/gpt-oss-20b` | 0.075 (a verificar: Vercel lista 0.08) | 0.30 | Paso 2b por defecto |
+| `analyze` | Groq | `openai/gpt-oss-20b` | 0.08 | 0.30 | Paso 2b por defecto |
 | `analyze_hard` | Groq | `openai/gpt-oss-120b` | 0.15 | 0.60 | Paso 2b en casos difíciles |
 | `analyze_fallback` | OpenAI | `openai/gpt-4.1-mini` | 0.40 | 1.60 | Paso 2b si Groq no responde |
 | `reason` | OpenAI | `openai/gpt-4.1-mini` | 0.40 | 1.60 | Paso 3 |
@@ -138,7 +138,7 @@ comparan con esta tabla.
 ```yaml
 # Fase 0: todo pasa por Vercel AI Gateway. `model` es el id del gateway (prefijo
 # del creador); `provider` es quien lo sirve, fijado con providerOptions.gateway.only.
-verified_at: 2026-09-21
+verified_at: 2026-09-30
 
 roles:
   describe:
@@ -222,10 +222,12 @@ roles:
     format: mp3
     timeout_s: 10
 
+# Precios de Vercel AI Gateway, sin los niveles priority ni fast. Los de groq se
+# comparan con el costo real del panel de Vercel tras la primera llamada.
 prices_usd_per_1m:
   openai/gpt-4.1-nano:   { input: 0.10,  cached_input: 0.025, output: 0.40 }
   openai/gpt-4.1-mini:   { input: 0.40,  cached_input: 0.10,  output: 1.60 }
-  openai/gpt-oss-20b:    { input: 0.075, output: 0.30 }   # servido por groq; pendiente de verificar (Vercel lista 0.08 de entrada)
+  openai/gpt-oss-20b:    { input: 0.08,  output: 0.30 }   # servido por groq
   openai/gpt-oss-120b:   { input: 0.15,  output: 0.60 }   # servido por groq
   openai/tts-1: { per_1m_characters: null }   # verificar antes de la Fase 0
 ```
