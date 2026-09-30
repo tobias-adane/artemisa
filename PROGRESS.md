@@ -1,8 +1,8 @@
 # Progreso
 
 **Fase actual:** Fase 0, laboratorio.
-**Paso en curso:** 2.
-**Siguiente:** 3.
+**Paso en curso:** 3.
+**Siguiente:** 4.
 
 Al terminar cada paso: tests y chequeos limpios, marcar el paso acá y hacer
 commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
@@ -10,7 +10,7 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 ## Fase 0
 
 - [x] 1. Esqueleto del repositorio, herramientas y CI (tipos, lint, tests y guardas).
-- [ ] 2. Supabase de laboratorio: migraciones, `lab_only` y `seed_demo.py`.
+- [x] 2. Supabase de laboratorio: migraciones, `lab_only` y `seed_demo.py`.
 - [ ] 3. Registro de modelos, clientes de proveedores, costo y `pipeline_runs`.
 - [ ] 4. Bridge: go2rtc en tmpfs, lector, entrega de un frame por segundo, canal de control con latido, `VIDEO_SOURCE`.
 - [ ] 5. Paso 1 y Paso 2a en la API: endpoint de frames, movimiento, descripción, estado del space.

@@ -3,6 +3,7 @@ name = "artemisa"
 version = "0.0.0"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "asyncpg",
     "pydantic",
 ]
 
@@ -35,3 +36,8 @@ testpaths = ["tests"]
 [tool.ruff.lint.per-file-ignores]
 # Generado desde docs/04-MODELOS.md; el contenido no se reescribe.
 "artemisa/core/schemas.py" = ["UP042"]
+
+[[tool.mypy.overrides]]
+# asyncpg no publica tipos.
+module = ["asyncpg", "asyncpg.*"]
+ignore_missing_imports = true
