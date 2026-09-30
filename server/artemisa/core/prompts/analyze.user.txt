@@ -1,0 +1,17 @@
+HOUSEHOLD
+{custom_instructions | "(nothing yet)"}
+
+NOW
+{weekday}, {local_time} ({timezone}). Space: {space_name}.
+
+OTHER SPACES RIGHT NOW
+- {space}: {state_description} ({minutes} min ago)
+
+EARLIER TODAY IN THIS SPACE
+- {time} [{classification}] {narrative}
+
+PREVIOUS NARRATIVE OF THIS MOMENT
+{previous_narrative | "(first look)"}
+
+OBSERVATIONS
+- {hh:mm:ss} {description} {flags}

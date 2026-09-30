@@ -1,0 +1,6 @@
+THE MOMENT THEY'RE ASKING ABOUT
+{time} {space}: {narrative}
+Why: {reasoning}
+What you saw:
+- {hh:mm:ss} {description}
+What you did: {action summary from dispatches}

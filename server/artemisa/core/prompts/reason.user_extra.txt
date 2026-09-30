@@ -1,0 +1,7 @@
+FIRST PASS
+[{classification}, confidence {confidence}] {narrative}
+Why: {reasoning}
+Escalated because: {escalate_reason | trigger}
+
+WHOLE HOME, LAST {hours} HOURS
+- {time} {space} [{classification}] {narrative}
