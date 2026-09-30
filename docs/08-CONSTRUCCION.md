@@ -61,7 +61,7 @@ artemisa/
 **Dependencias del servidor:** `fastapi`, `uvicorn`, `httpx`, `websockets`,
 `pydantic`, `pydantic-settings`, `asyncpg`, `opencv-python-headless`, `numpy`,
 `openai`, `groq`, `pyyaml`, `pyjwt` (Fase 1), `cryptography` (archivo cifrado
-del bridge), `sentry-sdk`. Nada más sin preguntar.
+del bridge), `sentry-sdk`, `tzdata` (solo en Windows). Nada más sin preguntar.
 
 **Binarios externos:** go2rtc (licencia MIT), en la caja y en el laboratorio,
 con la versión fijada. FFmpeg para publicar el vivo.
