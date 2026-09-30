@@ -194,7 +194,8 @@ App:        Expo + Expo Router, TypeScript, React Native Reusables (NativeWind),
 Servidor:   Python 3.12, FastAPI, asyncpg, OpenCV, FFmpeg, uv, ruff, mypy, pytest
 Base:       Supabase (Postgres + Realtime)
 Relay:      MediaMTX
-Modelos:    OpenAI (visión, razonamiento, voz) y Groq (texto), vía registro
+Modelos:    OpenAI (visión, razonamiento, voz) y Groq (texto), vía registro,
+            a través de Vercel AI Gateway (un solo cliente, SDK de openai)
 Diseño:     Prototipos en Claude Design con shadcn web (preset bbVJxce). Solo
             para diseñar: la app es Expo.
 Push:       Expo Push Service

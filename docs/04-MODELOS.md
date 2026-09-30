@@ -12,25 +12,30 @@ Los precios viven en el mismo registro, con la fecha en que se verificaron. El
 costo de cada llamada se calcula con el `usage` real que devuelve el proveedor,
 nunca con estimaciones.
 
+En la Fase 0 todas las llamadas pasan por **Vercel AI Gateway**: un solo cliente
+(SDK de openai, `base_url` `https://ai-gateway.vercel.sh/v1`, clave en
+`AI_GATEWAY_API_KEY`). El modelo se pide por su id del gateway y el proveedor
+que lo sirve se fija con `providerOptions.gateway.only`.
+
 ---
 
 ## Modelos por rol
 
 Verificados el **21 de septiembre de 2026**. Precios en USD por millón de
-tokens.
+tokens. El modelo es su id en Vercel AI Gateway; el proveedor es quien lo sirve.
 
 | Rol | Proveedor | Modelo | Entrada | Salida | Para qué |
 |---|---|---|---|---|---|
-| `describe` | OpenAI | `gpt-4.1-nano` | 0.10 (0.025 cacheado) | 0.40 | Paso 2a: una oración por frame |
-| `describe_fallback` | OpenAI | `gpt-4.1-mini` | 0.40 (0.10 cacheado) | 1.60 | Paso 2a si el modelo por defecto falla |
-| `analyze` | Groq | `openai/gpt-oss-20b` | 0.075 | 0.30 | Paso 2b por defecto |
+| `describe` | OpenAI | `openai/gpt-4.1-nano` | 0.10 (0.025 cacheado) | 0.40 | Paso 2a: una oración por frame |
+| `describe_fallback` | OpenAI | `openai/gpt-4.1-mini` | 0.40 (0.10 cacheado) | 1.60 | Paso 2a si el modelo por defecto falla |
+| `analyze` | Groq | `openai/gpt-oss-20b` | 0.075 (a verificar: Vercel lista 0.08) | 0.30 | Paso 2b por defecto |
 | `analyze_hard` | Groq | `openai/gpt-oss-120b` | 0.15 | 0.60 | Paso 2b en casos difíciles |
-| `analyze_fallback` | OpenAI | `gpt-4.1-mini` | 0.40 | 1.60 | Paso 2b si Groq no responde |
-| `reason` | OpenAI | `gpt-4.1-mini` | 0.40 | 1.60 | Paso 3 |
+| `analyze_fallback` | OpenAI | `openai/gpt-4.1-mini` | 0.40 | 1.60 | Paso 2b si Groq no responde |
+| `reason` | OpenAI | `openai/gpt-4.1-mini` | 0.40 | 1.60 | Paso 3 |
 | `reason_fallback` | Groq | `openai/gpt-oss-120b` | 0.15 | 0.60 | Paso 3 si OpenAI no responde |
-| `live_read` | OpenAI | `gpt-4.1-mini` | 0.40 | 1.60 | Lectura en vivo (con imagen) |
+| `live_read` | OpenAI | `openai/gpt-4.1-mini` | 0.40 | 1.60 | Lectura en vivo (con imagen) |
 | `chat` | Groq | `openai/gpt-oss-120b` | 0.15 | 0.60 | Chat |
-| `chat_fallback` | OpenAI | `gpt-4.1-mini` | 0.40 | 1.60 | Chat si Groq no responde |
+| `chat_fallback` | OpenAI | `openai/gpt-4.1-mini` | 0.40 | 1.60 | Chat si Groq no responde |
 | `tts` | OpenAI | `tts-1` | a verificar | | Voz de Artemisa |
 | Movimiento | Nube | OpenCV en la API | 0 | 0 | Paso 1, sin modelo |
 | Voz a texto | Local | Reconocimiento del teléfono | 0 | 0 | Entrada de voz |
@@ -93,6 +98,11 @@ beneficia: su palanca es el tamaño de la imagen. Los prompts de análisis,
 razonamiento y chat sí: por eso el texto fijo va siempre primero y el contexto
 variable al final.
 
+**En el gateway, el prefijo del modelo es el creador, no quien lo sirve.**
+`openai/gpt-oss-20b` lo hizo OpenAI y lo sirve Groq. Sin `only`, el gateway puede
+elegir otro proveedor, con otro precio, otra forma de contar las imágenes y otra
+retención. Por eso cada rol fija su proveedor.
+
 **Los nombres exactos de parámetros cambian entre proveedores** (esfuerzo de
 razonamiento, formato de respuesta, nivel de detalle de imagen). Se verifican
 contra la documentación de cada proveedor al implementar su cliente.
@@ -126,12 +136,14 @@ comparan con esta tabla.
 `server/artemisa/core/models.yaml`:
 
 ```yaml
+# Fase 0: todo pasa por Vercel AI Gateway. `model` es el id del gateway (prefijo
+# del creador); `provider` es quien lo sirve, fijado con providerOptions.gateway.only.
 verified_at: 2026-09-21
 
 roles:
   describe:
     provider: openai
-    model: gpt-4.1-nano
+    model: openai/gpt-4.1-nano
     temperature: 0.2
     max_output_tokens: 80
     image_detail: low
@@ -139,7 +151,7 @@ roles:
     fallback: describe_fallback
   describe_fallback:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.2
     max_output_tokens: 80
     image_detail: low
@@ -162,13 +174,13 @@ roles:
     fallback: analyze_fallback
   analyze_fallback:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.3
     max_output_tokens: 400
     timeout_s: 10
   reason:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.2
     max_output_tokens: 600
     timeout_s: 20
@@ -182,7 +194,7 @@ roles:
     timeout_s: 20
   live_read:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.6
     max_output_tokens: 250
     image_detail: low
@@ -198,7 +210,7 @@ roles:
     fallback: chat_fallback
   chat_fallback:
     provider: openai
-    model: gpt-4.1-mini
+    model: openai/gpt-4.1-mini
     temperature: 0.5
     max_output_tokens: 400
     stream: true
@@ -213,8 +225,8 @@ roles:
 prices_usd_per_1m:
   openai/gpt-4.1-nano:   { input: 0.10,  cached_input: 0.025, output: 0.40 }
   openai/gpt-4.1-mini:   { input: 0.40,  cached_input: 0.10,  output: 1.60 }
-  groq/openai/gpt-oss-20b:  { input: 0.075, output: 0.30 }
-  groq/openai/gpt-oss-120b: { input: 0.15,  output: 0.60 }
+  openai/gpt-oss-20b:    { input: 0.075, output: 0.30 }   # servido por groq; pendiente de verificar (Vercel lista 0.08 de entrada)
+  openai/gpt-oss-120b:   { input: 0.15,  output: 0.60 }   # servido por groq
   openai/tts-1: { per_1m_characters: null }   # verificar antes de la Fase 0
 ```
 
@@ -570,6 +582,10 @@ términos, y el producto tiene que ser honesto con eso.
 
 **Groq** (recibe solo texto): verificar sus términos de retención antes de la
 Fase 1.
+
+**Vercel AI Gateway** (recibe todo, imágenes incluidas, en camino al proveedor):
+verificar sus términos de retención antes de la Fase 1 y declararlo como
+encargado de tratamiento.
 
 **Acciones del proyecto:**
 

@@ -35,7 +35,7 @@ artemisa/
     pyproject.toml
     artemisa/
       core/                 config, models.py, schemas.py, models.yaml, prompts/, costs.py
-      providers/            openai.py, groq.py, expo_push.py, twilio.py (Fase 2a)
+      providers/            gateway.py, expo_push.py, twilio.py (Fase 2a)
       bridge/               go2rtc.py, reader.py, uploader.py, control.py, stream.py,
                             secrets.py, discovery.py (Fase 1), recorder.py (Fase 1)
       pipeline/             motion.py, describe.py, sessionize.py, context.py, analyze.py,
@@ -60,7 +60,7 @@ artemisa/
 
 **Dependencias del servidor:** `fastapi`, `uvicorn`, `httpx`, `websockets`,
 `pydantic`, `pydantic-settings`, `asyncpg`, `opencv-python-headless`, `numpy`,
-`openai`, `groq`, `pyyaml`, `pyjwt` (Fase 1), `cryptography` (archivo cifrado
+`openai`, `pyyaml`, `pyjwt` (Fase 1), `cryptography` (archivo cifrado
 del bridge), `sentry-sdk`, `tzdata` (solo en Windows). Nada más sin preguntar.
 
 **Binarios externos:** go2rtc (licencia MIT), en la caja y en el laboratorio,
