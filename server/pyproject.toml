@@ -4,11 +4,18 @@ version = "0.0.0"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "asyncpg",
+    "httpx",
+    "numpy",
     "openai",
+    "opencv-python-headless",
     "pydantic",
     "pyyaml",
+    "websockets",
     "tzdata; sys_platform == 'win32'",
 ]
+
+[project.scripts]
+artemisa-lab = "artemisa.lab.main:main"
 
 [dependency-groups]
 dev = [
