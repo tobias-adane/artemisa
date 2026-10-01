@@ -239,6 +239,7 @@ prices_usd_per_1m:
 Los prompts viven en `server/artemisa/core/prompts/`, uno por archivo, y se
 versionan con el código. Están en inglés; lo que el usuario lee sale en su
 idioma porque cada prompt recibe `{language}`.
+`{language}` sale de `users.locale`: `en` → `English`, `es-AR` → `Argentine Spanish`.
 
 ### `describe` (Paso 2a)
 
