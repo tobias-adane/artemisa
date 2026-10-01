@@ -4,12 +4,14 @@ version = "0.0.0"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "asyncpg",
+    "fastapi",
     "httpx",
     "numpy",
     "openai",
     "opencv-python-headless",
     "pydantic",
     "pyyaml",
+    "uvicorn",
     "websockets",
     "tzdata; sys_platform == 'win32'",
 ]

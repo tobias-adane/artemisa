@@ -1,11 +1,12 @@
 """artemisa-lab: el laboratorio de la Fase 0 en un solo proceso.
 
-Por ahora corre solo el bridge (paso 4): VIDEO_SOURCE entra a go2rtc como la
-cámara del space "Front Door" de user_lab, un hilo lo lee y el bridge entrega
-un frame por segundo a la API y mantiene el canal de control. La API todavía no
-existe (paso 5): las subidas y el canal fallan y reintentan.
+Corre la API (paso 5) y el bridge (paso 4). VIDEO_SOURCE entra a go2rtc como
+la cámara del space "Front Door" de user_lab; el bridge entrega un frame por
+segundo a la API, que detecta movimiento y describe. El lado servidor del canal
+de control llega en el paso 9: hasta entonces el bridge avisa que no conecta.
 
-Variables: DATABASE_URL, LAB_BRIDGE_TOKEN, ARTEMISA_API_URL y VIDEO_SOURCE (la
+Variables: DATABASE_URL, LAB_BRIDGE_TOKEN, AI_GATEWAY_API_KEY, ARTEMISA_API_URL
+(donde escucha la API, por ejemplo http://127.0.0.1:8000) y VIDEO_SOURCE (la
 ruta del .mp4 como la ve go2rtc, por ejemplo /videos/puerta.mp4).
 """
 
@@ -13,20 +14,41 @@ import asyncio
 import logging
 import os
 from importlib.metadata import version
+from urllib.parse import urlsplit
 
 import asyncpg
 import httpx
+import uvicorn
+from fastapi import FastAPI
 
+from artemisa.api.app import create_app
 from artemisa.bridge import go2rtc
 from artemisa.bridge.control import ControlChannel
 from artemisa.bridge.reader import FrameReader
 from artemisa.bridge.uploader import Uploader
 from artemisa.core.config import configure_logging
+from artemisa.providers.gateway import Gateway
 
 USER_ID = "user_lab"
 VIDEO_SPACE = "Front Door"
 
 log = logging.getLogger("artemisa.lab")
+
+
+class Stopped(Exception):
+    """La API terminó (Ctrl+C): se corta todo lo demás."""
+
+
+def api_server(api_url: str, app: FastAPI) -> uvicorn.Server:
+    address = urlsplit(api_url)
+    config = uvicorn.Config(
+        app,
+        host=address.hostname or "127.0.0.1",
+        port=address.port or 8000,
+        log_config=None,  # usa los logs de artemisa, con el filtro de rtsp://
+        access_log=False,  # sin una línea por frame
+    )
+    return uvicorn.Server(config)
 
 
 async def lab_ids(database_url: str) -> tuple[str, str]:
@@ -52,7 +74,15 @@ async def run() -> None:
         raise SystemExit("Set VIDEO_SOURCE to a .mp4 path as go2rtc sees it, e.g. /videos/x.mp4")
     api_url = os.environ["ARTEMISA_API_URL"]
     token = os.environ["LAB_BRIDGE_TOKEN"]
-    bridge_id, space_id = await lab_ids(os.environ["DATABASE_URL"])
+    database_url = os.environ["DATABASE_URL"]
+    bridge_id, space_id = await lab_ids(database_url)
+
+    pool = await asyncpg.create_pool(database_url, min_size=1, max_size=5)
+    server = api_server(api_url, create_app(pool, Gateway.from_env(pool)))
+
+    async def serve() -> None:
+        await server.serve()
+        raise Stopped
 
     async with httpx.AsyncClient() as client:
         await go2rtc.add_stream(client, space_id, go2rtc.file_source(video_source))
@@ -64,10 +94,14 @@ async def run() -> None:
         channel = ControlChannel(api_url, token, bridge_id, version("artemisa"), [reader])
         try:
             async with asyncio.TaskGroup() as tasks:
+                tasks.create_task(serve())
                 tasks.create_task(uploader.run([reader]))
                 tasks.create_task(channel.run())
+        except* Stopped:
+            log.info("stopped")
         finally:
             reader.stop()
+            await pool.close()
 
 
 def main() -> None:
