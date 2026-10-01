@@ -31,3 +31,10 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 
 (Lo que haga falta recordar entre sesiones: decisiones chicas, bloqueos, qué
 quedó a medias.)
+
+- **Canal de control, lado servidor: paso 9.** El bridge ya lo usa desde el
+  paso 4, pero `/v1/bridges/connect` en la API va en el paso 9: autenticación
+  con el token del bridge, `last_seen_at` con cada mensaje, `hello` y
+  `heartbeat` en `bridges`, `health` en `spaces`. Los comandos de la nube se
+  suman encima: `start_stream` y `stop_stream` en el paso 14, `add_camera` y
+  `remove_camera` en el paso 16.
