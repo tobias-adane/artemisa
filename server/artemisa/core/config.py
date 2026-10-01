@@ -1,5 +1,7 @@
-"""Registro de modelos: carga y valida models.yaml."""
+"""Configuración: el registro de modelos (models.yaml) y los logs."""
 
+import logging
+import re
 from datetime import date
 from functools import cache
 from pathlib import Path
@@ -65,3 +67,30 @@ class ModelRegistry(BaseModel):
 @cache
 def load_registry(path: Path = MODELS_YAML) -> ModelRegistry:
     return ModelRegistry.model_validate(yaml.safe_load(path.read_text()))
+
+
+# Logs: ninguna dirección RTSP llega a un log (CLAUDE.md, regla 4).
+
+RTSP_PATTERN = re.compile(r"rtsps?://\S+", re.IGNORECASE)
+
+
+def redact(text: str) -> str:
+    return RTSP_PATTERN.sub("rtsp://[redacted]", text)
+
+
+class RedactRtsp(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.msg = redact(record.getMessage())
+        record.args = None
+        if record.exc_info and record.exc_info[1] is not None:
+            record.exc_text = redact(logging.Formatter().formatException(record.exc_info))
+            record.exc_info = None
+        return True
+
+
+def configure_logging() -> None:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    handler.addFilter(RedactRtsp())
+    logging.basicConfig(level=logging.INFO, handlers=[handler], force=True)
+    logging.getLogger("httpx").setLevel(logging.WARNING)  # sin una línea por frame

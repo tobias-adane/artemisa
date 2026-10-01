@@ -1,0 +1,25 @@
+# Laboratorio de la Fase 0 (06-ARQUITECTURA.md, Fase 0: todo en una máquina).
+# Por ahora solo go2rtc; el bridge corre en el host con `uv run artemisa-lab`.
+#
+# Uso, desde la raíz del repo:
+#   docker compose -f infra/docker-compose.lab.yml up
+
+services:
+  go2rtc:
+    image: alexxit/go2rtc:1.9.14
+    # La configuración se copia a tmpfs: lo que go2rtc guarde después (las
+    # fuentes que agrega el bridge) también queda en memoria.
+    entrypoint:
+      - sh
+      - -c
+      - cp /base/go2rtc.yml /config/go2rtc.yaml && exec go2rtc -config /config/go2rtc.yaml
+    read_only: true          # go2rtc no puede escribir fuera de los tmpfs
+    tmpfs:
+      - /config
+      - /tmp
+    volumes:
+      - ./go2rtc.yml:/base/go2rtc.yml:ro
+      - ../../artemisa-videos:/videos:ro   # carpeta al lado del repo; nunca se commitea
+    ports:
+      - "127.0.0.1:1984:1984"   # API y página de go2rtc, solo desde esta máquina
+      - "127.0.0.1:8554:8554"   # RTSP que lee el bridge

@@ -1,0 +1,15 @@
+# Configuración base de go2rtc para el laboratorio. Sin cámaras ni contraseñas:
+# el bridge agrega cada fuente por la API y go2rtc la guarda en su copia de este
+# archivo, que vive en tmpfs (ver docker-compose.lab.yml).
+
+api:
+  listen: ":1984"   # dentro del contenedor; el host lo publica solo en 127.0.0.1
+
+rtsp:
+  listen: ":8554"   # el bridge lee de acá, nunca directo de la cámara
+
+webrtc:
+  listen: ""        # apagado: el vivo va por el relay
+
+ffmpeg:
+  loop: "-re -stream_loop -1 -i {input}"   # VIDEO_SOURCE: el .mp4 se repite sin fin
