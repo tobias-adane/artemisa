@@ -1,8 +1,9 @@
 """artemisa-lab: el laboratorio de la Fase 0 en un solo proceso.
 
-Corre la API (paso 5) y el bridge (paso 4). VIDEO_SOURCE entra a go2rtc como
-la cámara del space "Front Door" de user_lab; el bridge entrega un frame por
-segundo a la API, que detecta movimiento y describe. El lado servidor del canal
+Corre la API (paso 5), el bridge (paso 4) y el worker (paso 7). VIDEO_SOURCE
+entra a go2rtc como la cámara del space "Front Door" de user_lab; el bridge
+entrega un frame por segundo a la API, que detecta movimiento y describe, y el
+worker narra cada thread. La señal analyze_now va directo por memoria. El lado servidor del canal
 de control llega en el paso 9: hasta entonces el bridge avisa que no conecta.
 
 Variables: DATABASE_URL, LAB_BRIDGE_TOKEN, AI_GATEWAY_API_KEY, ARTEMISA_API_URL
@@ -27,7 +28,10 @@ from artemisa.bridge.control import ControlChannel
 from artemisa.bridge.reader import FrameReader
 from artemisa.bridge.uploader import Uploader
 from artemisa.core.config import configure_logging
+from artemisa.pipeline.analyze import Analysis
 from artemisa.providers.gateway import Gateway
+from artemisa.worker.main import Signals
+from artemisa.worker.scheduler import Scheduler
 
 USER_ID = "user_lab"
 VIDEO_SPACE = "Front Door"
@@ -77,8 +81,12 @@ async def run() -> None:
     database_url = os.environ["DATABASE_URL"]
     bridge_id, space_id = await lab_ids(database_url)
 
-    pool = await asyncpg.create_pool(database_url, min_size=1, max_size=5)
-    server = api_server(api_url, create_app(pool, Gateway.from_env(pool)))
+    # Cada análisis en curso toma una conexión (hasta 4 por usuario): el pool deja lugar
+    # para la API.
+    pool = await asyncpg.create_pool(database_url, min_size=1, max_size=10)
+    gateway = Gateway.from_env(pool)
+    worker = Scheduler(pool, Analysis(gateway))
+    server = api_server(api_url, create_app(pool, gateway, Signals(pool, worker)))
 
     async def serve() -> None:
         await server.serve()
@@ -97,6 +105,7 @@ async def run() -> None:
                 tasks.create_task(serve())
                 tasks.create_task(uploader.run([reader]))
                 tasks.create_task(channel.run())
+                tasks.create_task(worker.run())
         except* Stopped:
             log.info("stopped")
         finally:

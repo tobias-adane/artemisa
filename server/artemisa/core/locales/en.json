@@ -1,0 +1,10 @@
+{
+  "push": {
+    "homeBlind": "I lost contact with your home at {time}. It might be a power or internet cut.",
+    "homeBack": "I can see your home again. I couldn't see it between {start} and {end}.",
+    "cameraOffline": "I can't see the {space} right now."
+  },
+  "fallback": {
+    "urgentNarrative": "I saw something at the {space} I want you to look at."
+  }
+}

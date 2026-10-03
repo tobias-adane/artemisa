@@ -373,6 +373,16 @@ def reanalyze_interval(th, now) -> float:
 El camino rápido llega por `signal_worker("analyze_now", fast_path=True)` y
 ejecuta `process_thread(thread_id, fast_path=True)` sin esperar al tick.
 
+Notas de implementación (paso 7):
+
+- **El lock del thread es de sesión, no de transacción**
+  (`pg_advisory_lock` y `pg_advisory_unlock`): el análisis llama a un modelo y
+  no conviene una transacción abierta durante segundos.
+- **`set_end_time` toma el lock del space**, el mismo de la sesionización, y
+  solo termina el thread si sigue sin `end_time` y su último layer tiene más de
+  `THREAD_GAP_S`. Si entró un layer entre la lectura y el update, no lo termina
+  y decide el próximo tick.
+
 En palabras: un momento corto se narra `SETTLE_S` segundos después de que se
 calma. Un momento largo tiene su primera narrativa como máximo a los
 `MAX_COMPOSE_S` segundos, se actualiza cada `REANALYZE_S` durante sus primeros
@@ -404,7 +414,9 @@ de estas condiciones:
 - Es horario nocturno (`night_start` a `night_end` del usuario, hora local).
 - Algún layer del thread tiene flags.
 - Algún layer menciona algo que el usuario pidió vigilar en sus custom
-  instructions (coincidencia de palabras clave, sin modelo).
+  instructions (coincidencia de palabras clave, sin modelo). Regla simple del
+  laboratorio: alguna palabra de 4 letras o más de las custom instructions
+  aparece en un layer, comparando en minúsculas y sin acentos.
 - El análisis anterior del mismo thread tuvo confianza menor a
   `LOW_CONFIDENCE`.
 

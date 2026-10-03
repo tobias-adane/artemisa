@@ -2,7 +2,7 @@
 
 Convierte el frame en una oración factual y el frame deja de existir. Actualiza
 el estado del space y, si el frame es de movimiento, suma el layer a su thread
-(sesionización). El aviso al worker llega con el paso 7.
+(sesionización). Un flag urgente avisa al worker por el camino rápido.
 """
 
 import asyncio
@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from artemisa.core.costs import Executor
 from artemisa.core.models import PipelineStep
-from artemisa.core.schemas import DescribeOut
+from artemisa.core.schemas import DescribeOut, Flag
 from artemisa.pipeline.motion import FrameKind, InboxFrame
 from artemisa.pipeline.sessionize import Pool, add_layer
 from artemisa.providers.gateway import Completion, ModelCallFailed, RunContext
@@ -31,6 +31,8 @@ RETRY_WAIT_S = 1.0  # espera corta entre intentos
 PROMPTS = Path(__file__).resolve().parents[1] / "core" / "prompts"
 SYSTEM_PROMPT = (PROMPTS / "describe.system.txt").read_text(encoding="utf-8").strip()
 USER_PROMPT = (PROMPTS / "describe.user.txt").read_text(encoding="utf-8").strip()
+
+URGENT_FLAGS = frozenset(Flag)  # 03: todos los flags activan el camino rápido
 
 # 04-MODELOS.md, Prompts: users.locale → {language}.
 LANGUAGES = {"en": "English", "es-AR": "Argentine Spanish"}
@@ -48,6 +50,12 @@ class Models(Protocol):
         schema: type[T],
         context: RunContext,
     ) -> Completion[T]: ...
+
+
+class WorkerSignal(Protocol):
+    """signal_worker de worker/main.py: NOTIFY de Postgres o directo por memoria."""
+
+    async def signal_worker(self, channel: str, **payload: object) -> None: ...
 
 
 class Db(Executor, Pool, Protocol):
@@ -114,6 +122,7 @@ async def describe(
 async def on_frame(
     models: Models,
     db: Db,
+    signals: WorkerSignal,
     space: SpaceInfo,
     kind: FrameKind,
     frame: InboxFrame,
@@ -149,3 +158,5 @@ async def on_frame(
         captured_at,
     )
     log.info("space %s: layer added to thread %s (%s)", space.id, thread_id, decision)
+    if set(out.flags) & URGENT_FLAGS:
+        await signals.signal_worker("analyze_now", thread_id=thread_id, fast_path=True)

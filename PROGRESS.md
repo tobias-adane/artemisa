@@ -1,8 +1,8 @@
 # Progreso
 
 **Fase actual:** Fase 0, laboratorio.
-**Paso en curso:** 7.
-**Siguiente:** 8.
+**Paso en curso:** 8.
+**Siguiente:** 9.
 
 Al terminar cada paso: tests y chequeos limpios, marcar el paso acá y hacer
 commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
@@ -15,7 +15,7 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 - [x] 4. Bridge: go2rtc en tmpfs, lector, entrega de un frame por segundo, canal de control con latido, `VIDEO_SOURCE`.
 - [x] 5. Paso 1 y Paso 2a en la API: endpoint de frames, movimiento, descripción, estado del space.
 - [x] 6. Sesionización y threads en composing.
-- [ ] 7. `LISTEN` / `NOTIFY`, scheduler y Paso 2b.
+- [x] 7. `LISTEN` / `NOTIFY`, scheduler y Paso 2b.
 - [ ] 8. Paso 3 con refuerzo.
 - [ ] 9. Paso 4 con notificaciones y `dispatches`; salud de la caja y de las cámaras.
 - [ ] 10. `artemisa-lab report`.
@@ -49,3 +49,19 @@ quedó a medias.)
   los logs. El test de la guarda de `05` simula el solo-lectura a nivel Python y
   no ve escrituras de código nativo. Revisión de privacidad del paso 5,
   hallazgo 4.
+- **Límite conocido del paso 7: `analyze` solo guarda.** No llama al Paso 3
+  (`needs_reasoning`, paso 8) ni al Paso 4 (`act`, paso 9). Un `attention`
+  queda sin acción hasta el paso 9. Con `ANALYSIS_MAX_FAILURES` fallos y un flag
+  urgente, la narrativa pasa a `fallback.urgentNarrative`, pero el aviso de
+  resguardo se ejecuta recién en el paso 9.
+- **Worker en el laboratorio.** Corre dentro de `artemisa-lab` y la señal
+  `analyze_now` va por memoria. `LISTEN` / `NOTIFY` está hecho y probado contra
+  Postgres para cuando el worker sea otro proceso. El punto de entrada
+  `artemisa-worker` no está en `pyproject.toml` todavía.
+- **Para revisar en el laboratorio:** `last_analyzed_at` es la hora al terminar
+  el análisis. Un layer capturado antes de esa hora pero guardado después (la
+  descripción tarda unos segundos) no vuelve a marcar el thread como pendiente.
+  La regla de palabras vigiladas no ve palabras de 3 letras ("dog", "gas") y no
+  traduce: si las custom instructions están en inglés y los layers en
+  castellano, casi no coincide. Además, palabras comunes como "door" o "home"
+  pueden mandar casi todo a `analyze_hard`. Medirlo con `report` (paso 10).
