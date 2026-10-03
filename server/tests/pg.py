@@ -2,7 +2,8 @@
 
 La base de test tiene que traer lo propio de Supabase que la migración da por
 sentado (los roles anon y authenticated, auth.jwt() y la publicación
-supabase_realtime). Los tests aplican solo supabase/migrations/0001_fase0.sql.
+supabase_realtime): el CI lo crea con tests/supabase_shim.sql antes de correr
+pytest. Los tests aplican solo supabase/migrations/0001_fase0.sql.
 """
 
 import asyncio

@@ -4,8 +4,9 @@ La API suma cada layer al thread abierto del space; si ese thread ya no recibe
 layers, lo termina y crea uno nuevo en composing. Nunca narra ni cierra un
 thread: eso es trabajo del worker.
 
-Dos correcciones al pseudocódigo de 03, explicadas allí: el layer se inserta en
-la misma transacción que el thread, y last_layer_at nunca retrocede.
+Correcciones al pseudocódigo de 03, explicadas allí: el layer se inserta en la
+misma transacción que el thread, last_layer_at nunca retrocede y start_time
+nunca avanza.
 """
 
 from collections.abc import Sequence
@@ -72,9 +73,11 @@ async def add_layer(
         decision = decide(current, captured_at)
         if current is not None and decision == "touch":
             thread_id = current.id
-            # greatest: un frame capturado antes puede terminar de describirse después.
+            # greatest y least: un frame capturado antes puede terminar de describirse después.
             await conn.execute(
-                "update threads set last_layer_at = greatest(last_layer_at, $2) where id = $1",
+                """update threads set last_layer_at = greatest(last_layer_at, $2),
+                                      start_time = least(start_time, $2)
+                   where id = $1""",
                 thread_id,
                 captured_at,
             )

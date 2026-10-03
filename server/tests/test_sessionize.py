@@ -97,6 +97,14 @@ def test_last_layer_at_never_moves_back() -> None:
     assert query_args == (OPEN, at(10))  # el SQL aplica greatest(last_layer_at, $2)
 
 
+def test_the_touch_applies_greatest_and_least() -> None:
+    pool = FakePool(open_thread(30))
+    run(pool, at(10))
+    touch = pool.connection.queries["touch"]
+    assert "last_layer_at = greatest(last_layer_at, $2)" in touch
+    assert "start_time = least(start_time, $2)" in touch
+
+
 def test_layer_flags_and_content_reach_the_insert() -> None:
     pool = FakePool()
     run(pool, T0, flags=("person_on_floor",))

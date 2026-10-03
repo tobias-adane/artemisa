@@ -135,6 +135,16 @@ def test_an_earlier_frame_never_moves_last_layer_at_back(test_database_url: str)
     assert threads[0]["last_layer_at"] == at(30)
 
 
+def test_an_earlier_frame_moves_start_time_back(test_database_url: str) -> None:
+    async def go(pool: asyncpg.Pool) -> Any:
+        await layer(pool, at(30))
+        await layer(pool, at(10))  # el thread no puede empezar después de su primer layer
+        return await pool.fetchrow("select * from threads")
+
+    thread = run_db(test_database_url, go)
+    assert (thread["start_time"], thread["last_layer_at"]) == (at(10), at(30))
+
+
 def test_concurrent_frames_of_one_space_make_one_thread(test_database_url: str) -> None:
     async def go(pool: asyncpg.Pool) -> tuple[Any, Any, Any]:
         await asyncio.gather(*(layer(pool, at(i * 0.1)) for i in range(20)))

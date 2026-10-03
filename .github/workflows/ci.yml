@@ -7,6 +7,21 @@ on:
 jobs:
   server:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15.19
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: artemisa_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/artemisa_test
     defaults:
       run:
         working-directory: server
@@ -18,5 +33,7 @@ jobs:
         run: uv run ruff check . && uv run ruff format --check .
       - name: Tipos
         run: uv run mypy artemisa tests
+      - name: Simular lo mínimo de Supabase en la base de test
+        run: psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/supabase_shim.sql
       - name: Tests y guardas
-        run: uv run pytest
+        run: uv run pytest -v -rs

@@ -265,8 +265,9 @@ async def sessionize(space, t, layer) -> Thread:
         await advisory_lock("space", space.id)       # un solo escritor por space
         current = await get_open_thread(space.id)
         if current and (t - current.last_layer_at) <= THREAD_GAP_S:
-            # greatest: un frame capturado antes puede terminar de describirse después
-            await touch_thread(current.id, last_layer_at=max(current.last_layer_at, t))
+            # greatest y least: un frame capturado antes puede terminar de describirse después
+            await touch_thread(current.id, last_layer_at=max(current.last_layer_at, t),
+                               start_time=min(current.start_time, t))
             thread = current
         else:
             if current:
@@ -284,7 +285,9 @@ async def sessionize(space, t, layer) -> Thread:
 - **`last_layer_at` nunca retrocede.** Con varias descripciones en vuelo, un
   frame capturado antes puede terminar de describirse después que uno
   posterior. `touch_thread` usa `greatest(last_layer_at, t)`: el reloj del thread
-  no vuelve atrás y no cambia cuándo vence `THREAD_GAP_S`.
+  no vuelve atrás y no cambia cuándo vence `THREAD_GAP_S`. Por lo mismo,
+  `start_time` usa `least(start_time, t)`: un thread no empieza después de su
+  primer layer.
 - **El thread y su layer se escriben en una sola transacción.** Antes
   `sessionize` creaba el thread y `insert_layer` iba aparte: un fallo entre los
   dos dejaba un thread sin observaciones. Con una transacción existen los dos o

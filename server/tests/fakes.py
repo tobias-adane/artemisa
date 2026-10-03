@@ -29,6 +29,7 @@ class FakeConnection:
         self.open_thread = open_thread
         self.events: list[str] = []
         self.statements: list[tuple[str, tuple[object, ...]]] = []
+        self.queries: dict[str, str] = {}  # el SQL de cada sentencia, por su etiqueta
 
     async def execute(self, query: str, *args: object) -> object:
         self._record(query, args)
@@ -45,6 +46,7 @@ class FakeConnection:
     def _record(self, query: str, args: tuple[object, ...]) -> None:
         self.events.append(label(query))
         self.statements.append((label(query), args))
+        self.queries[label(query)] = " ".join(query.split())
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[None]:
