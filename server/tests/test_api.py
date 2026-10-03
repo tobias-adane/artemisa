@@ -20,7 +20,7 @@ from openai import AsyncOpenAI
 
 from artemisa.api.app import create_app
 from artemisa.api.auth import token_hash
-from artemisa.core.config import load_registry
+from artemisa.core.config import STALE_FRAME_S, load_registry
 from artemisa.core.schemas import DescribeOut
 from artemisa.pipeline import describe as describe_module
 from artemisa.pipeline import motion
@@ -124,7 +124,7 @@ def test_loop_ignores_stale_repeated_and_undecodable_frames() -> None:
         loop.tick(now)  # aprende el fondo
         moving = InboxFrame(jpeg(scene(box=(300, 150, 120, 120))), datetime.now(UTC), now)
         loop.inbox.put(moving)
-        loop.tick(now + 1 + motion.STALE_FRAME_S)  # viejo: se ignora
+        loop.tick(now + 1 + STALE_FRAME_S)  # viejo: se ignora
         loop.inbox.put(InboxFrame(moving.jpeg, moving.captured_at, now + 2))
         loop.tick(now + 2)
         loop.tick(now + 2.5)  # el mismo frame: no se vuelve a mirar

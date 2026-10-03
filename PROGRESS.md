@@ -38,3 +38,14 @@ quedó a medias.)
   `heartbeat` en `bridges`, `health` en `spaces`. Los comandos de la nube se
   suman encima: `start_stream` y `stop_stream` en el paso 14, `add_camera` y
   `remove_camera` en el paso 16.
+- **Al agregar Sentry** (entra en la Fase 0 según `08`, pero ningún paso lo
+  nombra): configurarlo con `include_local_variables=False`,
+  `send_default_pii=False` y `max_request_body_size="never"`. `jpeg`, `body` y
+  `messages` (con el base64) son variables locales en `frames.py`,
+  `describe.py` y `app.py`, y Sentry las manda por defecto. Es lo que ya pide
+  `06`, Observabilidad. Revisión de privacidad del paso 5, hallazgo 3.
+- **Al haber Dockerfile** (hoy solo go2rtc corre en Docker; el servicio `lab` de
+  `06` todavía no existe): correr la API con `read_only: true` y tmpfs solo para
+  los logs. El test de la guarda de `05` simula el solo-lectura a nivel Python y
+  no ve escrituras de código nativo. Revisión de privacidad del paso 5,
+  hallazgo 4.

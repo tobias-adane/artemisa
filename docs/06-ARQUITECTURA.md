@@ -290,8 +290,9 @@ X-Captured-At: 2026-09-21T19:42:11.482Z
 
 La API descarta duplicados por `X-Frame-Id`, guarda el frame **en memoria**
 como el último de ese space (el `inbox` del Paso 1) y lo suelta al llegar el
-siguiente. El Paso 1 decide si pasa al Paso 2a; la lectura en vivo usa el
-último.
+siguiente. **También lo suelta si el space deja de mandar:** pasados
+`STALE_FRAME_S` sin un frame nuevo, el `inbox` queda vacío. El Paso 1 decide si
+pasa al Paso 2a; la lectura en vivo usa el último.
 
 **Pendiente antes de la Fase 1:** si una request por frame alcanza o hace falta
 un canal continuo (WebSocket o stream), a qué tamaño y frecuencia, y cuánto

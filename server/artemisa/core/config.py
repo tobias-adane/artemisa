@@ -1,4 +1,4 @@
-"""Configuración: el registro de modelos (models.yaml) y los logs."""
+"""Configuración: constantes de 03, el registro de modelos (models.yaml) y los logs."""
 
 import logging
 import re
@@ -11,6 +11,9 @@ import yaml
 from pydantic import BaseModel, ConfigDict, model_validator
 
 MODELS_YAML = Path(__file__).with_name("models.yaml")
+
+# Constantes de 03-ALGORITMO.md (tabla de Constantes). Una sola definición, la misma de 03.
+STALE_FRAME_S = 5  # antigüedad máxima del último frame; pasada, se ignora y se suelta de memoria
 
 # tts queda abierto hasta el paso 15 (00-DECISIONES.md, punto 10).
 UNPRICED_ROLES = frozenset({"tts"})
@@ -88,9 +91,19 @@ class RedactRtsp(logging.Filter):
         return True
 
 
+def quiet_libraries() -> None:
+    """Las librerías de red no loguean pedidos, ni siquiera si alguien sube el nivel a DEBUG.
+
+    websockets imprime el header Authorization del handshake (el token del bridge) y httpx2,
+    que usa el SDK de OpenAI, una línea INFO por cada llamada al gateway.
+    """
+    for name in ("httpx", "httpx2", "websockets"):
+        logging.getLogger(name).setLevel(logging.WARNING)
+
+
 def configure_logging() -> None:
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
     handler.addFilter(RedactRtsp())
     logging.basicConfig(level=logging.INFO, handlers=[handler], force=True)
-    logging.getLogger("httpx").setLevel(logging.WARNING)  # sin una línea por frame
+    quiet_libraries()
