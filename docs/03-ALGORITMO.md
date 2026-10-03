@@ -207,10 +207,8 @@ async def on_frame(space, kind, jpeg: bytes, captured_at, meta):   # lo llama ha
             return
 
         await set_last_motion(space.id, captured_at)
-        thread = await sessionize(space, captured_at)
-        await insert_layer(thread.id, space.id,
-                           description=out.description, flags=out.flags,
-                           captured_at=captured_at)
+        thread = await sessionize(space, captured_at,     # thread y layer, en una transacción
+                                  layer=Layer(description=out.description, flags=out.flags))
         if set(out.flags) & URGENT_FLAGS:
             await signal_worker("analyze_now", thread_id=thread.id, fast_path=True)
     finally:
@@ -262,20 +260,35 @@ de ese thread fue hace `THREAD_GAP_S` segundos o menos. Si pasó más, el thread
 abierto **termina** (se le pone `end_time`) y nace uno nuevo.
 
 ```python
-async def sessionize(space, t) -> Thread:
+async def sessionize(space, t, layer) -> Thread:
     async with transaction():
         await advisory_lock("space", space.id)       # un solo escritor por space
         current = await get_open_thread(space.id)
         if current and (t - current.last_layer_at) <= THREAD_GAP_S:
-            await touch_thread(current.id, last_layer_at=t)
-            return current
-        if current:
-            # Ya no recibe layers. El worker lo narra si hace falta y lo cierra.
-            await set_end_time(current.id, current.last_layer_at)
-        return await create_thread(space_id=space.id, user_id=space.user_id,
-                                   status="composing", start_time=t,
-                                   last_layer_at=t)
+            # greatest: un frame capturado antes puede terminar de describirse después
+            await touch_thread(current.id, last_layer_at=max(current.last_layer_at, t))
+            thread = current
+        else:
+            if current:
+                # Ya no recibe layers. El worker lo narra si hace falta y lo cierra.
+                await set_end_time(current.id, current.last_layer_at)
+            thread = await create_thread(space_id=space.id, user_id=space.user_id,
+                                         status="composing", start_time=t,
+                                         last_layer_at=t)
+        await insert_layer(thread.id, space.id, layer)   # en la misma transacción
+        return thread
 ```
+
+**Dos correcciones al pseudocódigo (paso 6).**
+
+- **`last_layer_at` nunca retrocede.** Con varias descripciones en vuelo, un
+  frame capturado antes puede terminar de describirse después que uno
+  posterior. `touch_thread` usa `greatest(last_layer_at, t)`: el reloj del thread
+  no vuelve atrás y no cambia cuándo vence `THREAD_GAP_S`.
+- **El thread y su layer se escriben en una sola transacción.** Antes
+  `sessionize` creaba el thread y `insert_layer` iba aparte: un fallo entre los
+  dos dejaba un thread sin observaciones. Con una transacción existen los dos o
+  ninguno, así nunca existe un thread sin al menos una observación.
 
 La API nunca cierra un thread ni lo analiza: solo lo termina. Narrarlo y
 cerrarlo es trabajo del worker. Así un thread que terminó sin haber sido

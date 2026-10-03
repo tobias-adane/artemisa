@@ -14,6 +14,7 @@ MODELS_YAML = Path(__file__).with_name("models.yaml")
 
 # Constantes de 03-ALGORITMO.md (tabla de Constantes). Una sola definición, la misma de 03.
 STALE_FRAME_S = 5  # antigüedad máxima del último frame; pasada, se ignora y se suelta de memoria
+THREAD_GAP_S = 90  # silencio que termina un thread
 
 # tts queda abierto hasta el paso 15 (00-DECISIONES.md, punto 10).
 UNPRICED_ROLES = frozenset({"tts"})

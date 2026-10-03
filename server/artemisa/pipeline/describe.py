@@ -1,8 +1,8 @@
 """Paso 2a: descripción, en la API (03-ALGORITMO.md, Paso 2a).
 
-Convierte el frame en una oración factual y el frame deja de existir. En el
-paso 5 solo actualiza el estado del space: los layers y threads llegan con la
-sesionización (paso 6) y el aviso al worker con el paso 7.
+Convierte el frame en una oración factual y el frame deja de existir. Actualiza
+el estado del space y, si el frame es de movimiento, suma el layer a su thread
+(sesionización). El aviso al worker llega con el paso 7.
 """
 
 import asyncio
@@ -22,6 +22,7 @@ from artemisa.core.costs import Executor
 from artemisa.core.models import PipelineStep
 from artemisa.core.schemas import DescribeOut
 from artemisa.pipeline.motion import FrameKind, InboxFrame
+from artemisa.pipeline.sessionize import Pool, add_layer
 from artemisa.providers.gateway import Completion, ModelCallFailed, RunContext
 
 DESCRIBE_RETRIES = 2
@@ -47,6 +48,10 @@ class Models(Protocol):
         schema: type[T],
         context: RunContext,
     ) -> Completion[T]: ...
+
+
+class Db(Executor, Pool, Protocol):
+    """Lo que el Paso 2a usa de la base: execute para el estado y acquire para el thread."""
 
 
 @dataclass(frozen=True)
@@ -108,13 +113,13 @@ async def describe(
 
 async def on_frame(
     models: Models,
-    db: Executor,
+    db: Db,
     space: SpaceInfo,
     kind: FrameKind,
     frame: InboxFrame,
     detail: str | None,
 ) -> None:
-    """Describe y actualiza el estado del space. Si falla, el frame se pierde: no hay cola."""
+    """Describe, actualiza el estado del space y suma el layer. Si falla, el frame se pierde."""
     captured_at = frame.captured_at
     out = await describe(models, space, kind, frame.jpeg, captured_at, detail)
     del frame  # a partir de acá el frame no se usa más
@@ -133,3 +138,14 @@ async def on_frame(
         kind == "motion",
     )
     log.info("space %s: state updated (%s, people: %d)", space.id, kind, out.people_count)
+    if kind == "state":
+        return  # un frame de estado no crea threads
+    thread_id, decision = await add_layer(
+        db,
+        space.id,
+        space.user_id,
+        out.description,
+        [flag.value for flag in out.flags],
+        captured_at,
+    )
+    log.info("space %s: layer added to thread %s (%s)", space.id, thread_id, decision)

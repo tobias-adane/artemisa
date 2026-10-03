@@ -9,8 +9,10 @@ import hmac
 from typing import Any, Protocol
 from uuid import UUID
 
+from artemisa.pipeline.sessionize import Pool
 
-class Database(Protocol):
+
+class Database(Pool, Protocol):
     async def execute(self, query: str, *args: object) -> object: ...
     async def fetch(self, query: str, *args: object) -> list[Any]: ...
     async def fetchrow(self, query: str, *args: object) -> Any: ...
