@@ -541,6 +541,21 @@ async def reason(th, urgent: bool):
     await act(th, resolve_action_level(out.classification, out.severity_high))
 ```
 
+Notas de implementación (paso 8):
+
+- **Un refuerzo por razonamiento.** `reason` no pide otro refuerzo mientras
+  siga vigente el último que pidió ese thread (`last_reasoned_at` +
+  `BOOST_DURATION_S`): así los layers del propio refuerzo no encadenan
+  refuerzos.
+- **`unfamiliar_person_returning` cuenta threads distintos:** este thread más
+  al menos `UNFAMILIAR_REPEAT_COUNT` − 1 threads más del usuario con un
+  desconocido y un layer dentro de `UNFAMILIAR_WINDOW_S`.
+- **`{escalate_reason | trigger}`:** si el análisis no dio `escalate_reason`, va
+  una frase corta en inglés con la regla que activó el Paso 3. Viven en
+  `pipeline/reason.py` y solo las lee el modelo.
+- **"WHOLE HOME"** muestra cada thread con día y hora local del usuario
+  (`Sat 14:40`).
+
 El Paso 3 **puede bajar** la clasificación (una emergencia que no era, un
 `attention` que era normal) o subirla. Si baja después de que Artemisa ya actuó,
 lo hecho no se deshace: queda en `dispatches`, `action` sigue guardando el nivel
