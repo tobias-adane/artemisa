@@ -17,7 +17,7 @@ from uuid import UUID
 from openai.types.chat import ChatCompletionMessageParam
 
 from artemisa.core.models import PipelineStep
-from artemisa.core.schemas import AnalysisOut
+from artemisa.core.schemas import AnalysisOut, Classification
 from artemisa.pipeline.context import (
     AnalysisContext,
     build_analysis_context,
@@ -29,7 +29,7 @@ from artemisa.pipeline.context import (
 from artemisa.pipeline.describe import Models
 from artemisa.providers.gateway import ModelCallFailed, RunContext
 
-LOW_CONFIDENCE = 0.6  # debajo, el análisis siguiente usa analyze_hard
+LOW_CONFIDENCE = 0.6  # debajo, analyze_hard la próxima vez y un attention va al Paso 3
 ANALYSIS_MAX_FAILURES = 3  # fallos seguidos antes de la narrativa de resguardo
 
 LOCALES = Path(__file__).resolve().parents[1] / "core" / "locales"
@@ -65,12 +65,13 @@ class Thread:
     end_time: datetime | None
     last_layer_at: datetime
     last_analyzed_at: datetime | None
+    last_reasoned_at: datetime | None
 
 
 THREAD_COLUMNS = """id, user_id, space_id, status::text as status, narrative,
     classification::text as classification, confidence, escalated_to_reasoning,
     unfamiliar_person, analysis_failures, start_time, end_time, last_layer_at,
-    last_analyzed_at"""
+    last_analyzed_at, last_reasoned_at"""
 
 
 async def load_thread(conn: Connection, thread_id: UUID) -> Thread | None:
@@ -99,11 +100,26 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+class Reasoner(Protocol):
+    """El Paso 3 (pipeline/reason.py)."""
+
+    async def trigger(
+        self, conn: Connection, th: Thread, out: AnalysisOut, fast_path: bool
+    ) -> str | None: ...
+
+    async def reason(
+        self, conn: Connection, th: Thread, first: AnalysisOut, trigger: str, urgent: bool
+    ) -> Thread: ...
+
+
 class Analysis:
     """El Paso 2b con el gateway (providers/gateway.py) y el registro de modelos."""
 
-    def __init__(self, models: Models, clock: Callable[[], datetime] = utcnow) -> None:
+    def __init__(
+        self, models: Models, reasoner: Reasoner, clock: Callable[[], datetime] = utcnow
+    ) -> None:
         self.models = models
+        self.reasoner = reasoner
         self.clock = clock
 
     async def analyze(self, conn: Connection, th: Thread, fast_path: bool = False) -> Thread:
@@ -145,8 +161,13 @@ class Analysis:
                 out.people_present,
             )
         log.info("thread %s: analyzed with %s (%s)", th.id, role, out.classification.value)
-        # Paso 3 (needs_reasoning) y Paso 4 (act) llegan en los pasos 8 y 9.
-        return await reload(conn, th.id)
+        th = await reload(conn, th.id)
+        trigger = await self.reasoner.trigger(conn, th, out, fast_path)
+        if trigger is not None:
+            urgent = fast_path or out.classification == Classification.emergency
+            return await self.reasoner.reason(conn, th, out, trigger, urgent)
+        # El informar de un attention sin Paso 3 (act) llega con el paso 9.
+        return th
 
     async def on_failure(self, conn: Connection, th: Thread, ctx: AnalysisContext) -> Thread:
         """03, Fallos y bordes: el análisis falla ANALYSIS_MAX_FAILURES veces seguidas."""
