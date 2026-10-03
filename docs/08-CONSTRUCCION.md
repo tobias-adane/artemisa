@@ -56,7 +56,8 @@ artemisa/
 ```
 
 **Herramientas del servidor:** Python 3.12, `uv` para dependencias, `ruff`,
-`mypy` en modo estricto y `pytest`.
+`mypy` en modo estricto y `pytest`. El CI incluye un servicio de Postgres
+(`postgres:15.19`) para los tests de la base.
 
 **Dependencias del servidor:** `fastapi`, `uvicorn`, `httpx`, `websockets`,
 `pydantic`, `pydantic-settings`, `asyncpg`, `opencv-python-headless`, `numpy`,

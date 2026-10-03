@@ -33,6 +33,7 @@ from artemisa.pipeline.motion import (
     MotionLoop,
 )
 from artemisa.providers.gateway import BASE_URL, Completion, Gateway, ModelCallFailed, RunContext
+from tests.fakes import FakePool
 
 TOKEN = "lab-token"
 BRIDGE = UUID("00000000-0000-4000-8000-0000000000b1")
@@ -156,6 +157,10 @@ class FakeDb:
     def __init__(self, space_bridge: UUID = BRIDGE) -> None:
         self.executed: list[tuple[str, tuple[object, ...]]] = []
         self.space_bridge = space_bridge
+        self.pool = FakePool()
+
+    def acquire(self) -> Any:
+        return self.pool.acquire()
 
     async def execute(self, query: str, *args: object) -> object:
         self.executed.append((query, args))
@@ -218,6 +223,9 @@ def test_motion_frame_updates_state_and_last_motion() -> None:
     query, args = db.executed[0]
     assert query.lstrip().startswith("update spaces")
     assert args == (SPACE, OUT.description, True, captured, True)
+    # y suma el layer a su thread, en una sola transacción
+    events = db.pool.connection.events
+    assert events == ["begin", "lock", "select_open", "insert_thread", "insert_layer", "commit"]
 
 
 def test_state_frame_does_not_touch_last_motion_and_failure_drops_the_frame() -> None:
@@ -225,10 +233,12 @@ def test_state_frame_does_not_touch_last_motion_and_failure_drops_the_frame() ->
     frame = InboxFrame(b"x", datetime.now(UTC), 0)
     asyncio.run(on_frame(FakeModels([OUT]), db, INFO, "state", frame, None))
     assert db.executed[0][1][4] is False
+    assert db.pool.acquired == 0  # un frame de estado no crea threads ni layers
     failed = FakeDb()
     down = FakeModels([ModelCallFailed("x")] * 3)
     asyncio.run(on_frame(down, failed, INFO, "motion", frame, None))
     assert failed.executed == []
+    assert failed.pool.acquired == 0  # sin descripción no existe un thread
 
 
 # Endpoint
