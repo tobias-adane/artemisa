@@ -853,7 +853,7 @@ Valores iniciales. Todos configurables; varios se ajustan en la Fase 0.
 | Constante | Valor | Dónde | Qué controla |
 |---|---|---|---|
 | `CAPTURE_INTERVAL_S` | 1 | bridge y API | Cada cuánto el bridge entrega un frame por cámara y el Paso 1 evalúa movimiento |
-| `STALE_FRAME_S` | 5 | API (Paso 1) | Antigüedad máxima del último frame entregado |
+| `STALE_FRAME_S` | 5 | API (Paso 1) | Antigüedad máxima del último frame entregado. Pasada, el Paso 1 lo ignora y el `inbox` lo suelta de memoria |
 | `RECONNECT_BACKOFF_MAX_S` | 60 | bridge | Espera máxima entre reconexiones a una cámara o a la nube |
 | `ANALYSIS_WIDTH` | 320 px | API (Paso 1) | Ancho de la imagen para detectar movimiento |
 | `BLUR_KERNEL` | 21 × 21 | API (Paso 1) | Suavizado antes de comparar |

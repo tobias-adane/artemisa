@@ -2,7 +2,8 @@
 
 Aritmética de píxeles, sin modelos. Un loop por space, porque el fondo que
 compara vive en memoria. El frame vive en el inbox hasta que llega el
-siguiente y nunca se escribe a disco.
+siguiente, o hasta que el space deja de mandar (STALE_FRAME_S), y nunca se
+escribe a disco.
 """
 
 import asyncio
@@ -16,8 +17,9 @@ from typing import Any, Literal
 import cv2
 import numpy as np
 
+from artemisa.core.config import STALE_FRAME_S
+
 CAPTURE_INTERVAL_S = 1
-STALE_FRAME_S = 5
 ANALYSIS_WIDTH = 320
 BLUR_KERNEL = (21, 21)
 PIXEL_DIFF_THRESHOLD = 25
@@ -42,13 +44,19 @@ class InboxFrame:
 
 
 class Inbox:
-    """El último frame de un space, en memoria. El anterior se suelta al llegar uno nuevo."""
+    """El último frame de un space, en memoria.
+
+    El anterior se suelta al llegar uno nuevo; el último, si el space deja de mandar.
+    """
 
     def __init__(self) -> None:
         self.latest: InboxFrame | None = None
 
     def put(self, frame: InboxFrame) -> None:
         self.latest = frame
+
+    def clear(self) -> None:
+        self.latest = None
 
 
 class MotionDetector:
@@ -106,8 +114,15 @@ class MotionLoop:
     def tick(self, now: float) -> None:
         """Una vuelta del loop: mira el último frame del inbox, si es nuevo y no está viejo."""
         latest = self.inbox.latest
-        if latest is None or latest is self._last_seen or now - latest.received_at > STALE_FRAME_S:
+        if latest is None:
+            return
+        if now - latest.received_at > STALE_FRAME_S:
+            # El space dejó de mandar: el frame se suelta de memoria (06, Subida de frames).
+            self.inbox.clear()
+            self._last_seen = None
             return  # la salud de la cámara la reporta el bridge
+        if latest is self._last_seen:
+            return
         self._last_seen = latest
         frame = cv2.imdecode(np.frombuffer(latest.jpeg, np.uint8), cv2.IMREAD_COLOR)
         if frame is None:
