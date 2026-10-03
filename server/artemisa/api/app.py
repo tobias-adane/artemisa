@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from artemisa.api.auth import Database
 from artemisa.api.routes import frames
 from artemisa.core.config import load_registry
-from artemisa.pipeline.describe import Models, SpaceInfo, on_frame
+from artemisa.pipeline.describe import Models, SpaceInfo, WorkerSignal, on_frame
 from artemisa.pipeline.motion import FrameKind, InboxFrame, MotionLoop
 
 FRAME_DEDUP_WINDOW_S = 300
@@ -23,9 +23,10 @@ log = logging.getLogger(__name__)
 class Frames:
     """Lo que vive en memoria de la API: el inbox y el loop de cada space, y los ids vistos."""
 
-    def __init__(self, db: Database, models: Models) -> None:
+    def __init__(self, db: Database, models: Models, signals: WorkerSignal) -> None:
         self.db = db
         self.models = models
+        self.signals = signals
         self.detail = load_registry().roles["describe"].image_detail
         self.loops: dict[UUID, MotionLoop] = {}
         self._spaces: dict[UUID, SpaceInfo] = {}
@@ -59,7 +60,9 @@ class Frames:
         if loop is None:
 
             async def handle(kind: FrameKind, inbox_frame: InboxFrame) -> None:
-                await on_frame(self.models, self.db, space, kind, inbox_frame, self.detail)
+                await on_frame(
+                    self.models, self.db, self.signals, space, kind, inbox_frame, self.detail
+                )
 
             loop = MotionLoop(str(space.id), space.motion_threshold, handle)
             self.loops[space.id] = loop
@@ -73,8 +76,8 @@ class Frames:
         await asyncio.gather(*self._tasks.values(), return_exceptions=True)
 
 
-def create_app(db: Database, models: Models) -> FastAPI:
-    frames_state = Frames(db, models)
+def create_app(db: Database, models: Models, signals: WorkerSignal) -> FastAPI:
+    frames_state = Frames(db, models, signals)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

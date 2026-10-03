@@ -14,6 +14,7 @@ import asyncpg
 
 from artemisa.core.config import THREAD_GAP_S
 from artemisa.pipeline.analyze import Connection, Thread, load_thread
+from artemisa.worker.main import ANALYZE_NOW, Signals, listen
 from artemisa.worker.scheduler import (
     MAX_COMPOSE_S,
     REANALYZE_FAST_WINDOW_S,
@@ -317,7 +318,7 @@ def test_the_fast_path_skips_every_wait(test_database_url: str) -> None:
     async def go(pool: asyncpg.Pool) -> Any:
         th = await thread(pool, ago(2), ago(1))  # recién empezó: sin camino rápido, esperaría
         scheduler = Scheduler(pool, analysis, clock=lambda: NOW)
-        scheduler.analyze_now(th, USER)
+        scheduler.analyze_now(th)
         await scheduler.drain()
         return th
 
@@ -343,3 +344,51 @@ def test_the_tick_respects_the_limit_per_user(test_database_url: str) -> None:
     assert narrated == count
     assert len(analysis.calls) == count
     assert analysis.peak == WORKER_CONCURRENCY_PER_USER
+
+
+# La señal analyze_now: de la API al worker
+
+
+def test_analyze_now_travels_by_notify_to_a_listening_worker(test_database_url: str) -> None:
+    """La API y el worker en procesos distintos: NOTIFY por una conexión, LISTEN por otra."""
+    analysis = FakeAnalysis()
+
+    async def go(pool: asyncpg.Pool) -> UUID:
+        th = await thread(pool, ago(2), ago(1))
+        scheduler = Scheduler(pool, analysis, clock=lambda: NOW)
+        listener = await asyncpg.connect(test_database_url)
+        try:
+            await listen(listener, scheduler)
+            await Signals(pool).signal_worker(ANALYZE_NOW, thread_id=th, fast_path=True)
+            for _ in range(50):  # la notificación llega asíncrona
+                if scheduler.urgent or analysis.calls:
+                    break
+                await asyncio.sleep(0.05)
+            await scheduler.drain()
+        finally:
+            await listener.close()
+        return th
+
+    th = run_db(test_database_url, go)
+    assert analysis.calls == [(th, True)]
+
+
+def test_in_one_process_the_signal_goes_through_memory(test_database_url: str) -> None:
+    analysis = FakeAnalysis()
+
+    async def go(pool: asyncpg.Pool) -> UUID:
+        th = await thread(pool, ago(2), ago(1))
+        scheduler = Scheduler(pool, analysis, clock=lambda: NOW)
+
+        class NoNotify:
+            async def execute(self, query: str, *args: object) -> object:
+                raise AssertionError("NOTIFY used in a single process")
+
+        await Signals(NoNotify(), scheduler).signal_worker(
+            ANALYZE_NOW, thread_id=th, fast_path=True
+        )
+        await scheduler.drain()
+        return th
+
+    th = run_db(test_database_url, go)
+    assert analysis.calls == [(th, True)]

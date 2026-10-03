@@ -21,7 +21,7 @@ from openai import AsyncOpenAI
 from artemisa.api.app import create_app
 from artemisa.api.auth import token_hash
 from artemisa.core.config import STALE_FRAME_S, load_registry
-from artemisa.core.schemas import DescribeOut
+from artemisa.core.schemas import DescribeOut, Flag
 from artemisa.pipeline import describe as describe_module
 from artemisa.pipeline import motion
 from artemisa.pipeline.describe import SpaceInfo, describe, messages_for, on_frame
@@ -33,7 +33,7 @@ from artemisa.pipeline.motion import (
     MotionLoop,
 )
 from artemisa.providers.gateway import BASE_URL, Completion, Gateway, ModelCallFailed, RunContext
-from tests.fakes import FakePool
+from tests.fakes import THREAD, FakePool
 
 TOKEN = "lab-token"
 BRIDGE = UUID("00000000-0000-4000-8000-0000000000b1")
@@ -182,6 +182,14 @@ class FakeDb:
         return None
 
 
+class FakeSignals:
+    def __init__(self) -> None:
+        self.sent: list[tuple[str, dict[str, object]]] = []
+
+    async def signal_worker(self, channel: str, **payload: object) -> None:
+        self.sent.append((channel, payload))
+
+
 OUT = DescribeOut(description="Alguien deja una caja en la puerta.", flags=[], people_count=1)
 
 
@@ -216,27 +224,36 @@ def test_describe_retries_only_on_failure() -> None:
 
 
 def test_motion_frame_updates_state_and_last_motion() -> None:
-    db = FakeDb()
+    db, signals = FakeDb(), FakeSignals()
     captured = datetime.now(UTC)
     frame = InboxFrame(b"x", captured, 0)
-    asyncio.run(on_frame(FakeModels([OUT]), db, INFO, "motion", frame, None))
+    asyncio.run(on_frame(FakeModels([OUT]), db, signals, INFO, "motion", frame, None))
     query, args = db.executed[0]
     assert query.lstrip().startswith("update spaces")
     assert args == (SPACE, OUT.description, True, captured, True)
     # y suma el layer a su thread, en una sola transacción
     events = db.pool.connection.events
     assert events == ["begin", "lock", "select_open", "insert_thread", "insert_layer", "commit"]
+    assert signals.sent == []  # sin flags, el worker lo ve en su próximo tick
+
+
+def test_an_urgent_flag_signals_the_worker_fast_path() -> None:
+    signals = FakeSignals()
+    urgent = OUT.model_copy(update={"flags": [Flag.person_on_floor]})
+    frame = InboxFrame(b"x", datetime.now(UTC), 0)
+    asyncio.run(on_frame(FakeModels([urgent]), FakeDb(), signals, INFO, "motion", frame, None))
+    assert signals.sent == [("analyze_now", {"thread_id": THREAD, "fast_path": True})]
 
 
 def test_state_frame_does_not_touch_last_motion_and_failure_drops_the_frame() -> None:
     db = FakeDb()
     frame = InboxFrame(b"x", datetime.now(UTC), 0)
-    asyncio.run(on_frame(FakeModels([OUT]), db, INFO, "state", frame, None))
+    asyncio.run(on_frame(FakeModels([OUT]), db, FakeSignals(), INFO, "state", frame, None))
     assert db.executed[0][1][4] is False
     assert db.pool.acquired == 0  # un frame de estado no crea threads ni layers
     failed = FakeDb()
     down = FakeModels([ModelCallFailed("x")] * 3)
-    asyncio.run(on_frame(down, failed, INFO, "motion", frame, None))
+    asyncio.run(on_frame(down, failed, FakeSignals(), INFO, "motion", frame, None))
     assert failed.executed == []
     assert failed.pool.acquired == 0  # sin descripción no existe un thread
 
@@ -258,7 +275,7 @@ def headers(overrides: dict[str, str] | None = None) -> dict[str, str]:
 def post_all(
     requests: list[tuple[dict[str, str], bytes]], db: FakeDb | None = None
 ) -> tuple[list[int], Any]:
-    app = create_app(db or FakeDb(), FakeModels([]))
+    app = create_app(db or FakeDb(), FakeModels([]), FakeSignals())
     motion_interval = motion.CAPTURE_INTERVAL_S
 
     async def send() -> list[int]:
@@ -384,7 +401,7 @@ def test_frames_never_touch_disk_logs_or_pipeline_runs(
 ) -> None:
     db = FakeDb()
     models = gateway_answering(OUT.model_dump(mode="json"), db)
-    app = create_app(db, models)
+    app = create_app(db, models, FakeSignals())
     quiet, moving = jpeg(scene()), jpeg(scene(box=(300, 150, 120, 120)))
     monkeypatch.setattr(motion, "CAPTURE_INTERVAL_S", 3600)
     forbid_disk_writes(monkeypatch)

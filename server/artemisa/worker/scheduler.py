@@ -161,11 +161,17 @@ class Scheduler:
     def forget(self, thread_id: UUID, _: object) -> None:
         self.running.pop(thread_id, None)
 
-    def analyze_now(self, thread_id: UUID, user_id: str) -> None:
+    def analyze_now(self, thread_id: UUID, fast_path: bool = True) -> None:
         """El camino rápido: sin esperar al tick. El lock del thread lo ordena."""
-        task = asyncio.create_task(self.process(thread_id, user_id, True))
+        task = asyncio.create_task(self.urgent_process(thread_id, fast_path))
         self.urgent.add(task)
         task.add_done_callback(self.urgent.discard)
+
+    async def urgent_process(self, thread_id: UUID, fast_path: bool) -> None:
+        async with self.pool.acquire() as conn:
+            user_id = await conn.fetchval("select user_id from threads where id = $1", thread_id)
+        if user_id is not None:
+            await self.process(thread_id, user_id, fast_path)
 
     async def process(self, thread_id: UUID, user_id: str, fast_path: bool) -> None:
         limit = self.limits.setdefault(user_id, asyncio.Semaphore(WORKER_CONCURRENCY_PER_USER))
