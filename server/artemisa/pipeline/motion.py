@@ -26,6 +26,7 @@ PIXEL_DIFF_THRESHOLD = 25
 BG_LEARNING_RATE = 0.05
 GLOBAL_CHANGE_RATIO = 0.6
 DESCRIBE_MIN_INTERVAL_S = 10
+BOOSTED_INTERVAL_S = 3
 STATE_MIN_INTERVAL_S = 300
 STATE_REFRESH_MAX_S = 3600
 DILATE_KERNEL = np.ones((3, 3), np.uint8)  # el que OpenCV usa por defecto
@@ -60,13 +61,26 @@ class Inbox:
 
 
 class MotionDetector:
-    """Decide qué frames pasan al Paso 2a. Sin refuerzo: llega en el paso 8."""
+    """Decide qué frames pasan al Paso 2a.
+
+    Con un refuerzo del Paso 3 activo, pasa un frame motion cada boost_interval_s
+    haya movimiento o no: una persona quieta en el piso no se mueve.
+    """
 
     def __init__(self, motion_threshold: float) -> None:
         self.motion_threshold = motion_threshold
         self.background: np.ndarray[Any, np.dtype[np.float32]] | None = None
         self.last_described = float("-inf")
         self.last_state = float("-inf")
+        self.boost_until = float("-inf")  # time.monotonic()
+        self.boost_interval_s: float = BOOSTED_INTERVAL_S
+
+    def boost(self, now: float, interval_s: float, duration_s: float) -> None:
+        self.boost_until = now + duration_s
+        self.boost_interval_s = interval_s
+
+    def describe_interval(self, now: float) -> float:
+        return self.boost_interval_s if now < self.boost_until else DESCRIBE_MIN_INTERVAL_S
 
     def step(self, frame: Image, now: float) -> tuple[FrameKind, float] | None:
         """Devuelve el tipo de frame que pasa al Paso 2a y la proporción cambiada, o None."""
@@ -82,6 +96,7 @@ class MotionDetector:
         mask = cv2.dilate(mask, DILATE_KERNEL)
         changed = cv2.countNonZero(mask) / mask.size
         cv2.accumulateWeighted(gray, self.background, BG_LEARNING_RATE)
+        boosted = now < self.boost_until
 
         if changed >= GLOBAL_CHANGE_RATIO:
             # Luz que se prende o apaga, infrarrojo, salto de exposición: no es movimiento.
@@ -89,8 +104,8 @@ class MotionDetector:
             if now - self.last_state >= STATE_MIN_INTERVAL_S:
                 self.last_state = now
                 return "state", changed
-        elif changed >= self.motion_threshold:
-            if now - self.last_described >= DESCRIBE_MIN_INTERVAL_S:
+        elif changed >= self.motion_threshold or boosted:
+            if now - self.last_described >= self.describe_interval(now):
                 self.last_described = now
                 return "motion", changed
         elif now - self.last_state >= STATE_REFRESH_MAX_S:

@@ -14,7 +14,7 @@ import asyncpg
 
 from artemisa.core.config import THREAD_GAP_S
 from artemisa.pipeline.analyze import Connection, Thread, load_thread
-from artemisa.worker.main import ANALYZE_NOW, Signals, listen
+from artemisa.worker.main import ANALYZE_NOW, BOOST, Signals, listen, listen_api
 from artemisa.worker.scheduler import (
     MAX_COMPOSE_S,
     REANALYZE_FAST_WINDOW_S,
@@ -392,3 +392,45 @@ def test_in_one_process_the_signal_goes_through_memory(test_database_url: str) -
 
     th = run_db(test_database_url, go)
     assert analysis.calls == [(th, True)]
+
+
+# La señal boost: del worker a la API
+
+
+class FakeApi:
+    def __init__(self) -> None:
+        self.boosts: list[tuple[UUID, float, float]] = []
+
+    def boost(self, space_id: UUID, interval_s: float, duration_s: float) -> None:
+        self.boosts.append((space_id, interval_s, duration_s))
+
+
+def test_boost_travels_by_notify_to_a_listening_api(test_database_url: str) -> None:
+    api = FakeApi()
+
+    async def go(pool: asyncpg.Pool) -> None:
+        listener = await asyncpg.connect(test_database_url)
+        try:
+            await listen_api(listener, api)
+            await Signals(pool).signal_api(BOOST, space_id=SPACE, interval_s=3, duration_s=120)
+            for _ in range(50):
+                if api.boosts:
+                    break
+                await asyncio.sleep(0.05)
+        finally:
+            await listener.close()
+
+    run_db(test_database_url, go)
+    assert api.boosts == [(SPACE, 3.0, 120.0)]
+
+
+def test_in_one_process_the_boost_goes_through_memory() -> None:
+    api = FakeApi()
+
+    class NoNotify:
+        async def execute(self, query: str, *args: object) -> object:
+            raise AssertionError("NOTIFY used in a single process")
+
+    signals = Signals(NoNotify(), api=api)
+    asyncio.run(signals.signal_api(BOOST, space_id=SPACE, interval_s=3, duration_s=120))
+    assert api.boosts == [(SPACE, 3.0, 120.0)]
