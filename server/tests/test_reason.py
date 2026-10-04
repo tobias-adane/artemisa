@@ -182,9 +182,24 @@ def test_trigger_phrases_live_in_one_place() -> None:
         reason.TRIGGER_EMERGENCY,
         reason.TRIGGER_LOW_CONFIDENCE,
         reason.TRIGGER_UNFAMILIAR,
+        reason.TRIGGER_ESCALATE,
+        reason.TRIGGER_MORE_SERIOUS,
     ]
     for path in (ROOT / "server" / "artemisa").rglob("*.py"):
         if path.name == "reason.py":
             continue
         source = path.read_text(encoding="utf-8")
         assert not any(f'"{phrase}"' in source for phrase in phrases), path
+
+
+def test_trigger_phrases_are_the_ones_documented_in_03() -> None:
+    doc = (ROOT / "docs" / "03-ALGORITMO.md").read_text(encoding="utf-8")
+    documented = re.findall(r"^  \| [^|]+ \| `([^`]+)` \|$", doc, re.MULTILINE)
+    assert documented == [
+        reason.TRIGGER_URGENT_FLAG,
+        reason.TRIGGER_EMERGENCY,
+        reason.TRIGGER_LOW_CONFIDENCE,
+        reason.TRIGGER_UNFAMILIAR,
+        reason.TRIGGER_ESCALATE,
+        reason.TRIGGER_MORE_SERIOUS,
+    ]

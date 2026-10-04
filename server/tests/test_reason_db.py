@@ -217,6 +217,16 @@ def test_escalate_uses_its_own_reason(test_database_url: str) -> None:
     assert "Escalated because: handle moved" in models.reason_prompt()
 
 
+def test_escalate_without_a_reason_says_so(test_database_url: str) -> None:
+    models = FakeModels(classification="normal", confidence=0.9, escalate=True)
+
+    async def go(pool: asyncpg.Pool) -> None:
+        await Setup(pool, models).analyze(await moment(pool))
+
+    run_db(test_database_url, go)
+    assert "Escalated because: first pass asked for a closer look" in models.reason_prompt()
+
+
 # Un desconocido que vuelve: threads distintos
 
 
@@ -286,6 +296,9 @@ def test_a_reasoned_thread_is_reasoned_again_only_if_it_gets_worse(test_database
         setup.analysis.models = worse
         setup.analysis.reasoner.models = worse  # type: ignore[attr-defined]
         await setup.analyze(th)
+        assert "Escalated because: more serious than the last careful look" in (
+            worse.reason_prompt()
+        )
         return same.roles() + worse.roles(), len(setup.signals.sent)
 
     roles, boosts = run_db(test_database_url, go)
