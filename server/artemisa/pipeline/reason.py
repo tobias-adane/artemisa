@@ -48,7 +48,6 @@ TRIGGER_URGENT_FLAG = "urgent flag"
 TRIGGER_EMERGENCY = "emergency on first pass"
 TRIGGER_LOW_CONFIDENCE = "low-confidence attention"
 TRIGGER_UNFAMILIAR = "unfamiliar person returning"
-# Pendientes de OK: casos de 03 sin frase aprobada.
 TRIGGER_ESCALATE = "first pass asked for a closer look"  # escalate sin escalate_reason
 TRIGGER_MORE_SERIOUS = "more serious than the last careful look"  # ya razonado, sube
 

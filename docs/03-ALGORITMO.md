@@ -552,7 +552,16 @@ Notas de implementación (paso 8):
   desconocido y un layer dentro de `UNFAMILIAR_WINDOW_S`.
 - **`{escalate_reason | trigger}`:** si el análisis no dio `escalate_reason`, va
   una frase corta en inglés con la regla que activó el Paso 3. Viven en
-  `pipeline/reason.py` y solo las lee el modelo.
+  `pipeline/reason.py` y solo las lee el modelo:
+
+  | Regla | Frase |
+  |---|---|
+  | Camino rápido o flags urgentes nuevos | `urgent flag` |
+  | El análisis dijo `emergency` | `emergency on first pass` |
+  | `attention` con confianza menor a `LOW_CONFIDENCE` | `low-confidence attention` |
+  | Desconocido en otro thread dentro de `UNFAMILIAR_WINDOW_S` | `unfamiliar person returning` |
+  | `escalate: true` sin `escalate_reason` | `first pass asked for a closer look` |
+  | Ya razonado, y el análisis nuevo es más grave | `more serious than the last careful look` |
 - **"WHOLE HOME"** muestra cada thread con día y hora local del usuario
   (`Sat 14:40`).
 
