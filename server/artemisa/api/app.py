@@ -70,6 +70,14 @@ class Frames:
             log.info("space %s (%s): motion loop started", space.id, space.name)
         loop.inbox.put(frame)
 
+    def boost(self, space_id: UUID, interval_s: float, duration_s: float) -> None:
+        """El refuerzo del Paso 3. Sin loop para ese space, no hay nada que reforzar acá."""
+        loop = self.loops.get(space_id)
+        if loop is None:
+            return
+        loop.detector.boost(time.monotonic(), interval_s, duration_s)
+        log.info("space %s: boosted for %.0f s (every %.0f s)", space_id, duration_s, interval_s)
+
     async def close(self) -> None:
         for task in self._tasks.values():
             task.cancel()

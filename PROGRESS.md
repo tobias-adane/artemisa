@@ -1,8 +1,8 @@
 # Progreso
 
 **Fase actual:** Fase 0, laboratorio.
-**Paso en curso:** 8.
-**Siguiente:** 9.
+**Paso en curso:** 9.
+**Siguiente:** 10.
 
 Al terminar cada paso: tests y chequeos limpios, marcar el paso acá y hacer
 commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
@@ -16,7 +16,7 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 - [x] 5. Paso 1 y Paso 2a en la API: endpoint de frames, movimiento, descripción, estado del space.
 - [x] 6. Sesionización y threads en composing.
 - [x] 7. `LISTEN` / `NOTIFY`, scheduler y Paso 2b.
-- [ ] 8. Paso 3 con refuerzo.
+- [x] 8. Paso 3 con refuerzo.
 - [ ] 9. Paso 4 con notificaciones y `dispatches`; salud de la caja y de las cámaras.
 - [ ] 10. `artemisa-lab report`.
 - [ ] 11. App: RN Reusables, tokens, fuentes, textos, layout, modo laboratorio.
@@ -49,13 +49,14 @@ quedó a medias.)
   los logs. El test de la guarda de `05` simula el solo-lectura a nivel Python y
   no ve escrituras de código nativo. Revisión de privacidad del paso 5,
   hallazgo 4.
-- **Límite conocido del paso 7: `analyze` solo guarda.** No llama al Paso 3
-  (`needs_reasoning`, paso 8) ni al Paso 4 (`act`, paso 9). Un `attention`
-  queda sin acción hasta el paso 9. Con `ANALYSIS_MAX_FAILURES` fallos y un flag
+- **Límite conocido de los pasos 7 y 8: nadie actúa todavía.** El Paso 3 guarda
+  su decisión y calcula el nivel (`resolve_action_level`), pero solo lo
+  loguea: `act` es del paso 9. Un `attention` queda sin acción hasta el paso 9,
+  y también el `informar` o el aviso de resguardo cuando falla el Paso 3. Con `ANALYSIS_MAX_FAILURES` fallos y un flag
   urgente, la narrativa pasa a `fallback.urgentNarrative`, pero el aviso de
   resguardo se ejecuta recién en el paso 9.
-- **Worker en el laboratorio.** Corre dentro de `artemisa-lab` y la señal
-  `analyze_now` va por memoria. `LISTEN` / `NOTIFY` está hecho y probado contra
+- **Worker en el laboratorio.** Corre dentro de `artemisa-lab` y las señales
+  `analyze_now` y `boost` van por memoria. `LISTEN` / `NOTIFY` está hecho y probado contra
   Postgres para cuando el worker sea otro proceso. El punto de entrada
   `artemisa-worker` no está en `pyproject.toml` todavía.
 - **Para revisar en el laboratorio:** `last_analyzed_at` es la hora al terminar
@@ -65,3 +66,31 @@ quedó a medias.)
   traduce: si las custom instructions están en inglés y los layers en
   castellano, casi no coincide. Además, palabras comunes como "door" o "home"
   pueden mandar casi todo a `analyze_hard`. Medirlo con `report` (paso 10).
+- **Historia de 48 h del Paso 3 sin tope (pasos 10 y 17).** En el laboratorio
+  entra entera al prompt de `reason`. En una casa real con mucha actividad
+  puede crecer mucho: medir `input_tokens` de `reason` en `pipeline_runs` antes
+  de la Fase 1.
+
+- **Ida y vuelta entre el Paso 2b y el Paso 3 (pasos 10 y 17).** Si el Paso 2b
+  sigue diciendo `attention` y el Paso 3 decidió `normal`, cada reanálisis es
+  "más grave" y vuelve a mandar el thread al Paso 3 (regla de 03). En la prueba
+  de punta a punta con el modelo simulado, un thread de 4 minutos se razonó 3
+  veces, con un solo refuerzo. Además, la confianza baja del primer análisis
+  queda y los siguientes van a `analyze_hard`. Medir cuánto pasa y cuánto
+  cuesta.
+
+### Para el paso 17 (hallazgos de las pruebas del paso 7)
+
+1. **Un desconocido sale `attention` por la instrucción nocturna.** Con el
+   contexto de una casa, todo thread con una persona desconocida salió
+   `attention` (0,78 a 0,86). Con el contexto de la escuela salió `normal`. Con
+   esa confianza no pasa por el Paso 3 (umbral `LOW_CONFIDENCE` 0,6): entra
+   solo si el desconocido vuelve en otro thread dentro de la hora o si el
+   análisis pide `escalate`.
+2. **Las palabras vigiladas mandan casi todo a `analyze_hard`** cuando
+   comparten palabras comunes del lugar (por ejemplo "staircase").
+3. **Falso positivo del Paso 1:** un frame de movimiento sin persona (una
+   puerta, una luz) abrió un thread.
+4. **"Avisame si alguien que no conozco viene" no se puede responder** mirando
+   un frame sin reconocimiento de personas. Hay que decidir cómo se pide esa
+   instrucción, o cómo responde Artemisa cuando no puede saberlo.

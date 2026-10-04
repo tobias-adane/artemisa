@@ -26,6 +26,7 @@ from artemisa.pipeline import describe as describe_module
 from artemisa.pipeline import motion
 from artemisa.pipeline.describe import SpaceInfo, describe, messages_for, on_frame
 from artemisa.pipeline.motion import (
+    BOOSTED_INTERVAL_S,
     DESCRIBE_MIN_INTERVAL_S,
     STATE_REFRESH_MAX_S,
     InboxFrame,
@@ -107,6 +108,47 @@ def test_threshold_is_per_space() -> None:
     picky.step(scene(), 0)
     picky.last_state = 0
     assert picky.step(scene(box=(300, 150, 120, 120)), 1) is None
+
+
+# Paso 1: refuerzo del Paso 3
+
+
+def test_a_boost_passes_still_frames_every_boosted_interval() -> None:
+    """Una persona quieta en el piso no se mueve: con refuerzo pasa igual."""
+    detector = MotionDetector(0.02)
+    detector.step(scene(), 0)
+    detector.last_state = 0
+    assert detector.step(scene(), 1) is None  # quieto y sin refuerzo: nada
+    detector.boost(1, BOOSTED_INTERVAL_S, 120)
+    first = detector.step(scene(), 2)
+    assert first is not None and first[0] == "motion" and first[1] < 0.02
+    assert detector.step(scene(), 2 + BOOSTED_INTERVAL_S - 1) is None
+    assert detector.step(scene(), 2 + BOOSTED_INTERVAL_S) is not None
+    assert detector.step(scene(), 121) is None  # vencido: vuelve a la regla de siempre
+
+
+def test_a_boost_shortens_the_interval_between_moving_frames() -> None:
+    detector = MotionDetector(0.02)
+    detector.step(scene(), 0)
+    detector.last_state = 0
+    detector.boost(0, BOOSTED_INTERVAL_S, 120)
+    assert detector.step(scene(box=(300, 150, 120, 120)), 1) is not None
+    later = detector.step(scene(box=(200, 100, 120, 120)), 1 + BOOSTED_INTERVAL_S)
+    assert later is not None  # sin refuerzo serían 10 s
+
+
+def test_a_light_change_during_a_boost_is_still_state() -> None:
+    detector = MotionDetector(0.02)
+    detector.step(scene(light=40), 0)
+    detector.boost(0, BOOSTED_INTERVAL_S, 120)
+    result = detector.step(scene(light=200), 1)
+    assert result is not None and result[0] == "state"
+
+
+def test_the_api_boosts_only_spaces_whose_loop_it_has() -> None:
+    frames = create_app(FakeDb(), FakeModels([]), FakeSignals()).state.frames
+    frames.boost(uuid4(), BOOSTED_INTERVAL_S, 120)  # sin loop: no pasa nada
+    assert frames.loops == {}
 
 
 # Paso 1: loop
@@ -432,3 +474,40 @@ def test_frames_never_touch_disk_logs_or_pipeline_runs(
     assert "\\xff\\xd8" not in stored and "ÿØ" not in stored
     assert REASONING_SECRET not in stored
     assert TOKEN not in caplog.text
+
+
+def test_boosted_still_frames_never_touch_disk_or_logs(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """El refuerzo manda frames sin movimiento a describir: siguen sin tocar disco ni logs."""
+    db = FakeDb()
+    models = gateway_answering(OUT.model_dump(mode="json"), db)
+    app = create_app(db, models, FakeSignals())
+    still = [jpeg(scene(light=40 + i)) for i in range(3)]  # tres frames quietos, distintos
+    monkeypatch.setattr(motion, "CAPTURE_INTERVAL_S", 3600)
+    forbid_disk_writes(monkeypatch)
+
+    async def scenario() -> None:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://api") as client:
+            for i, body in enumerate(still):
+                response = await client.post("/v1/frames", headers=headers(), content=body)
+                assert response.status_code == 202
+                loop = app.state.frames.loops[SPACE]
+                if i == 0:
+                    loop.detector.last_state = loop.inbox.latest.received_at
+                    app.state.frames.boost(SPACE, 0, 120)  # cada frame, para el test
+                loop.tick(loop.inbox.latest.received_at)
+            await asyncio.gather(*loop._tasks)
+        await app.state.frames.close()
+
+    with caplog.at_level(logging.DEBUG):
+        asyncio.run(scenario())
+
+    runs = [args for query, args in db.executed if "pipeline_runs" in query]
+    assert len(runs) == 2  # los dos frames quietos pasaron por el refuerzo
+    stored = caplog.text + repr(runs)
+    for image in still:
+        assert base64.b64encode(image)[:40].decode() not in stored
+    assert "/9j/" not in stored
+    assert "\\xff\\xd8" not in stored and "ÿØ" not in stored

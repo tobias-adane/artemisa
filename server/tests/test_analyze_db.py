@@ -13,7 +13,8 @@ import asyncpg
 from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 
-from artemisa.pipeline.analyze import ANALYSIS_MAX_FAILURES, Analysis, load_thread
+from artemisa.core.schemas import AnalysisOut
+from artemisa.pipeline.analyze import ANALYSIS_MAX_FAILURES, Analysis, Thread, load_thread
 from artemisa.pipeline.sessionize import add_layer
 from artemisa.providers.gateway import Completion, ModelCallFailed, RunContext
 
@@ -60,6 +61,18 @@ class FakeModels:
         return str(self.calls[-1][1][1]["content"])
 
 
+class NoReasoning:
+    """Estos tests miran el Paso 2b: el Paso 3 no se activa."""
+
+    async def trigger(self, conn: Any, th: Thread, out: AnalysisOut, fast_path: bool) -> None:
+        return None
+
+    async def reason(
+        self, conn: Any, th: Thread, first: AnalysisOut, trigger: str, urgent: bool
+    ) -> Thread:
+        raise AssertionError("step 3 not expected")
+
+
 def run_db[T](url: str, scenario: Callable[[asyncpg.Pool], Awaitable[T]]) -> T:
     async def main() -> T:
         pool = await asyncpg.create_pool(url, min_size=1, max_size=4)
@@ -98,7 +111,7 @@ async def analyze_once(pool: asyncpg.Pool, models: FakeModels, thread_id: UUID) 
     async with pool.acquire() as conn:
         th = await load_thread(conn, thread_id)
         assert th is not None
-        await Analysis(models, clock=lambda: NOW).analyze(conn, th)
+        await Analysis(models, NoReasoning(), clock=lambda: NOW).analyze(conn, th)
     return await pool.fetchrow("select * from threads where id = $1", thread_id)
 
 
