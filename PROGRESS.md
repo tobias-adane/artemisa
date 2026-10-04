@@ -1,8 +1,8 @@
 # Progreso
 
 **Fase actual:** Fase 0, laboratorio.
-**Paso en curso:** 9.
-**Siguiente:** 10.
+**Paso en curso:** 10.
+**Siguiente:** 11.
 
 Al terminar cada paso: tests y chequeos limpios, marcar el paso acá y hacer
 commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
@@ -17,7 +17,7 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 - [x] 6. Sesionización y threads en composing.
 - [x] 7. `LISTEN` / `NOTIFY`, scheduler y Paso 2b.
 - [x] 8. Paso 3 con refuerzo.
-- [ ] 9. Paso 4 con notificaciones y `dispatches`; salud de la caja y de las cámaras.
+- [x] 9. Paso 4 con notificaciones y `dispatches`; salud de la caja y de las cámaras.
 - [ ] 10. `artemisa-lab report`.
 - [ ] 11. App: RN Reusables, tokens, fuentes, textos, layout, modo laboratorio.
 - [ ] 12. App: Home en tiempo real.
@@ -32,12 +32,10 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 (Lo que haga falta recordar entre sesiones: decisiones chicas, bloqueos, qué
 quedó a medias.)
 
-- **Canal de control, lado servidor: paso 9.** El bridge ya lo usa desde el
-  paso 4, pero `/v1/bridges/connect` en la API va en el paso 9: autenticación
-  con el token del bridge, `last_seen_at` con cada mensaje, `hello` y
-  `heartbeat` en `bridges`, `health` en `spaces`. Los comandos de la nube se
-  suman encima: `start_stream` y `stop_stream` en el paso 14, `add_camera` y
-  `remove_camera` en el paso 16.
+- **Canal de control: comandos de la nube.** El lado servidor está desde el
+  paso 9 (`hello`, `heartbeat`, `health`). Los comandos se suman encima:
+  `start_stream` y `stop_stream` en el paso 14, `add_camera` y `remove_camera`
+  en el paso 16.
 - **Al agregar Sentry** (entra en la Fase 0 según `08`, pero ningún paso lo
   nombra): configurarlo con `include_local_variables=False`,
   `send_default_pii=False` y `max_request_body_size="never"`. `jpeg`, `body` y

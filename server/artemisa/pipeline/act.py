@@ -116,12 +116,9 @@ class Actions:
             chosen.value,
         )
         ok = await self.sms.send(thread_text(home["space_name"], home["narrative"] or ""))
-        await db.execute(
-            "update dispatches set status = $2 where id = $1",
-            dispatch_id,
-            "sent" if ok else "failed",
-        )
-        log.info("thread %s: %s, dispatch %s %s", th.id, level.value, dispatch_id, ok)
+        status = "sent" if ok else "failed"
+        await db.execute("update dispatches set status = $2 where id = $1", dispatch_id, status)
+        log.info("thread %s: %s, dispatch %s %s", th.id, level.value, dispatch_id, status)
 
     async def notice(self, db: Db, user_id: str, key: str, **values: datetime | str) -> bool:
         """Un aviso de sistema con su texto de core/locales, en el idioma y la hora del usuario.

@@ -627,6 +627,22 @@ async def act(th, level, *, interruption=None, ignore_quiet=False):
             await emergency_protocol(th)         # ventana de cancelación primero
 ```
 
+Notas de implementación (paso 9, Fase 0):
+
+- **En la Fase 0 `push` es un SMS** al titular (`00-DECISIONES.md`, 11), con
+  canal `sms`. El nivel de interrupción se guarda en `dispatches.interruption`
+  aunque el SMS no lo distinga. `informar` en quiet hours no se manda;
+  `alertar`, sí.
+- **El SMS de un thread es `{space}: {narrativa}`**, en un solo segmento: 160
+  caracteres, o 70 si hay algún carácter fuera de GSM-7 (como á, í, ó, ú). Se
+  corta en el límite de una palabra con `...` y nunca queda vacío. Los avisos de
+  sistema no se cortan: son textos fijos de `02-PRODUCTO.md`.
+- **Subir el nivel es una sola sentencia**
+  (`update threads set action = ... where action_rank(action) < ...`): dos
+  llamadas a la vez no mandan dos avisos.
+- El estado del dispatch es `sent` o `failed` según la respuesta del envío. El
+  estado de entrega real necesita una URL pública para los avisos de Twilio.
+
 - `push` primero escribe una fila en `dispatches` (`queued`), después envía la
   notificación con `thread_id` y `dispatch_id` en los datos, y actualiza el
   estado con los recibos del proveedor (entregado, abierto, fallido).

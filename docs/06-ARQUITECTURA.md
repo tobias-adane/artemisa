@@ -506,6 +506,10 @@ base le avisa a la app. Así el backend no necesita saber si la app está abiert
 
 ## Notificaciones
 
+**En la Fase 0 los avisos salen por SMS** (`providers/twilio.py`, ver
+`00-DECISIONES.md`, 11). Lo que sigue describe el push de Expo, que vuelve con
+la app.
+
 - La app registra su token de Expo Push con `POST /v1/devices`.
 - El backend envía por Expo Push Service: título con el nombre del space, cuerpo
   con la narrativa, y en los datos el `thread_id` (para abrir el detalle) y el
@@ -565,9 +569,9 @@ RELAY_HLS_PUBLIC_URL=
 MODELS_CONFIG=artemisa/core/models.yaml
 PROVISION_ADMIN_TOKEN=                  # Fase 1, solo lo usa el script de preparación
 SENTRY_DSN=
-TWILIO_ACCOUNT_SID=                     # Fase 2a
-TWILIO_AUTH_TOKEN=                      # Fase 2a
-TWILIO_FROM_NUMBER=                     # Fase 2a
+TWILIO_ACCOUNT_SID=                     # Fase 0: SMS, solo con SMS_MODE=live (00-DECISIONES, 11)
+TWILIO_AUTH_TOKEN=                      # Fase 0: SMS, solo con SMS_MODE=live
+TWILIO_FROM_NUMBER=                     # Fase 0: SMS, solo con SMS_MODE=live
 ```
 
 ### Bridge
@@ -586,6 +590,8 @@ LAB_BRIDGE_TOKEN=                       # token del bridge de laboratorio
 LAB_SECRETS_KEY=                        # clave del archivo cifrado de credenciales
 VIDEO_SOURCE=                           # ruta a un .mp4 en lugar de la cámara RTSP
 DEBUG_SAVE_FRAMES=false                 # ver 08-CONSTRUCCION.md
+SMS_MODE=log                            # log (no envía) o live (envía, con tope por hora)
+LAB_SMS_TO=                             # número que recibe los SMS, solo con SMS_MODE=live
 ```
 
 Estas variables las lee solo `artemisa-lab`. El bridge que se distribuye en la
@@ -608,6 +614,7 @@ Fase 1 no las conoce.
 | Descripciones, narrativas, razonamientos | Se generan en la nube | Supabase | Sí, según retención |
 | Voz del usuario | No | Reconocimiento del teléfono (en el dispositivo cuando está disponible) | No |
 | Texto que Artemisa lee en voz alta | Sí | API → proveedor de voz | No |
+| Aviso por SMS (Fase 0): nombre del space y narrativa, o un aviso de sistema | Sí, solo con `SMS_MODE=live` | Worker o API → Twilio → teléfono del titular | Twilio guarda el mensaje según sus términos |
 
 ---
 
