@@ -14,6 +14,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 
 from artemisa.core.schemas import ReasoningOut
+from artemisa.pipeline.act import Actions
 from artemisa.pipeline.analyze import Analysis, load_thread
 from artemisa.pipeline.reason import (
     BOOST_DURATION_S,
@@ -23,6 +24,7 @@ from artemisa.pipeline.reason import (
 )
 from artemisa.pipeline.sessionize import add_layer
 from artemisa.providers.gateway import Completion, ModelCallFailed, RunContext
+from tests.fakes import FakeSms
 
 USER = "user_test"
 DOOR = UUID("00000000-0000-4000-8000-0000000000a1")
@@ -52,8 +54,11 @@ def ago(seconds: float) -> datetime:
 
 
 class FakeModels:
-    def __init__(self, fail_reason: bool = False, **first: Any) -> None:
+    def __init__(
+        self, fail_reason: bool = False, decision: dict[str, Any] | None = None, **first: Any
+    ) -> None:
         self.first = FIRST | first
+        self.decision = DECISION | (decision or {})
         self.fail_reason = fail_reason
         self.calls: list[tuple[str, list[ChatCompletionMessageParam]]] = []
 
@@ -69,7 +74,7 @@ class FakeModels:
             assert context.step.value == "reason"
             if self.fail_reason:
                 raise ModelCallFailed("reason: provider unavailable")
-            return Completion(schema.model_validate(DECISION), role)
+            return Completion(schema.model_validate(self.decision), role)
         return Completion(schema.model_validate(self.first), role)
 
     def roles(self) -> list[str]:
@@ -101,8 +106,10 @@ class Setup:
             if self.during_wait is not None:
                 await self.during_wait()
 
-        reasoning = Reasoning(models, self.signals, clock=lambda: NOW, sleep=sleep)
-        self.analysis = Analysis(models, reasoning, clock=lambda: NOW)
+        self.sms = FakeSms()
+        actions = Actions(self.sms, clock=lambda: NOW)
+        reasoning = Reasoning(models, self.signals, actions, clock=lambda: NOW, sleep=sleep)
+        self.analysis = Analysis(models, reasoning, actions, clock=lambda: NOW)
 
     async def analyze(self, thread_id: UUID, fast_path: bool = False) -> Any:
         async with self.pool.acquire() as conn:
@@ -366,7 +373,7 @@ def test_a_failed_reasoning_leaves_the_thread_not_reasoned(test_database_url: st
     row = run_db(test_database_url, go)
     assert row["escalated_to_reasoning"] is False and row["last_reasoned_at"] is None
     assert row["classification"] == "attention"  # queda lo del Paso 2b
-    assert row["action"] is None
+    assert row["action"] == "informar"  # 03: si dijo attention, informar
 
 
 def test_the_whole_home_of_the_last_48_hours_is_in_context(test_database_url: str) -> None:
@@ -389,3 +396,32 @@ def test_the_whole_home_of_the_last_48_hours_is_in_context(test_database_url: st
     prompt = models.reason_prompt()
     assert "- Fri 18:40 Kitchen [normal] Cena en la cocina." in prompt
     assert "Hace tres días." not in prompt
+
+
+# Paso 4: el nivel que resuelve el Paso 3 se convierte en un aviso
+
+
+def test_a_severe_attention_from_step_3_alerts_by_sms(test_database_url: str) -> None:
+    models = FakeModels(decision={"classification": "attention", "severity_high": True})
+
+    async def go(pool: asyncpg.Pool) -> tuple[Any, Setup, list[Any]]:
+        setup = Setup(pool, models)
+        row = await setup.analyze(await moment(pool))
+        rows = await pool.fetch("select level::text, interruption::text from dispatches")
+        return row, setup, rows
+
+    row, setup, rows = run_db(test_database_url, go)
+    assert row["action"] == "alertar"
+    assert [tuple(r) for r in rows] == [("alertar", "time_sensitive")]
+    assert setup.sms.texts == [f"Front Door: {DECISION['narrative']}"]
+
+
+def test_a_normal_decision_sends_nothing(test_database_url: str) -> None:
+    models = FakeModels()
+
+    async def go(pool: asyncpg.Pool) -> tuple[Any, Setup]:
+        setup = Setup(pool, models)
+        return await setup.analyze(await moment(pool)), setup
+
+    row, setup = run_db(test_database_url, go)
+    assert row["action"] is None and setup.sms.texts == []

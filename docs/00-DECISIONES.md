@@ -155,3 +155,22 @@ este repo.
   privacidad y se verifican sus términos de retención antes de la Fase 1.
 - Integrado en `04-MODELOS.md`, `08-CONSTRUCCION.md`, `models.yaml` y
   `CLAUDE.md`.
+
+---
+
+## 2026-10-04
+
+### 11. Avisos por SMS en la Fase 0
+
+- En la Fase 0 los avisos del Paso 4 y los avisos de sistema (casa sin señal,
+  casa de vuelta, cámara sin conexión) salen **por SMS**, no por Expo Push: la
+  app todavía no existe. **El push vuelve con la app.**
+- `dispatch_channel` suma el valor `sms` (`supabase/migrations/0002_dispatch_sms.sql`).
+- Proveedor: Twilio, por su API REST con `httpx`, en `providers/twilio.py`, sin
+  dependencia nueva. Claves en `server/.env`: `TWILIO_ACCOUNT_SID`,
+  `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`.
+- El número de destino es `LAB_SMS_TO`, una variable solo del laboratorio. El
+  esquema no tiene teléfonos.
+- `SMS_MODE=log` por defecto: registra el aviso sin enviarlo. `SMS_MODE=live`
+  envía, con un tope duro de envíos por hora.
+- La llamada de voz al titular sigue en la Fase 2a. No se escribe nada de ella.

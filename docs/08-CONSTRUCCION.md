@@ -35,7 +35,7 @@ artemisa/
     pyproject.toml
     artemisa/
       core/                 config, models.py, schemas.py, models.yaml, prompts/, costs.py
-      providers/            gateway.py, expo_push.py, twilio.py (Fase 2a)
+      providers/            gateway.py, expo_push.py, twilio.py (SMS en la Fase 0, llamadas en la 2a)
       bridge/               go2rtc.py, reader.py, uploader.py, control.py, stream.py,
                             secrets.py, discovery.py (Fase 1), recorder.py (Fase 1)
       pipeline/             motion.py, describe.py, sessionize.py, context.py, analyze.py,

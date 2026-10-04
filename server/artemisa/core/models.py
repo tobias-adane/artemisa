@@ -56,6 +56,7 @@ class DispatchChannel(StrEnum):
     push = "push"
     call = "call"
     whatsapp = "whatsapp"
+    sms = "sms"
 
 
 class DispatchTarget(StrEnum):

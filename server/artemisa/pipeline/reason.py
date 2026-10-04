@@ -2,7 +2,7 @@
 
 Una segunda mirada, más cara y rara: ve toda la casa de las últimas horas y,
 si el thread sigue abierto, pide un refuerzo del Paso 1 antes de decidir. En la
-Fase 0, hasta el paso 9, solo guarda la decisión: no actúa.
+Fase 0 el nivel que resuelve se convierte en un aviso por SMS (pipeline/act.py).
 """
 
 import asyncio
@@ -15,10 +15,11 @@ from zoneinfo import ZoneInfo
 
 from openai.types.chat import ChatCompletionMessageParam
 
-from artemisa.core.models import ActionLevel, PipelineStep
+from artemisa.core.models import ActionLevel, PipelineStep, PushInterruption
 from artemisa.core.schemas import AnalysisOut, Classification, ReasoningOut
 from artemisa.pipeline.analyze import (
     LOW_CONFIDENCE,
+    Acting,
     Connection,
     Thread,
     reload,
@@ -144,11 +145,13 @@ class Reasoning:
         self,
         models: Models,
         signals: ApiSignal,
+        actions: Acting,
         clock: Callable[[], datetime] = utcnow,
         sleep: Callable[[float], Awaitable[Any]] = asyncio.sleep,
     ) -> None:
         self.models = models
         self.signals = signals
+        self.actions = actions
         self.clock = clock
         self.sleep = sleep
 
@@ -184,9 +187,20 @@ class Reasoning:
             out = (await self.models.complete("reason", messages, ReasoningOut, context)).output
         except ModelCallFailed:
             # El thread no queda razonado: el próximo análisis puede volver a intentarlo.
-            # El aviso de resguardo y el informar de 03 llegan con el paso 9.
             log.warning("thread %s: reasoning failed", th.id)
-            return th
+            if first.classification == Classification.emergency or any(
+                layer.flags for layer in ctx.layers
+            ):
+                await self.actions.act(  # el aviso de resguardo (03, Fallos y bordes)
+                    conn,
+                    th,
+                    ActionLevel.informar,
+                    PushInterruption.time_sensitive,
+                    ignore_quiet=True,
+                )
+            elif first.classification == Classification.attention:
+                await self.actions.act(conn, th, ActionLevel.informar)
+            return await reload(conn, th.id)
         await update_thread(
             conn,
             th.id,
@@ -201,12 +215,15 @@ class Reasoning:
         )
         level = resolve_action_level(out.classification, out.severity_high)
         log.info(
-            "thread %s: reasoned (%s, severity_high %s, level %s; acting comes in step 9)",
+            "thread %s: reasoned (%s, severity_high %s, level %s)",
             th.id,
             out.classification.value,
             out.severity_high,
             level.value if level else "none",
         )
+        th = await reload(conn, th.id)
+        if level is not None:
+            await self.actions.act(conn, th, level)
         return await reload(conn, th.id)
 
 
