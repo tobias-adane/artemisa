@@ -10,6 +10,7 @@ from uuid import UUID
 from fastapi import FastAPI
 
 from artemisa.api.auth import Database
+from artemisa.api.bridge_hub import Notices, control_router
 from artemisa.api.routes import frames
 from artemisa.core.config import load_registry
 from artemisa.pipeline.describe import Models, SpaceInfo, WorkerSignal, on_frame
@@ -84,7 +85,7 @@ class Frames:
         await asyncio.gather(*self._tasks.values(), return_exceptions=True)
 
 
-def create_app(db: Database, models: Models, signals: WorkerSignal) -> FastAPI:
+def create_app(db: Database, models: Models, signals: WorkerSignal, notices: Notices) -> FastAPI:
     frames_state = Frames(db, models, signals)
 
     @asynccontextmanager
@@ -95,4 +96,5 @@ def create_app(db: Database, models: Models, signals: WorkerSignal) -> FastAPI:
     app = FastAPI(title="Artemisa", lifespan=lifespan)
     app.state.frames = frames_state
     app.include_router(frames.router)
+    app.include_router(control_router(db, notices))
     return app

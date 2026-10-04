@@ -146,7 +146,7 @@ def test_a_light_change_during_a_boost_is_still_state() -> None:
 
 
 def test_the_api_boosts_only_spaces_whose_loop_it_has() -> None:
-    frames = create_app(FakeDb(), FakeModels([]), FakeSignals()).state.frames
+    frames = create_app(FakeDb(), FakeModels([]), FakeSignals(), FakeNotices()).state.frames
     frames.boost(uuid4(), BOOSTED_INTERVAL_S, 120)  # sin loop: no pasa nada
     assert frames.loops == {}
 
@@ -222,6 +222,11 @@ class FakeDb:
         if space_id == FOREIGN_SPACE:
             return {**INFO.__dict__, "id": FOREIGN_SPACE, "bridge_id": OTHER_BRIDGE}
         return None
+
+
+class FakeNotices:
+    async def notice(self, db: Any, user_id: str, key: str, **values: Any) -> bool:
+        return True
 
 
 class FakeSignals:
@@ -317,7 +322,7 @@ def headers(overrides: dict[str, str] | None = None) -> dict[str, str]:
 def post_all(
     requests: list[tuple[dict[str, str], bytes]], db: FakeDb | None = None
 ) -> tuple[list[int], Any]:
-    app = create_app(db or FakeDb(), FakeModels([]), FakeSignals())
+    app = create_app(db or FakeDb(), FakeModels([]), FakeSignals(), FakeNotices())
     motion_interval = motion.CAPTURE_INTERVAL_S
 
     async def send() -> list[int]:
@@ -443,7 +448,7 @@ def test_frames_never_touch_disk_logs_or_pipeline_runs(
 ) -> None:
     db = FakeDb()
     models = gateway_answering(OUT.model_dump(mode="json"), db)
-    app = create_app(db, models, FakeSignals())
+    app = create_app(db, models, FakeSignals(), FakeNotices())
     quiet, moving = jpeg(scene()), jpeg(scene(box=(300, 150, 120, 120)))
     monkeypatch.setattr(motion, "CAPTURE_INTERVAL_S", 3600)
     forbid_disk_writes(monkeypatch)
@@ -482,7 +487,7 @@ def test_boosted_still_frames_never_touch_disk_or_logs(
     """El refuerzo manda frames sin movimiento a describir: siguen sin tocar disco ni logs."""
     db = FakeDb()
     models = gateway_answering(OUT.model_dump(mode="json"), db)
-    app = create_app(db, models, FakeSignals())
+    app = create_app(db, models, FakeSignals(), FakeNotices())
     still = [jpeg(scene(light=40 + i)) for i in range(3)]  # tres frames quietos, distintos
     monkeypatch.setattr(motion, "CAPTURE_INTERVAL_S", 3600)
     forbid_disk_writes(monkeypatch)

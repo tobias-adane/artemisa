@@ -3,13 +3,16 @@
 Corre la API (paso 5), el bridge (paso 4) y el worker (paso 7). VIDEO_SOURCE
 entra a go2rtc como la cámara del space "Front Door" de user_lab; el bridge
 entrega un frame por segundo a la API, que detecta movimiento y describe, y el
-worker narra cada thread y, cuando hace falta, lo razona (Paso 3, paso 8). Las
-señales analyze_now y boost van directo por memoria. El lado servidor del canal
-de control llega en el paso 9: hasta entonces el bridge avisa que no conecta.
+worker narra cada thread, lo razona cuando hace falta y avisa por SMS (en modo
+de prueba por defecto, SMS_MODE=log). El canal de control del bridge llega a la
+API, y el worker avisa si la casa o una cámara se quedan sin señal. Las señales
+analyze_now y boost van directo por memoria.
 
 Variables: DATABASE_URL, LAB_BRIDGE_TOKEN, AI_GATEWAY_API_KEY, ARTEMISA_API_URL
 (donde escucha la API, por ejemplo http://127.0.0.1:8000) y VIDEO_SOURCE (la
-ruta del .mp4 como la ve go2rtc, por ejemplo /videos/puerta.mp4).
+ruta del .mp4 como la ve go2rtc, por ejemplo /videos/puerta.mp4). Opcionales:
+SMS_MODE (log o live) y, solo con live, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
+TWILIO_FROM_NUMBER y LAB_SMS_TO.
 """
 
 import asyncio
@@ -34,6 +37,7 @@ from artemisa.pipeline.analyze import Analysis
 from artemisa.pipeline.reason import Reasoning
 from artemisa.providers.gateway import Gateway
 from artemisa.providers.twilio import sms_from_env
+from artemisa.worker.health import run_health
 from artemisa.worker.main import Signals
 from artemisa.worker.scheduler import Scheduler
 
@@ -94,7 +98,7 @@ async def run() -> None:
     # API y worker en el mismo proceso: las señales van por memoria en los dos sentidos.
     signals = Signals(pool)
     worker = Scheduler(pool, Analysis(gateway, Reasoning(gateway, signals, actions), actions))
-    app = create_app(pool, gateway, signals)
+    app = create_app(pool, gateway, signals, actions)
     signals.worker, signals.api = worker, app.state.frames
     server = api_server(api_url, app)
 
@@ -116,6 +120,7 @@ async def run() -> None:
                 tasks.create_task(uploader.run([reader]))
                 tasks.create_task(channel.run())
                 tasks.create_task(worker.run())
+                tasks.create_task(run_health(pool, actions))
         except* Stopped:
             log.info("stopped")
         finally:
