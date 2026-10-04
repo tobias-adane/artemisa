@@ -71,6 +71,14 @@ quedó a medias.)
   puede crecer mucho: medir `input_tokens` de `reason` en `pipeline_runs` antes
   de la Fase 1.
 
+- **Ida y vuelta entre el Paso 2b y el Paso 3 (pasos 10 y 17).** Si el Paso 2b
+  sigue diciendo `attention` y el Paso 3 decidió `normal`, cada reanálisis es
+  "más grave" y vuelve a mandar el thread al Paso 3 (regla de 03). En la prueba
+  de punta a punta con el modelo simulado, un thread de 4 minutos se razonó 3
+  veces, con un solo refuerzo. Además, la confianza baja del primer análisis
+  queda y los siguientes van a `analyze_hard`. Medir cuánto pasa y cuánto
+  cuesta.
+
 ### Para el paso 17 (hallazgos de las pruebas del paso 7)
 
 1. **Un desconocido sale `attention` por la instrucción nocturna.** Con el
