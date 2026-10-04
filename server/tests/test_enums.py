@@ -10,11 +10,26 @@ from artemisa.core import models
 
 MIGRATIONS = Path(__file__).resolve().parents[2] / "supabase" / "migrations"
 ENUM = re.compile(r"create\s+type\s+(\w+)\s+as\s+enum\s*\(([^)]*)\)", re.IGNORECASE)
+ADD_VALUE = re.compile(
+    r"alter\s+type\s+(\w+)\s+add\s+value\s+(?:if\s+not\s+exists\s+)?'([^']*)'", re.IGNORECASE
+)
 
 
 def sql_enums() -> dict[str, list[str]]:
-    sql = "\n".join(path.read_text() for path in sorted(MIGRATIONS.glob("*.sql")))
-    return {name: re.findall(r"'([^']*)'", values) for name, values in ENUM.findall(sql)}
+    """Los enums de todas las migraciones, en orden: create type y después add value."""
+    enums: dict[str, list[str]] = {}
+    for path in sorted(MIGRATIONS.glob("*.sql")):
+        sql = path.read_text()
+        for name, values in ENUM.findall(sql):
+            enums[name] = re.findall(r"'([^']*)'", values)
+        for name, value in ADD_VALUE.findall(sql):
+            if value not in enums[name]:
+                enums[name].append(value)
+    return enums
+
+
+def test_sms_is_added_by_its_own_migration() -> None:
+    assert sql_enums()["dispatch_channel"] == ["push", "call", "whatsapp", "sms"]
 
 
 PYTHON_ENUMS: dict[str, type[Enum]] = {
