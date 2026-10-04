@@ -16,7 +16,7 @@ from uuid import UUID
 
 from openai.types.chat import ChatCompletionMessageParam
 
-from artemisa.core.models import PipelineStep
+from artemisa.core.models import ActionLevel, PipelineStep, PushInterruption
 from artemisa.core.schemas import AnalysisOut, Classification
 from artemisa.pipeline.context import (
     AnalysisContext,
@@ -112,14 +112,32 @@ class Reasoner(Protocol):
     ) -> Thread: ...
 
 
+class Acting(Protocol):
+    """El Paso 4 (pipeline/act.py)."""
+
+    async def act(
+        self,
+        db: Any,
+        th: Thread,
+        level: ActionLevel,
+        interruption: PushInterruption | None = None,
+        ignore_quiet: bool = False,
+    ) -> None: ...
+
+
 class Analysis:
     """El Paso 2b con el gateway (providers/gateway.py) y el registro de modelos."""
 
     def __init__(
-        self, models: Models, reasoner: Reasoner, clock: Callable[[], datetime] = utcnow
+        self,
+        models: Models,
+        reasoner: Reasoner,
+        actions: Acting,
+        clock: Callable[[], datetime] = utcnow,
     ) -> None:
         self.models = models
         self.reasoner = reasoner
+        self.actions = actions
         self.clock = clock
 
     async def analyze(self, conn: Connection, th: Thread, fast_path: bool = False) -> Thread:
@@ -166,21 +184,24 @@ class Analysis:
         if trigger is not None:
             urgent = fast_path or out.classification == Classification.emergency
             return await self.reasoner.reason(conn, th, out, trigger, urgent)
-        # El informar de un attention sin Paso 3 (act) llega con el paso 9.
-        return th
+        if not th.escalated_to_reasoning and out.classification == Classification.attention:
+            await self.actions.act(conn, th, ActionLevel.informar)
+        # normal: no hay acción. emergency nunca llega a actuar desde acá.
+        return await reload(conn, th.id)
 
     async def on_failure(self, conn: Connection, th: Thread, ctx: AnalysisContext) -> Thread:
         """03, Fallos y bordes: el análisis falla ANALYSIS_MAX_FAILURES veces seguidas."""
         failures = th.analysis_failures + 1
         log.warning("thread %s: analysis failed (%d in a row)", th.id, failures)
         fields: dict[str, object] = {"analysis_failures": failures}
+        urgent = False
         if failures >= ANALYSIS_MAX_FAILURES and th.narrative is None and ctx.layers:
             if any(layer.flags for layer in ctx.layers):  # todos los flags son urgentes
                 narrative = server_text(ctx.locale, "fallback.urgentNarrative").replace(
                     "{space}", ctx.space_name
                 )
                 classification = "attention"
-                # El aviso de resguardo llega en el paso 9.
+                urgent = True
             else:
                 narrative = ctx.layers[-1].description
                 classification = "normal"
@@ -191,7 +212,12 @@ class Analysis:
                 "last_analyzed_at": self.clock(),
             }
         await update_thread(conn, th.id, fields)
-        return await reload(conn, th.id)
+        th = await reload(conn, th.id)
+        if urgent:
+            await self.actions.act(  # el aviso de resguardo (03, Fallos y bordes)
+                conn, th, ActionLevel.informar, PushInterruption.time_sensitive, ignore_quiet=True
+            )
+        return th
 
 
 async def update_thread(conn: Connection, thread_id: UUID, fields: dict[str, object]) -> None:

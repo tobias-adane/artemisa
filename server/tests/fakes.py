@@ -68,3 +68,15 @@ class FakePool:
     async def acquire(self) -> AsyncIterator[FakeConnection]:
         self.acquired += 1
         yield self.connection
+
+
+class FakeSms:
+    """Guarda los SMS en vez de enviarlos."""
+
+    def __init__(self, ok: bool = True) -> None:
+        self.ok = ok
+        self.texts: list[str] = []
+
+    async def send(self, text: str) -> bool:
+        self.texts.append(text)
+        return self.ok

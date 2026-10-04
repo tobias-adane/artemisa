@@ -29,9 +29,11 @@ from artemisa.bridge.control import ControlChannel
 from artemisa.bridge.reader import FrameReader
 from artemisa.bridge.uploader import Uploader
 from artemisa.core.config import configure_logging
+from artemisa.pipeline.act import Actions
 from artemisa.pipeline.analyze import Analysis
 from artemisa.pipeline.reason import Reasoning
 from artemisa.providers.gateway import Gateway
+from artemisa.providers.twilio import sms_from_env
 from artemisa.worker.main import Signals
 from artemisa.worker.scheduler import Scheduler
 
@@ -82,6 +84,8 @@ async def run() -> None:
     token = os.environ["LAB_BRIDGE_TOKEN"]
     database_url = os.environ["DATABASE_URL"]
     bridge_id, space_id = await lab_ids(database_url)
+    sms_client = httpx.AsyncClient()
+    actions = Actions(sms_from_env(sms_client))  # SMS_MODE=log por defecto: no envía
 
     # Cada análisis en curso toma una conexión (hasta 4 por usuario): el pool deja lugar
     # para la API.
@@ -89,7 +93,7 @@ async def run() -> None:
     gateway = Gateway.from_env(pool)
     # API y worker en el mismo proceso: las señales van por memoria en los dos sentidos.
     signals = Signals(pool)
-    worker = Scheduler(pool, Analysis(gateway, Reasoning(gateway, signals)))
+    worker = Scheduler(pool, Analysis(gateway, Reasoning(gateway, signals, actions), actions))
     app = create_app(pool, gateway, signals)
     signals.worker, signals.api = worker, app.state.frames
     server = api_server(api_url, app)
@@ -116,6 +120,7 @@ async def run() -> None:
             log.info("stopped")
         finally:
             reader.stop()
+            await sms_client.aclose()
             await pool.close()
 
 

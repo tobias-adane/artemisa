@@ -14,9 +14,11 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 
 from artemisa.core.schemas import AnalysisOut
+from artemisa.pipeline.act import Actions
 from artemisa.pipeline.analyze import ANALYSIS_MAX_FAILURES, Analysis, Thread, load_thread
 from artemisa.pipeline.sessionize import add_layer
 from artemisa.providers.gateway import Completion, ModelCallFailed, RunContext
+from tests.fakes import FakeSms
 
 USER = "user_test"
 DOOR = UUID("00000000-0000-4000-8000-0000000000a1")
@@ -107,11 +109,14 @@ async def moment(pool: asyncpg.Pool, *layers: tuple[str, list[str], float]) -> U
     return thread_id
 
 
-async def analyze_once(pool: asyncpg.Pool, models: FakeModels, thread_id: UUID) -> Any:
+async def analyze_once(
+    pool: asyncpg.Pool, models: FakeModels, thread_id: UUID, sms: FakeSms | None = None
+) -> Any:
     async with pool.acquire() as conn:
         th = await load_thread(conn, thread_id)
         assert th is not None
-        await Analysis(models, NoReasoning(), clock=lambda: NOW).analyze(conn, th)
+        actions = Actions(sms or FakeSms(), clock=lambda: NOW)
+        await Analysis(models, NoReasoning(), actions, clock=lambda: NOW).analyze(conn, th)
     return await pool.fetchrow("select * from threads where id = $1", thread_id)
 
 
@@ -131,7 +136,7 @@ def test_the_analysis_is_saved_and_the_thread_becomes_active(test_database_url: 
     assert abs(row["confidence"] - 0.8) < 1e-6
     assert row["unfamiliar_person"] is True and row["people_present"] is False
     assert row["last_analyzed_at"] == NOW and row["analysis_failures"] == 0
-    assert row["action"] is None  # en el paso 7 no se actúa
+    assert row["action"] == "informar"  # attention sin Paso 3: informar (03, analyze)
     assert door["people_present"] is False
     role, _, context = models.calls[0]
     assert role == "analyze"
@@ -263,7 +268,7 @@ def test_repeated_failures_with_a_flag_use_the_urgent_narrative(test_database_ur
     row = run_db(test_database_url, go)
     assert row["narrative"] == "Vi algo en Front Door que quiero que mires."
     assert row["classification"] == "attention"
-    assert row["action"] is None  # el aviso de resguardo llega en el paso 9
+    assert row["action"] == "informar"  # el aviso de resguardo
 
 
 def test_failures_never_replace_an_existing_narrative(test_database_url: str) -> None:
