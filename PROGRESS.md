@@ -1,8 +1,8 @@
 # Progreso
 
 **Fase actual:** Fase 0, laboratorio.
-**Paso en curso:** 10.
-**Siguiente:** 11.
+**Paso en curso:** 11.
+**Siguiente:** 12.
 
 Al terminar cada paso: tests y chequeos limpios, marcar el paso acá y hacer
 commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
@@ -18,7 +18,7 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 - [x] 7. `LISTEN` / `NOTIFY`, scheduler y Paso 2b.
 - [x] 8. Paso 3 con refuerzo.
 - [x] 9. Paso 4 con notificaciones y `dispatches`; salud de la caja y de las cámaras.
-- [ ] 10. `artemisa-lab report`.
+- [x] 10. `artemisa-lab report`.
 - [ ] 11. App: RN Reusables, tokens, fuentes, textos, layout, modo laboratorio.
 - [ ] 12. App: Home en tiempo real.
 - [ ] 13. App: Detalle.
@@ -92,3 +92,14 @@ quedó a medias.)
 4. **"Avisame si alguien que no conozco viene" no se puede responder** mirando
    un frame sin reconocimiento de personas. Hay que decidir cómo se pide esa
    instrucción, o cómo responde Artemisa cuando no puede saberlo.
+5. **La razón de cada escalada no se guarda.** `artemisa-lab report` cuenta
+   las llamadas a `analyze_hard` y las corridas del Paso 3 por thread, pero no
+   por qué. Guardar la razón de `analyze_hard` y el disparador del Paso 3
+   pediría una columna nueva en `pipeline_runs`: decidirlo antes del
+   laboratorio con casa real. El esquema no se tocó.
+6. **Límites del informe** (paso 10): los frames que el Paso 1 descarta no pasan
+   por la base, así que solo se cuentan los descriptos (`describe` y `state`).
+   Los tokens de imagen salen "sin dato" porque `visual_tokens` viene vacío.
+   Las horas de cámara son una estimación (del primer al último
+   `pipeline_run` de cada space, en sesiones cortadas por huecos de más de 15
+   minutos); `--camera-hours` acepta el valor exacto.
