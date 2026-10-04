@@ -1,8 +1,8 @@
 # Progreso
 
 **Fase actual:** Fase 0, laboratorio.
-**Paso en curso:** 11.
-**Siguiente:** 12.
+**Paso en curso:** 12.
+**Siguiente:** 13.
 
 Al terminar cada paso: tests y chequeos limpios, marcar el paso acá y hacer
 commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
@@ -19,7 +19,7 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 - [x] 8. Paso 3 con refuerzo.
 - [x] 9. Paso 4 con notificaciones y `dispatches`; salud de la caja y de las cámaras.
 - [x] 10. `artemisa-lab report`.
-- [ ] 11. App: RN Reusables, tokens, fuentes, textos, layout, modo laboratorio.
+- [x] 11. App: RN Reusables, tokens, fuentes, textos, layout, modo laboratorio.
 - [ ] 12. App: Home en tiempo real.
 - [ ] 13. App: Detalle.
 - [ ] 14. App: Feed en vivo y lectura en vivo.
@@ -32,6 +32,22 @@ commit. Qué leer en cada paso: tabla de `CLAUDE.md`.
 (Lo que haga falta recordar entre sesiones: decisiones chicas, bloqueos, qué
 quedó a medias.)
 
+- **Paso 12: lectura de la base en modo lab.** Para que la app lea la base con
+  la clave anónima hace falta decidir una política de lectura para el
+  laboratorio. No está escrita.
+- **Paso 12: tipos de la base.** `mobile/lib/types/db.ts` no se generó en el
+  paso 11: la CLI de Supabase necesita la imagen de pg-meta y la red de la
+  sesión no la deja bajar. Generarlo con la CLI contra un Postgres local con
+  las migraciones aplicadas y tipar `createClient<Database>` en
+  `lib/supabase.ts`.
+- **App, dependencias por paso.** En el paso 11 entró solo lo que usa la base.
+  `expo-video`, `expo-notifications`, `expo-device`, `expo-audio`,
+  `expo-linear-gradient`, `expo-speech-recognition` y Sentry se instalan en el
+  paso que los usa (Sentry, cuando haya DSN, con la config de abajo).
+- **App, primitivas.** Si `reactnativereusables.com` está bloqueado por la red,
+  el JSON del registro está en GitHub
+  (`founded-labs/react-native-reusables`, `apps/docs/public/r/nativewind/`).
+  Así se agregaron las del paso 11, sin editar más que los imports.
 - **Canal de control: comandos de la nube.** El lado servidor está desde el
   paso 9 (`hello`, `heartbeat`, `health`). Los comandos se suman encima:
   `start_stream` y `stop_stream` en el paso 14, `add_camera` y `remove_camera`
