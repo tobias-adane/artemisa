@@ -18,6 +18,7 @@ TWILIO_FROM_NUMBER y LAB_SMS_TO.
 import asyncio
 import logging
 import os
+import sys
 from importlib.metadata import version
 from urllib.parse import urlsplit
 
@@ -32,6 +33,7 @@ from artemisa.bridge.control import ControlChannel
 from artemisa.bridge.reader import FrameReader
 from artemisa.bridge.uploader import Uploader
 from artemisa.core.config import configure_logging
+from artemisa.lab import report
 from artemisa.pipeline.act import Actions
 from artemisa.pipeline.analyze import Analysis
 from artemisa.pipeline.reason import Reasoning
@@ -130,6 +132,9 @@ async def run() -> None:
 
 
 def main() -> None:
+    if sys.argv[1:2] == ["report"]:
+        report.main(sys.argv[2:])
+        return
     configure_logging()
     try:
         asyncio.run(run())
