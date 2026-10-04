@@ -1,0 +1,73 @@
+{
+  "home": {
+    "greeting": {
+      "morning": "Buen día, {name}",
+      "afternoon": "Buenas tardes, {name}",
+      "evening": "Buenas noches, {name}",
+      "night": "Buenas noches, {name}"
+    },
+    "state": {
+      "default": "Todo se siente bien en casa.",
+      "empty": "Tu casa está vacía ahora. Todo en orden.",
+      "attentionOne": "Un día tranquilo, con una sola cosa que contarte.",
+      "attentionFew": "Un día con algunas cosas para contarte.",
+      "attentionRecent": "Hay algo que quiero contarte.",
+      "offline": "No puedo ver {space} ahora. Todo lo demás está tranquilo.",
+      "blind": "No puedo ver tu casa desde las {time}.",
+      "day1": "Estoy conociendo tu casa. Te voy a contar lo que note."
+    },
+    "threads": "Hilos",
+    "today": "Hoy"
+  },
+  "thread": {
+    "composing": "Artemisa está componiendo el momento…",
+    "seeNow": "Ver ahora",
+    "askSomething": "Preguntá algo"
+  },
+  "ask": {
+    "placeholder": "Preguntá lo que quieras"
+  },
+  "detail": {
+    "today": "Hoy, {time}",
+    "why": "Por qué te lo cuento",
+    "did": "Qué hice",
+    "saw": "Lo que vi"
+  },
+  "did": {
+    "nothing": "Nada. No te interrumpí. Está acá cuando lo quieras ver.",
+    "pushQuiet": "Te mandé una notificación.",
+    "pushAlert": "Te avisé a las {time}.",
+    "pushFailed": "Intenté avisarte, pero la notificación no llegó.",
+    "calledYou": "Te llamé a las {time}.",
+    "calledYouNoAnswer": "Te llamé a las {time}. No atendiste.",
+    "calledContact": "Llamé a {name}.",
+    "messagedContact": "Le escribí a {name}.",
+    "emergencyServices": "Contacté al servicio de emergencias a las {time}.",
+    "cancelled": "Cancelaste a las {time}. No contacté a nadie más.",
+    "noOneElse": "No contacté a nadie más."
+  },
+  "live": {
+    "badge": "En vivo",
+    "privacy": "Lo estás viendo en vivo. Artemisa no lo graba."
+  },
+  "connect": {
+    "title": "Conectemos tu primera cámara.",
+    "body": "Artemisa funciona con las cámaras que ya tenés en casa.",
+    "label": "Dirección de la cámara",
+    "placeholder": "rtsp://",
+    "help": "La encontrás en la app de tu cámara, en la sección de acceso remoto o RTSP.",
+    "privacy": "Artemisa entiende lo que ve y nunca guarda las imágenes.",
+    "submit": "Conectar",
+    "error": "No pude conectarme a esa dirección. Revisala y probemos de nuevo.",
+    "errorHelp": "Fijate que la cámara esté encendida y en la misma red que tu bridge.",
+    "findAddress": "¿No encontrás la dirección?",
+    "retry": "Probar de nuevo"
+  },
+  "a11y": {
+    "menu": "Menú",
+    "profile": "Tu perfil",
+    "more": "Más opciones",
+    "voice": "Hablale a Artemisa",
+    "back": "Volver"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "home": {
+    "greeting": {
+      "morning": "Good morning, {name}",
+      "afternoon": "Good afternoon, {name}",
+      "evening": "Good evening, {name}",
+      "night": "Good night, {name}"
+    },
+    "state": {
+      "default": "Everything feels right at home.",
+      "empty": "Your home's empty right now. All secure.",
+      "attentionOne": "A calm day, with one thing worth telling you about.",
+      "attentionFew": "A day with a few things worth telling you about.",
+      "attentionRecent": "There's something I want to tell you about.",
+      "offline": "I can't see the {space} right now. Everything else is quiet.",
+      "blind": "I haven't been able to see your home since {time}.",
+      "day1": "I'm getting to know your home. I'll tell you what I notice."
+    },
+    "threads": "Threads",
+    "today": "Today"
+  },
+  "thread": {
+    "composing": "Artemisa is composing the moment…",
+    "seeNow": "See now",
+    "askSomething": "Ask something"
+  },
+  "ask": {
+    "placeholder": "Ask anything"
+  },
+  "detail": {
+    "today": "Today, {time}",
+    "why": "Why I'm telling you",
+    "did": "What I did",
+    "saw": "What I saw"
+  },
+  "did": {
+    "nothing": "Nothing. I didn't interrupt you. It's here when you want it.",
+    "pushQuiet": "I sent you a notification.",
+    "pushAlert": "I let you know at {time}.",
+    "pushFailed": "I tried to let you know, but the notification didn't go through.",
+    "calledYou": "I called you at {time}.",
+    "calledYouNoAnswer": "I called you at {time}. You didn't answer.",
+    "calledContact": "I called {name}.",
+    "messagedContact": "I messaged {name}.",
+    "emergencyServices": "I contacted emergency services at {time}.",
+    "cancelled": "You cancelled at {time}. I didn't contact anyone else.",
+    "noOneElse": "I didn't contact anyone else."
+  },
+  "live": {
+    "badge": "Live",
+    "privacy": "You're watching this live. Artemisa doesn't record it."
+  },
+  "connect": {
+    "title": "Let's connect your first camera.",
+    "body": "Artemisa works with the cameras you already have at home.",
+    "label": "Camera address",
+    "placeholder": "rtsp://",
+    "help": "You'll find it in your camera's app, under remote access or RTSP.",
+    "privacy": "Artemisa understands what it sees and never keeps the images.",
+    "submit": "Connect",
+    "error": "I couldn't connect to that address. Check it and let's try again.",
+    "errorHelp": "Make sure the camera is on and on the same network as your bridge.",
+    "findAddress": "Can't find the address?",
+    "retry": "Try again"
+  },
+  "a11y": {
+    "menu": "Menu",
+    "profile": "Your profile",
+    "more": "More options",
+    "voice": "Talk to Artemisa",
+    "back": "Back"
+  }
+}
